@@ -1,0 +1,25 @@
+{
+  "name": "archive-server",
+  "version": "1.0.0",
+  "description": "## Git flow Branch - master : 제품으로 출시될 수 있는 브랜치 - develop : 다음 출시 버전을 개발하는 브랜치 - feature : 기능을 개발하는 브랜치 - release : 이번 출시 버전을 준비하는 브랜치 - hotfix : 출시 버전에서 발생한 버그를 수정 하는 브랜치",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^7.20.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/argon1025/Archive-server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/argon1025/Archive-server/issues"
+  },
+  "homepage": "https://github.com/argon1025/Archive-server#readme"
+}
