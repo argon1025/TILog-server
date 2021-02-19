@@ -12,5 +12,5 @@ services:
     build:
       context: ./src
     container_name: express_1
-    ports:
+    expose:
       - "8001"
