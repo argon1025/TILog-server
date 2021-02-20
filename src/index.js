@@ -5,14 +5,9 @@ app.get("/", (req, res) => {
     res.send("Hello World");
 });
 
-const PORT = 8001;
-const HOST = "0.0.0.0";
-app.listen(PORT, HOST);
-console.log(`Running on http://${HOST}:${PORT}`);
-/*
-if(process.env.NODE_PORT&&process.env.NODE_HOST){
-    const PORT = process.env.NODE_PORT;
-    const HOST = process.env.NODE_HOST;
+if(process.env.NodeJS_HOST&&process.env.NodeJS_PORT){
+    const PORT = process.env.NodeJS_PORT;
+    const HOST = process.env.NodeJS_HOST;
     app.listen(PORT, HOST);
     console.log(`Running on http://${HOST}:${PORT}`);
 }else{
@@ -21,4 +16,3 @@ if(process.env.NODE_PORT&&process.env.NODE_HOST){
     app.listen(PORT, HOST);
     console.log(`Running on dev http://${HOST}:${PORT}`);
 }
-*/
