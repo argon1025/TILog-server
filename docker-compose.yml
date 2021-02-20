@@ -12,8 +12,22 @@ services:
     build:
       context: ./src
     container_name: express_1
-    expose:
-      - "8001"
     environment:
       - NodeJS_HOST=0.0.0.0
       - NodeJS_PORT=8001
+    expose:
+      - "8001"
+  db:
+    image: mysql:5.7
+    container_name: Database
+    environment:
+      - MYSQL_ROOT_PASSWORD:"root"
+      - MYSQL_DATABASE:"tilog"
+      - MYSQL_USER:"testuser"
+      - MYSQL_PASSWORD:"testuser"
+      - MYSQL_ALLOW_EMPTY_PASSWORD="true"
+    volumes:
+      - "./docker/mysql/mysql-init-files/:/docker-entrypoint-initdb.d/"
+      - "./docker/mysql/mysql-data:/var/lib/mysql"
+    ports:
+      - "3306:3306"
