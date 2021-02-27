@@ -1,15 +1,6 @@
 {
-    /* 
-    TODO  
-        npm install prettier --save(prettier 설치)
-        npm install eslint-plugin-prettier eslint-config-prettier --save
-            *설명*
-             eslint-config-prettier: Prettier와 충돌할 설정들을 비활성화합니다. 
-             eslint-plugin-prettier: 코드 코맷할 때 Prettier를 사용하게 만드는 규칙을 추가합니다.
-    */
-    
-    // "plugins": ["prettier"],
-    "extends": ["eslint:recommended"/*, "plugin:prettier/recommended"*/],
+    "plugins": ["prettier"],
+    "extends": ["airbnb-base", "plugin:prettier/recommended"],
     "parserOptions": {
         "ecmaVersion": 7,
         "sourceType": "script",
@@ -22,6 +13,6 @@
         "node": true
     },
     "rules": {
-        // "prettier/prettier": "error"
+        "prettier/prettier": "error"
     }
 }
