@@ -9,3 +9,6 @@ lerna-debug.log*
 
 # on mac settings
 .DS_Store
+
+#docker mysql-data
+./docker/mysql/mysql-data
