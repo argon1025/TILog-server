@@ -1,6 +1,6 @@
 /**
- * Comments controller index
- * Comment 관련 로직을 관리하는 index.js 입니다
+ * Tags controller index
+ * Tag 관련 로직을 관리하는 index.js 입니다
  *
  *
  * @ author leeseongrok(argon1025@gmail.com) - 2021.3.1
