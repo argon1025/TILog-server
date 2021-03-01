@@ -13,9 +13,9 @@ const router = express.Router();
 /////////////////////////////////////
 
 ///////////////////////////////////// => 컨트롤러 임포트
-const accounts = require('./accounts/controllers/account.controller')
-const posts = require('./posts/controllers/post.controller')
-const comments = require('./comments/controllers/comment.controller')
+const accounts = require('./accounts/controllers')
+const posts = require('./posts/controllers')
+const comments = require('./comments/controllers')
 /////////////////////////////////////
 
 ///////////////////////////////////// => 게시글 관련 라우팅
