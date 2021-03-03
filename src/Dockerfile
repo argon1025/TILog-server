@@ -15,6 +15,8 @@ WORKDIR /usr/src/app
 COPY ./ ./
 RUN npm install
 
-# 포트 오픈 - docker compose 에서 관리 하기때문에 비활성화
+# 포트 오픈 - docker compose 에서 관리
 EXPOSE 8001
+
+# 서버 실행
 CMD [ "node", "index.js" ]
