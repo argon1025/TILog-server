@@ -1,4 +1,3 @@
-CREATE DATABASE TILog;
 USE TILog;
 
 -- category Table Create SQL

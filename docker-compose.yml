@@ -12,11 +12,11 @@ services:
     image: mysql:5.7
     container_name: Database_MySQL
     environment:
-      - MYSQL_ROOT_PASSWORD:"root"
-      - MYSQL_DATABASE:"TILog"
-      - MYSQL_USER:"testuser"
-      - MYSQL_PASSWORD:"testuser"
-      - MYSQL_ALLOW_EMPTY_PASSWORD="false"
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=TILog
+      - MYSQL_USER=TILog
+      - MYSQL_PASSWORD=1q2w3e4r
+      - MYSQL_ALLOW_EMPTY_PASSWORD=false
     volumes:
       - "./docker/mysql/mysql-init-files/:/docker-entrypoint-initdb.d/"
       - "./docker/mysql/mysql-data:/var/lib/mysql"
