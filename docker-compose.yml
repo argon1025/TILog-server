@@ -1,33 +1,31 @@
-version: '3'
+version: "3"
 
 services:
-  Nginx:
-    image: nginx:latest
-    container_name: proxy
-    volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
-    ports:
-      - "80:80"
-  express_1:
-    build:
-      context: ./src
-    container_name: express_1
-    environment:
-      - NodeJS_HOST=0.0.0.0
-      - NodeJS_PORT=8001
-    expose:
-      - "8001"
-  db:
-    image: mysql:5.7
-    container_name: Database
-    environment:
-      - MYSQL_ROOT_PASSWORD:"root"
-      - MYSQL_DATABASE:"tilog"
-      - MYSQL_USER:"testuser"
-      - MYSQL_PASSWORD:"testuser"
-      - MYSQL_ALLOW_EMPTY_PASSWORD="true"
-    volumes:
-      - "./docker/mysql/mysql-init-files/:/docker-entrypoint-initdb.d/"
-      - "./docker/mysql/mysql-data:/var/lib/mysql"
-    ports:
-      - "3306:3306"
+    WebServer_1:
+        # 도커파일 빌드
+        build:
+            context: ./src
+        # 컨테이너 명
+        container_name: WebServer_1
+        # 환경변수 설정 비활성화
+        # environment:
+        # 내부 포트 공유 비활성화
+        # expose:
+        # 오픈 포트
+          port:
+            # 호스트 : 컨테이너
+            - "80:80"
+    Database_MySQL:
+        image: mysql:5.7
+        container_name: Database_MySQL
+        environment:
+            - MYSQL_ROOT_PASSWORD:"root"
+            - MYSQL_DATABASE:"tilog"
+            - MYSQL_USER:"testuser"
+            - MYSQL_PASSWORD:"testuser"
+            - MYSQL_ALLOW_EMPTY_PASSWORD="true"
+        volumes:
+            - "./docker/mysql/mysql-init-files/:/docker-entrypoint-initdb.d/"
+            - "./docker/mysql/mysql-data:/var/lib/mysql"
+        ports:
+            - "3306:3306"
