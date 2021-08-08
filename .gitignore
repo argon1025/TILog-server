@@ -11,4 +11,4 @@ lerna-debug.log*
 .DS_Store
 
 #docker mysql-data
-./docker/mysql/mysql-data
+mysql-data
