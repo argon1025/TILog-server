@@ -7,6 +7,7 @@ services:
     container_name: app_1
     ports:
       - "80:80"
+      - "3000:3000"
   Database_MySQL:
     image: mysql:5.7
     container_name: Database_MySQL
@@ -15,7 +16,7 @@ services:
       - MYSQL_DATABASE:"TILog"
       - MYSQL_USER:"testuser"
       - MYSQL_PASSWORD:"testuser"
-      - MYSQL_ALLOW_EMPTY_PASSWORD="true"
+      - MYSQL_ALLOW_EMPTY_PASSWORD="false"
     volumes:
       - "./docker/mysql/mysql-init-files/:/docker-entrypoint-initdb.d/"
       - "./docker/mysql/mysql-data:/var/lib/mysql"
