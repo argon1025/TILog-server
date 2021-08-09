@@ -9,10 +9,10 @@ async function bootstrap() {
   // Configuration Load
   const configService = app.get<ConfigService>(ConfigService);
   const SERVER_PORT = configService.get<number>('SERVER_PORT', null);
-  const SERVER_ENV = configService.get<string>('NODE_ENV', null);
+  const SERVER_ENV = configService.get<string>('NODE_ENV', 'product');
   const SERVER_HOST = configService.get<string>('SERVER_HOST', null);
 
-  if (!SERVER_ENV || !SERVER_PORT || !SERVER_HOST) {
+  if (!SERVER_PORT || !SERVER_HOST) {
     Logger.error('Unable to load environment variables!');
     throw new Error('Unable to load environment variables!');
   } else {
