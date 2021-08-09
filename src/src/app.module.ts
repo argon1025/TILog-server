@@ -1,8 +1,22 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LoggerMiddleware } from './middlewares/Logger.middleware';
+
+// Load Entities
+import { Category } from './entities/Category';
+import { Comments } from './entities/Comments';
+import { ImageUpload } from './entities/ImageUpload';
+import { PinnedRepositories } from './entities/PinnedRepositories';
+import { PinnedRepositoryCategories } from './entities/PinnedRepositoryCategories';
+import { PostLike } from './entities/PostLike';
+import { Posts } from './entities/Posts';
+import { PostsTags } from './entities/PostsTags';
+import { Tags } from './entities/Tags';
+import { UserblogCustomization } from './entities/UserblogCustomization';
+import { Users } from './entities/Users';
 
 // Load ENV
 const ENV = process.env;
@@ -12,6 +26,19 @@ const ENV = process.env;
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV.NODE_ENV ? '.env' : `.env.${ENV.NODE_ENV}`,
+    }),
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: ENV.DB_HOST,
+      port: +ENV.DB_PORT,
+      username: ENV.DB_USERNAME,
+      password: ENV.DB_PASSWORD,
+      database: ENV.DB_DATABASE,
+      entities: [Users, UserblogCustomization, Tags, PostsTags, Posts, PostLike, PinnedRepositoryCategories, PinnedRepositories, ImageUpload, Comments, Category],
+      synchronize: false,
+      logging: true,
+      keepConnectionAlive: true,
+      autoLoadEntities: true,
     }),
   ],
   controllers: [AppController],
