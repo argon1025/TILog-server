@@ -1,6 +1,5 @@
 # 베이스 이미지를 지정합니다
-# 2021.02.17 기준 LTS 버전 입니다
-FROM node:14
+FROM node:16
 # MAINTAINER argon1025@gmail.com
 
 # 각명령어의 디렉토리 위치는 매번 초기화 되기 때문에
