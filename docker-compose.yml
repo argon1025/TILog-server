@@ -5,6 +5,8 @@ services:
     build:
       context: ./src
     container_name: app_1
+    links:
+      - "Database_MySQL:database"
     ports:
       - "80:80"
       - "3000:3000"
