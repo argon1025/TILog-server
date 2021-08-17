@@ -22,6 +22,8 @@ CREATE TABLE users
     `proFileImageURL`  VARCHAR(300)    NULL        COMMENT '서비스 유저 프로필 이미지 링크', 
     `mailAddress`      VARCHAR(50)     NULL        COMMENT '서비스 메일 주소', 
     `password`         VARCHAR(50)     NULL        COMMENT '사용자 암호, Oauth 사용자는 NULL', 
+    `accessToken`         VARCHAR(255)   NOT  NULL        COMMENT '서비스 엑세스 토큰', 
+    `refreshToken`         VARCHAR(255)   NULL        COMMENT '서비스 리프레시 토큰', 
     `createdAt`        DATETIME        NOT NULL    COMMENT '유저 가입일', 
     `updatedAt`        DATETIME        NOT NULL    COMMENT '유저 갱신일', 
     `deletedAt`        DATETIME        NOT NULL    COMMENT '유저 삭제일', 
@@ -221,3 +223,20 @@ ALTER TABLE postLike
 ALTER TABLE postLike
     ADD CONSTRAINT FK_postLike_usersID_users_id FOREIGN KEY (usersID)
         REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- postView Table Create SQL
+CREATE TABLE postView
+(
+    `id`       BIGINT          NOT NULL    AUTO_INCREMENT COMMENT '포스트좋아요 아이디', 
+    `userIP`  VARCHAR(16)    NOT NULL    COMMENT '유저 아이피', 
+    `postsID`  BIGINT          NOT NULL    COMMENT '포스트 아이디', 
+    `viewedAt`  DATETIME        NOT NULL    COMMENT '포스트 열람일', 
+    CONSTRAINT PK_postView PRIMARY KEY (id)
+);
+
+ALTER TABLE postView COMMENT '포스트 뷰 테이블';
+
+-- 외래키 제약 설정
+ALTER TABLE postView
+    ADD CONSTRAINT FK_postView_postsID_posts_id FOREIGN KEY (postsID)
+        REFERENCES posts (id) ON DELETE CASCADE ON UPDATE CASCADE;
