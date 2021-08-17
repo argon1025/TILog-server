@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import { Comments } from "./Comments";
 import { PostLike } from "./PostLike";
+import { PostView } from "./PostView";
 import { Category } from "./Category";
 import { Users } from "./Users";
 import { PostsTags } from "./PostsTags";
@@ -20,38 +21,34 @@ export class Posts {
   @PrimaryGeneratedColumn({
     type: "bigint",
     name: "id",
-    comment: "í¬ìŠ¤íŠ¸ ì•„ì´ë””",
+    comment: "포스트 아이디",
   })
   id: string;
 
-  @Column("int", {
-    name: "usersID",
-    comment: "ìœ ì € ì•„ì´ë””",
-    unsigned: true,
-  })
+  @Column("int", { name: "usersID", comment: "유저 아이디", unsigned: true })
   usersId: number;
 
   @Column("int", {
     name: "categoryID",
-    comment: "ì¹´í…Œê³ ë¦¬ ì•„ì´ë””",
+    comment: "카테고리 아이디",
     unsigned: true,
   })
   categoryId: number;
 
-  @Column("varchar", { name: "title", comment: "ê²Œì‹œê¸€ ì œëª©", length: 50 })
+  @Column("varchar", { name: "title", comment: "게시글 제목", length: 50 })
   title: string;
 
   @Column("varchar", {
     name: "thumbNaillURL",
     nullable: true,
-    comment: "ì¸ë„¤ì¼ ì´ë¯¸ì§€ URL",
+    comment: "썸네일 이미지 URL",
     length: 300,
   })
   thumbNaillUrl: string | null;
 
   @Column("int", {
     name: "viewcounts",
-    comment: "ì¡°íšŒìˆ˜",
+    comment: "조회수",
     unsigned: true,
     default: () => "'0'",
   })
@@ -59,7 +56,7 @@ export class Posts {
 
   @Column("int", {
     name: "lkes",
-    comment: "ì¢‹ì•„ìš”",
+    comment: "좋아요",
     unsigned: true,
     default: () => "'0'",
   })
@@ -68,34 +65,31 @@ export class Posts {
   @Column("mediumtext", {
     name: "markDownContent",
     nullable: true,
-    comment: "ë§ˆí¬ ë‹¤ìš´ í˜•ì‹ì˜ ë³¸ë¬¸",
+    comment: "마크 다운 형식의 본문",
   })
   markDownContent: string | null;
 
   @Column("tinyint", {
     name: "private",
-    comment: "ë¹„ë°€ê¸€ ì—¬ë¶€",
+    comment: "비밀글 여부",
     default: () => "'0'",
   })
   private: number;
 
-  @Column("datetime", {
-    name: "createdAt",
-    comment: "ê²Œì‹œê¸€ ìµœì´ˆ ìž‘ì„±ì¼",
-  })
+  @Column("datetime", { name: "createdAt", comment: "게시글 최초 작성일" })
   createdAt: Date;
 
   @Column("datetime", {
     name: "updatedAt",
     nullable: true,
-    comment: "ê²Œì‹œê¸€ ë§ˆì§€ë§‰ ì—…ë°ì´íŠ¸ì¼",
+    comment: "게시글 마지막 업데이트일",
   })
   updatedAt: Date | null;
 
   @Column("datetime", {
     name: "deletedAt",
     nullable: true,
-    comment: "ê²Œì‹œê¸€ ì‚­ì œì¼",
+    comment: "게시글 삭제일",
   })
   deletedAt: Date | null;
 
@@ -104,6 +98,9 @@ export class Posts {
 
   @OneToMany(() => PostLike, (postLike) => postLike.posts)
   postLikes: PostLike[];
+
+  @OneToMany(() => PostView, (postView) => postView.posts)
+  postViews: PostView[];
 
   @ManyToOne(() => Category, (category) => category.posts, {
     onDelete: "CASCADE",

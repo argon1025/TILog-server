@@ -3,13 +3,13 @@ import { PostsTags } from "./PostsTags";
 
 @Entity("tags", { schema: "tilog" })
 export class Tags {
-  @PrimaryGeneratedColumn({ type: "bigint", name: "id", comment: "íƒœê·¸ PK" })
+  @PrimaryGeneratedColumn({ type: "bigint", name: "id", comment: "태그 PK" })
   id: string;
 
-  @Column("varchar", { name: "tagsName", comment: "íƒœê·¸ ëª…", length: 30 })
+  @Column("varchar", { name: "tagsName", comment: "태그 명", length: 30 })
   tagsName: string;
 
-  @Column("datetime", { name: "createdAt", comment: "íƒœê·¸ ìƒì„±ì¼ìž" })
+  @Column("datetime", { name: "createdAt", comment: "태그 생성일자" })
   createdAt: Date;
 
   @OneToMany(() => PostsTags, (postsTags) => postsTags.tags)

@@ -16,28 +16,28 @@ export class Users {
   @PrimaryGeneratedColumn({
     type: "int",
     name: "id",
-    comment: "ë°ì´í„° ë² ì´ìŠ¤ ìœ ì € PK",
+    comment: "데이터 베이스 유저 PK",
     unsigned: true,
   })
   id: number;
 
   @Column("varchar", {
     name: "oAuthType",
-    comment: "Oauth ë¡œê·¸ì¸ íƒ€ìž… êµ¬ë¶„",
+    comment: "Oauth 로그인 타입 구분",
     length: 10,
   })
   oAuthType: string;
 
   @Column("varchar", {
     name: "oAuthServiceID",
-    comment: "Oauth ì„œë¹„ìŠ¤ ë³„ ê³ ìœ  ìœ ì € ì•„ì´ë””",
+    comment: "Oauth 서비스 별 고유 유저 아이디",
     length: 50,
   })
   oAuthServiceId: string;
 
   @Column("varchar", {
     name: "userName",
-    comment: "ì„œë¹„ìŠ¤ ìœ ì € ë‹‰ë„¤ìž„",
+    comment: "서비스 유저 닉네임",
     length: 50,
     default: () => "'User'",
   })
@@ -46,7 +46,7 @@ export class Users {
   @Column("varchar", {
     name: "proFileImageURL",
     nullable: true,
-    comment: "ì„œë¹„ìŠ¤ ìœ ì € í”„ë¡œí•„ ì´ë¯¸ì§€ ë§í¬",
+    comment: "서비스 유저 프로필 이미지 링크",
     length: 300,
   })
   proFileImageUrl: string | null;
@@ -54,7 +54,7 @@ export class Users {
   @Column("varchar", {
     name: "mailAddress",
     nullable: true,
-    comment: "ì„œë¹„ìŠ¤ ë©”ì¼ ì£¼ì†Œ",
+    comment: "서비스 메일 주소",
     length: 50,
   })
   mailAddress: string | null;
@@ -62,23 +62,38 @@ export class Users {
   @Column("varchar", {
     name: "password",
     nullable: true,
-    comment: "ì‚¬ìš©ìž ì•”í˜¸, Oauth ì‚¬ìš©ìžëŠ” NULL",
+    comment: "사용자 암호, Oauth 사용자는 NULL",
     length: 50,
   })
   password: string | null;
 
-  @Column("datetime", { name: "createdAt", comment: "ìœ ì € ê°€ìž…ì¼" })
+  @Column("varchar", {
+    name: "accessToken",
+    comment: "서비스 엑세스 토큰",
+    length: 255,
+  })
+  accessToken: string;
+
+  @Column("varchar", {
+    name: "refreshToken",
+    nullable: true,
+    comment: "서비스 리프레시 토큰",
+    length: 255,
+  })
+  refreshToken: string | null;
+
+  @Column("datetime", { name: "createdAt", comment: "유저 가입일" })
   createdAt: Date;
 
-  @Column("datetime", { name: "updatedAt", comment: "ìœ ì € ê°±ì‹ ì¼" })
+  @Column("datetime", { name: "updatedAt", comment: "유저 갱신일" })
   updatedAt: Date;
 
-  @Column("datetime", { name: "deletedAt", comment: "ìœ ì € ì‚­ì œì¼" })
+  @Column("datetime", { name: "deletedAt", comment: "유저 삭제일" })
   deletedAt: Date;
 
   @Column("tinyint", {
     name: "admin",
-    comment: "ê´€ë¦¬ìž ìœ ë¬´",
+    comment: "관리자 유무",
     default: () => "'0'",
   })
   admin: number;

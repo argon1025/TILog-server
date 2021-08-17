@@ -6,7 +6,7 @@ export class UserblogCustomization {
   @Column("int", {
     primary: true,
     name: "usersID",
-    comment: "ìœ ì € ì•„ì´ë””",
+    comment: "유저 아이디",
     unsigned: true,
   })
   usersId: number;
@@ -14,7 +14,7 @@ export class UserblogCustomization {
   @Column("varchar", {
     name: "blogTitle",
     nullable: true,
-    comment: "ë¸”ë¡œê·¸ íƒ€ì´í‹€",
+    comment: "블로그 타이틀",
     length: 20,
   })
   blogTitle: string | null;
@@ -22,7 +22,7 @@ export class UserblogCustomization {
   @Column("varchar", {
     name: "statusMessage",
     nullable: true,
-    comment: "ìƒíƒœë©”ì‹œì§€",
+    comment: "상태메시지",
     length: 30,
   })
   statusMessage: string | null;
@@ -30,7 +30,7 @@ export class UserblogCustomization {
   @Column("varchar", {
     name: "selfIntroduction",
     nullable: true,
-    comment: "ìžê¸°ì†Œê°œ",
+    comment: "자기소개",
     length: 300,
   })
   selfIntroduction: string | null;

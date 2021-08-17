@@ -6,21 +6,17 @@ export class PinnedRepositories {
   @PrimaryGeneratedColumn({
     type: "int",
     name: "id",
-    comment: "í•€ëœ ë ˆí¬ ì•„ì´ë””",
+    comment: "핀된 레포 아이디",
     unsigned: true,
   })
   id: number;
 
-  @Column("varchar", {
-    name: "nodeID",
-    comment: "ë ˆí¬ì§€í† ë¦¬ UID",
-    length: 30,
-  })
+  @Column("varchar", { name: "nodeID", comment: "레포지토리 UID", length: 30 })
   nodeId: string;
 
   @Column("tinyint", {
     name: "processPercent",
-    comment: "í”„ë¡œì íŠ¸ ì§„í–‰ë„",
+    comment: "프로젝트 진행도",
     default: () => "'0'",
   })
   processPercent: number;
@@ -28,7 +24,7 @@ export class PinnedRepositories {
   @Column("varchar", {
     name: "demoURL",
     nullable: true,
-    comment: "í”„ë¡œì íŠ¸ ë°ëª¨íŽ˜ì´ì§€",
+    comment: "프로젝트 데모페이지",
     length: 300,
   })
   demoUrl: string | null;
@@ -36,7 +32,7 @@ export class PinnedRepositories {
   @Column("varchar", {
     name: "position",
     nullable: true,
-    comment: "í”„ë¡œì íŠ¸  ì—­í• ",
+    comment: "프로젝트  역할",
     length: 10,
   })
   position: string | null;

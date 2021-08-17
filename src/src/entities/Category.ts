@@ -7,14 +7,14 @@ export class Category {
   @PrimaryGeneratedColumn({
     type: "int",
     name: "id",
-    comment: "ì¹´í…Œê³ ë¦¬ ì•„ì´ë””",
+    comment: "카테고리 아이디",
     unsigned: true,
   })
   id: number;
 
   @Column("varchar", {
     name: "categoryName",
-    comment: "ì¹´í…Œê³ ë¦¬ ëª…",
+    comment: "카테고리 명",
     length: 30,
   })
   categoryName: string;
@@ -22,7 +22,7 @@ export class Category {
   @Column("varchar", {
     name: "iconURL",
     nullable: true,
-    comment: "ì»¤ìŠ¤í…€ ê¸°ìˆ ì•„ì´ì½˜ ì»¬ëŸ¼",
+    comment: "커스텀 기술아이콘 컬럼",
     length: 300,
   })
   iconUrl: string | null;

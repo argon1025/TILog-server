@@ -16,51 +16,47 @@ export class Comments {
   @PrimaryGeneratedColumn({
     type: "bigint",
     name: "id",
-    comment: "ì½”ë©˜íŠ¸ ì•„ì´ë””",
+    comment: "코멘트 아이디",
   })
   id: string;
 
-  @Column("int", {
-    name: "usersID",
-    comment: "ìœ ì € ì•„ì´ë””",
-    unsigned: true,
-  })
+  @Column("int", { name: "usersID", comment: "유저 아이디", unsigned: true })
   usersId: number;
 
-  @Column("bigint", { name: "postsID", comment: "í¬ìŠ¤íŠ¸ ì•„ì´ë””" })
+  @Column("bigint", { name: "postsID", comment: "포스트 아이디" })
   postsId: string;
 
-  @Column("varchar", { name: "htmlContent", comment: "ì½”ë©˜íŠ¸", length: 300 })
+  @Column("varchar", { name: "htmlContent", comment: "코멘트", length: 300 })
   htmlContent: string;
 
   @Column("bigint", {
     name: "replyTo",
     nullable: true,
-    comment: "ë‹µê¸€ PK, ì•„ë‹ê²½ìš° NULL",
+    comment: "답글 PK, 아닐경우 NULL",
   })
   replyTo: string | null;
 
   @Column("tinyint", {
     name: "replyLevel",
-    comment: "ë£¨íŠ¸ ì½”ë©˜íŠ¸ íŒë³„ 0,1",
+    comment: "루트 코멘트 판별 0,1",
     default: () => "'0'",
   })
   replyLevel: number;
 
-  @Column("datetime", { name: "createdAt", comment: "ì½”ë©˜íŠ¸ ìƒì„±ì¼" })
+  @Column("datetime", { name: "createdAt", comment: "코멘트 생성일" })
   createdAt: Date;
 
   @Column("datetime", {
     name: "updatedAt",
     nullable: true,
-    comment: "ì½”ë©˜íŠ¸ ìˆ˜ì •ì¼",
+    comment: "코멘트 수정일",
   })
   updatedAt: Date | null;
 
   @Column("datetime", {
     name: "deletedAt",
     nullable: true,
-    comment: "ì½”ë©˜íŠ¸ ì‚­ì œì¼",
+    comment: "코멘트 삭제일",
   })
   deletedAt: Date | null;
 

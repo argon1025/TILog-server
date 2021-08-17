@@ -16,21 +16,17 @@ export class PostLike {
   @PrimaryGeneratedColumn({
     type: "bigint",
     name: "id",
-    comment: "í¬ìŠ¤íŠ¸ì¢‹ì•„ìš” ì•„ì´ë””",
+    comment: "포스트좋아요 아이디",
   })
   id: string;
 
-  @Column("int", {
-    name: "usersID",
-    comment: "ìœ ì € ì•„ì´ë””",
-    unsigned: true,
-  })
+  @Column("int", { name: "usersID", comment: "유저 아이디", unsigned: true })
   usersId: number;
 
-  @Column("bigint", { name: "postsID", comment: "í¬ìŠ¤íŠ¸ ì•„ì´ë””" })
+  @Column("bigint", { name: "postsID", comment: "포스트 아이디" })
   postsId: string;
 
-  @Column("datetime", { name: "likedAt", comment: "ì¢‹ì•„ìš” ëˆ„ë¥¸ì¼" })
+  @Column("datetime", { name: "likedAt", comment: "좋아요 누른일" })
   likedAt: Date;
 
   @ManyToOne(() => Posts, (posts) => posts.postLikes, {

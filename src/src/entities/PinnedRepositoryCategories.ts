@@ -24,21 +24,21 @@ export class PinnedRepositoryCategories {
   @PrimaryGeneratedColumn({
     type: "int",
     name: "id",
-    comment: "í•€ëœ ë ˆí¬ ì¹´í…Œê³ ë¦¬ ì•„ì´ë””",
+    comment: "핀된 레포 카테고리 아이디",
     unsigned: true,
   })
   id: number;
 
   @Column("int", {
     name: "categoryID",
-    comment: "í•€ ì¹´í…Œê³ ë¦¬ ê´€ê³„ì„¤ì • PK",
+    comment: "핀 카테고리 관계설정 PK",
     unsigned: true,
   })
   categoryId: number;
 
   @Column("int", {
     name: "pinnedRepositoriesID",
-    comment: "í•€ëœ ë ˆí¬ ì•„ì´ë””",
+    comment: "핀된 레포 아이디",
     unsigned: true,
   })
   pinnedRepositoriesId: number;

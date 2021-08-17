@@ -14,36 +14,36 @@ export class ImageUpload {
   @PrimaryGeneratedColumn({
     type: "bigint",
     name: "id",
-    comment: "ì´ë¯¸ì§€ ì—…ë¡œë“œ ì•„ì´ë””",
+    comment: "이미지 업로드 아이디",
   })
   id: string;
 
   @Column("int", {
     name: "usersID",
     nullable: true,
-    comment: "ìœ ì € ì•„ì´ë””",
+    comment: "유저 아이디",
     unsigned: true,
   })
   usersId: number | null;
 
   @Column("varchar", {
     name: "pathUrl",
-    comment: "ì´ë¯¸ì§€ URL ì •ë³´",
+    comment: "이미지 URL 정보",
     length: 300,
   })
   pathUrl: string;
 
-  @Column("int", { name: "fileSizeBytes", comment: "íŒŒì¼ ì‚¬ì´ì¦ˆ ì •ë³´" })
+  @Column("int", { name: "fileSizeBytes", comment: "파일 사이즈 정보" })
   fileSizeBytes: number;
 
   @Column("varchar", {
     name: "fileType",
-    comment: "íŒŒì¼ íƒ€ìž… ì •ë³´",
+    comment: "파일 타입 정보",
     length: 20,
   })
   fileType: string;
 
-  @Column("datetime", { name: "createdAt", comment: "íŒŒì¼ ì—…ë¡œë“œì¼" })
+  @Column("datetime", { name: "createdAt", comment: "파일 업로드일" })
   createdAt: Date;
 
   @ManyToOne(() => Users, (users) => users.imageUploads, {

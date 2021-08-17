@@ -16,17 +16,17 @@ export class PostsTags {
   @PrimaryGeneratedColumn({
     type: "bigint",
     name: "id",
-    comment: "í¬ìŠ¤íŠ¸íƒœê·¸ ê´€ê³„ PK",
+    comment: "포스트태그 관계 PK",
   })
   id: string;
 
-  @Column("bigint", { name: "postsID", comment: "í¬ìŠ¤íŠ¸ ì•„ì´ë””" })
+  @Column("bigint", { name: "postsID", comment: "포스트 아이디" })
   postsId: string;
 
-  @Column("bigint", { name: "tagsID", comment: "íƒœê·¸ ì•„ì´ë””" })
+  @Column("bigint", { name: "tagsID", comment: "태그 아이디" })
   tagsId: string;
 
-  @Column("datetime", { name: "createdAt", comment: "í¬ìŠ¤íŠ¸ í…Œê·¸ ìƒì„±ì¼" })
+  @Column("datetime", { name: "createdAt", comment: "포스트 테그 생성일" })
   createdAt: Date;
 
   @ManyToOne(() => Posts, (posts) => posts.postsTags, {
