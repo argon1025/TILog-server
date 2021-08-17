@@ -20,6 +20,7 @@ services:
       - MYSQL_USER=TILog
       - MYSQL_PASSWORD=1q2w3e4r
       - MYSQL_ALLOW_EMPTY_PASSWORD=false
+      - LC_ALL=C.UTF-8
     volumes:
       - "./docker/mysql/mysql-init-files/:/docker-entrypoint-initdb.d/"
       - "./docker/mysql/mysql-data:/var/lib/mysql"
