@@ -13,30 +13,9 @@ blog platform for developers only, TILog.
 [Daphne-Dev](https://github.com/Daphne-dev) Daphne-dev
 
 # Project Stack
+## ERD
+![image](https://user-images.githubusercontent.com/55491354/129714087-95a8cb3d-cb80-4a5e-92dc-ac60219d84c3.png)
 
-![download-1](https://user-images.githubusercontent.com/55491354/109424917-4a13ee00-7a29-11eb-9d9a-1696ca23c5d9.png)
-
--   Docker
--   Nginx
--   Mysql
--   NodeJS
-
-# How To Run
-
-## Clone this Project
-
-```
-git clone https://github.com/argon1025/TILog-server.git
-```
-
-## Using Docker-compose to Run This Server
-
-```
-cd ./
-docker-compose up --build
-```
-
-> Please Change the environment variable(Database password) in docker-compose.yml
 
 # Issues
 
