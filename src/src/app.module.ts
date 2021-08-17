@@ -17,6 +17,7 @@ import { PostsTags } from './entities/PostsTags';
 import { Tags } from './entities/Tags';
 import { UserblogCustomization } from './entities/UserblogCustomization';
 import { Users } from './entities/Users';
+import { PostView } from './entities/PostView';
 
 // Load ENV
 const ENV = process.env;
@@ -34,7 +35,7 @@ const ENV = process.env;
       username: ENV.DB_USERNAME,
       password: ENV.DB_PASSWORD,
       database: ENV.DB_DATABASE,
-      entities: [Users, UserblogCustomization, Tags, PostsTags, Posts, PostLike, PinnedRepositoryCategories, PinnedRepositories, ImageUpload, Comments, Category],
+      entities: [Users, UserblogCustomization, Tags, PostsTags, Posts, PostLike, PinnedRepositoryCategories, PinnedRepositories, ImageUpload, Comments, Category, PostView],
       synchronize: false,
       logging: true,
       keepConnectionAlive: true,
