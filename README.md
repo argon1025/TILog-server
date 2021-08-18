@@ -13,7 +13,7 @@ blog platform for developers only, TILog.
 [Daphne-Dev](https://github.com/Daphne-dev) Daphne-dev
 
 # Project Stack
-## ERD
+## ERD Diagram
 ![image](https://user-images.githubusercontent.com/55491354/129714087-95a8cb3d-cb80-4a5e-92dc-ac60219d84c3.png)
 
 
