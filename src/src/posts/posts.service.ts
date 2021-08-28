@@ -30,10 +30,11 @@ export class PostsService {
       await queryRunner.manager
         .createQueryBuilder()
         .useTransaction(true)
-        .setLock('pessimistic_write')
+        // .setLock('pessimistic_write')
         .insert()
         .into(Posts)
         .values([{ usersId: userID, categoryId: categoryID, title: title, thumbNaillUrl: thumbnailURL, markDownContent: markDownContent, private: isPrivate, createdAt: NOW_DATE }])
+        .updateEntity(false)
         .execute();
 
       // 변경 사항을 커밋합니다.
