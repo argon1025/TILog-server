@@ -8,23 +8,15 @@ import { UpdatePostDto } from './dto/update-post.dto';
 @Injectable()
 export class PostsService {
   constructor(@InjectRepository(Posts) private PostsRepository: Repository<Posts>) {}
-  create(createPostDto: CreatePostDto) {
-    return 'This action adds a new post';
-  }
 
-  findAll() {
-    return `This action returns all posts`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
-  }
-
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} post`;
-  }
+  // 게시글 생성
+  public createPost(userID: number, categoryID: number, title: string, thumbnailURL: string, markDownContent: string, isPrivate: boolean) {}
+  // 게시글 수정
+  public modifyPostByPostID(personalRequest: boolean, postID: number, categoryID: number, title: string, thumbnailURL: string, markDownContent: string, isPrivate: boolean) {}
+  // 게시글 리스트 리턴
+  public getPostsByUserID(personalRequest: boolean, userID: number, cursorNumber: number, contentLimit: number) {}
+  // 게시글 상세보기
+  public getPostDetailByPostID(personalRequest: boolean, postID: number) {}
+  // 게시글 삭제
+  public softDeletePostByPostID(personalRequest: boolean, postID: number) {}
 }
