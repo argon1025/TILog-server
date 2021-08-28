@@ -18,6 +18,7 @@ import { Tags } from './entities/Tags';
 import { UserblogCustomization } from './entities/UserblogCustomization';
 import { Users } from './entities/Users';
 import { PostView } from './entities/PostView';
+import { PostsModule } from './posts/posts.module';
 
 // Load ENV
 const ENV = process.env;
@@ -41,6 +42,7 @@ const ENV = process.env;
       keepConnectionAlive: true,
       autoLoadEntities: true,
     }),
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
