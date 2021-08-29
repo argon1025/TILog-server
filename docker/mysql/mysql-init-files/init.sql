@@ -24,7 +24,6 @@ CREATE TABLE users
     `mailAddress`      VARCHAR(50)     NULL        COMMENT '서비스 메일 주소', 
     `password`         VARCHAR(50)     NULL        COMMENT '사용자 암호, Oauth 사용자는 NULL', 
     `accessToken`         VARCHAR(255)   NOT  NULL        COMMENT '서비스 엑세스 토큰', 
-    `refreshToken`         VARCHAR(255)   NULL        COMMENT '서비스 리프레시 토큰', 
     `createdAt`        DATETIME        NOT NULL    COMMENT '유저 가입일', 
     `updatedAt`        DATETIME        NOT NULL    COMMENT '유저 갱신일', 
     `deletedAt`        DATETIME        NOT NULL    COMMENT '유저 삭제일', 
