@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Posts } from 'src/entities/Posts';
 import { getConnection, Repository } from 'typeorm';
+import { PostDetailDto } from './dto/Posts.Detail.DTO';
 import { PostsListDto } from './dto/Posts.List.DTO';
 
 @Injectable()
@@ -198,8 +199,82 @@ export class PostsService {
       await queryRunner.release();
     }
   }
-  // 게시글 상세보기
-  public getPostDetailByPostID(personalRequest: boolean, postID: number) {}
+
+  /**
+   * 게시글 디테일 뷰
+   * @param personalRequest
+   * @param postID
+   *
+   * 1. QueryBuilder를 사용해 질의를 작성합니다.
+   * 2. 본인이 아닐경우 비밀 게시글을 숨기는 조건을 추가합니다
+   * 3. 질의 결과와를 반환합니다
+   *
+   */
+  public async getPostDetailByPostID(personalRequest: boolean, postID: number): Promise<PostDetailDto | boolean> {
+    // 새 커넥션과 쿼리 러너객체를 생성합니다
+    const connection = getConnection();
+    const queryRunner = connection.createQueryRunner();
+
+    // 데이터 베이스에 연결합니다
+    await queryRunner.connect();
+
+    // 트랜잭션을 시작합니다.
+    await queryRunner.startTransaction();
+
+    try {
+      // 결과를 저장할 변수를 생성합니다.
+      let queryResult: Posts;
+      // 쿼리를 작성합니다
+      let query = queryRunner.manager
+        .createQueryBuilder()
+        .useTransaction(true)
+        .select('postTable.id')
+        .addSelect('postTable.usersId')
+        .addSelect('postTable.categoryId')
+        .addSelect('postTable.title')
+        .addSelect('postTable.thumbNailUrl')
+        .addSelect('postTable.viewCounts')
+        .addSelect('postTable.likes')
+        .addSelect('postTable.markDownContent')
+        .addSelect('postTable.private')
+        .addSelect('postTable.createdAt')
+        .addSelect('postTable.updatedAt')
+        // 질의할 테이블과 별칭 설정
+        .from(Posts, 'postTable')
+        // 해당 유저 아이디의
+        .where('postTable.id = :postID', { postID: postID })
+        // 소프트 딜리트가 되지 않은 게시글
+        .andWhere('postTable.deletedAt is NULL');
+
+      // 본인이 아닐경우 비밀게시글 조건을 추가합니다.
+      if (!personalRequest) {
+        query = query
+          // 비밀 게시글이 아닌
+          .andWhere('postTable.private = 0');
+      }
+
+      // 질의를 한뒤 결과를 저장합니다
+      queryResult = await query.getOne();
+
+      // 변경 사항을 커밋합니다.
+      await queryRunner.commitTransaction();
+
+      // DTO에 맞게 리턴 데이터를 정의합니다
+      let result: PostDetailDto = queryResult;
+
+      // [임시] 디버깅
+      console.log(result);
+
+      return result;
+    } catch (error) {
+      // 롤백을 실행합니다.
+      await queryRunner.rollbackTransaction();
+      return false;
+    } finally {
+      // 생성된 커넥션을 해제합니다.
+      await queryRunner.release();
+    }
+  }
 
   /**
    * 게시글 삭제
