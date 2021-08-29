@@ -112,6 +112,49 @@ export class PostsService {
   public getPostsByUserID(personalRequest: boolean, userID: number, cursorNumber: number, contentLimit: number) {}
   // 게시글 상세보기
   public getPostDetailByPostID(personalRequest: boolean, postID: number) {}
-  // 게시글 삭제
-  public softDeletePostByPostID(personalRequest: boolean, postID: number) {}
+
+  /**
+   * 게시글 삭제
+   * @param personalRequest
+   * @param postID
+   * @returns Promise<boolean>
+   *
+   * 1. 사용자 본인의 요청인지 확인합니다.-> 향후 해당 로직을 컨트롤러로 분리할 수 있습니다.
+   * 2. deleteAt 컬럼에 데이터를 추가합니다
+   *
+   */
+  public async softDeletePostByPostID(personalRequest: boolean, postID: number) {
+    // 사용자 본인의 요청인지 확인합니다.
+    if (!personalRequest) {
+      return false;
+    }
+
+    // 오늘 날자 반환
+    const NOW_DATE = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+    // 새 커넥션과 쿼리 러너객체를 생성합니다
+    const connection = getConnection();
+    const queryRunner = connection.createQueryRunner();
+
+    // 데이터 베이스에 연결합니다
+    await queryRunner.connect();
+
+    // 트랜잭션을 시작합니다.
+    await queryRunner.startTransaction();
+
+    try {
+      // 쿼리빌더를 통해 softDelete 구문을 실행합니다.
+      await queryRunner.manager.createQueryBuilder().useTransaction(true).update(Posts).set({ deletedAt: NOW_DATE }).where('id = :postID', { postID: postID }).updateEntity(false).execute();
+      // 변경 사항을 커밋합니다.
+      await queryRunner.commitTransaction();
+      return true;
+    } catch (error) {
+      // 롤백을 실행합니다.
+      await queryRunner.rollbackTransaction();
+      return false;
+    } finally {
+      // 생성된 커넥션을 해제합니다.
+      await queryRunner.release();
+    }
+  }
 }
