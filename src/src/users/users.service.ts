@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { callbackUserinfo } from 'src/auth/types/callbackUserinfo';
+import { userinfo } from 'src/auth/dto/userinfo.dto';
 import { Users } from 'src/entities/Users';
 import { Repository } from 'typeorm';
 
@@ -8,12 +8,12 @@ import { Repository } from 'typeorm';
 export class UsersService {
   constructor(@InjectRepository(Users) private userRepo: Repository<Users>) {}
   // 유저를 생성합니다.
-  createUser(userInfo: callbackUserinfo) {
-    const user = this.userRepo.create(userInfo);
-    return this.userRepo.save(user);
+  async createUser(userInfo: userinfo) {
+    const user = await this.userRepo.create(userInfo);
+    return await this.userRepo.save(user);
   }
   // 특정 유저를 검색합니다.
-  findUser(oAuthServiceId: string): Promise<Users | undefined> {
-    return this.userRepo.findOne({ oAuthServiceId });
+  async findUser(oAuthServiceId: string): Promise<Users | undefined> {
+    return await this.userRepo.findOne({ oAuthServiceId });
   }
 }
