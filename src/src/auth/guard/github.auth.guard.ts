@@ -9,7 +9,6 @@ export class GithubGuard extends AuthGuard('github') {
     const activate = (await super.canActivate(context)) as boolean;
     const request = context.switchToHttp().getRequest();
     await super.logIn(request);
-    console.log('GithubGuard');
     return activate;
   }
 }
@@ -17,7 +16,6 @@ export class GithubGuard extends AuthGuard('github') {
 @Injectable()
 export class AuthenticatedGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    console.log('AuthenticatedGuard');
     const req = context.switchToHttp().getRequest();
     return req.isAuthenticated();
   }
