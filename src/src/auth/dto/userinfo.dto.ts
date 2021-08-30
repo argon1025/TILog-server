@@ -1,4 +1,4 @@
-export type callbackUserinfo = {
+export type userinfo = {
   oAuthServiceId: string;
   userName: string;
   proFileImageURL: string;
