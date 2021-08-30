@@ -7,12 +7,28 @@ import { PostsListDto } from './dto/Posts.List.DTO';
 
 @Injectable()
 export class PostsService {
-  constructor() {}
+  /**
+   * 현재 날자와 시간을 구해 리턴합니다
+   * "2021-08-30 14:57:43"
+   * @returns
+   */
+  private nowDate(): string {
+    return new Date().toISOString().slice(0, 19).replace('T', ' ');
+  }
 
-  // 게시글 생성
+  /**
+   * 포스트 생성
+   * @param userID
+   * @param categoryID
+   * @param title
+   * @param thumbnailURL
+   * @param markDownContent
+   * @param isPrivate
+   * @returns
+   */
   public async createPost(userID: number, categoryID: number, title: string, thumbnailURL: string, markDownContent: string, isPrivate: boolean | number) {
     // 생성일자 반환
-    const NOW_DATE = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const NOW_DATE = this.nowDate();
     // Mysql TinyInt로 Boolean타입 변환
     isPrivate = isPrivate ? 1 : 0;
 
@@ -70,8 +86,8 @@ export class PostsService {
     if (!personalRequest) {
       return false;
     }
-    // 생성일자 반환
-    const NOW_DATE = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    // 수정일자
+    const NOW_DATE = this.nowDate();
     // Mysql TinyInt로 Boolean타입 변환
     isPrivate = isPrivate ? 1 : 0;
 
@@ -144,13 +160,12 @@ export class PostsService {
         .createQueryBuilder()
         .useTransaction(true)
         .select('postTable.id')
-        .addSelect('postTable.usersID')
-        .addSelect('postTable.categoryID')
+        .addSelect('postTable.usersId')
+        .addSelect('postTable.categoryId')
         .addSelect('postTable.title')
-        .addSelect('postTable.thumbNailURL')
+        .addSelect('postTable.thumbNailUrl')
         .addSelect('postTable.viewCounts')
         .addSelect('postTable.likes')
-        .addSelect('postTable.markDownContent')
         .addSelect('postTable.private')
         .addSelect('postTable.createdAt')
         .addSelect('postTable.updatedAt')
@@ -208,6 +223,10 @@ export class PostsService {
    * 1. QueryBuilder를 사용해 질의를 작성합니다.
    * 2. 본인이 아닐경우 비밀 게시글을 숨기는 조건을 추가합니다
    * 3. 질의 결과와를 반환합니다
+   *
+   * 논의 필요
+   * personalRequest로 본인 여부를 판단할것인지
+   * postID, userID를 인자로 받고 posts를 SELECT 한뒤에 posts.userID를 요청 유저 ID와 비교해서 전달할것인지
    *
    */
   public async getPostDetailByPostID(personalRequest: boolean, postID: number): Promise<PostDetailDto | boolean> {
