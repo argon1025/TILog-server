@@ -15,26 +15,36 @@ async function bootstrap() {
   const SERVER_PORT = configService.get<number>('SERVER_PORT', null);
   const SERVER_ENV = configService.get<string>('NODE_ENV', 'product');
   const SERVER_HOST = configService.get<string>('SERVER_HOST', null);
-  const client = redis.createClient({ url: 'redis://127.0.0.1:6379' });
-  const RedisStore = connectRedis(session);
-  client.on('connect', () => console.log('conecct'));
+  //CORS Setting
   app.enableCors({
     origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
+
+  // Connect Local Redis
+  const client = redis.createClient({ url: `${process.env.REDIS_HOST}:${process.env.REDIS_PORT}` });
+  // Redis Store Use Session
+  const redisStore = connectRedis(session);
+  // Redis Log
+  client.on('connect', () => console.log('Redis Connect Success'));
+  client.on('error', (error) => console.log('Redis Connect error:' + error));
+  // Session Setting
   app.use(
     session({
       cookie: {
-        maxAge: 10000 * 24, // 2시간
+        maxAge: 10000 * 24, // 24H
       },
-      secret: 'bitcoin-is-doog',
+      secret: process.env.SESSION_SECRET,
       resave: false,
       saveUninitialized: false,
-      store: new RedisStore({ client }),
+      // 세션 스토어를 레지스로 설정합니다.
+      store: new redisStore({ client }),
     }),
   );
+  // 패스포트를 구동합니다.
   app.use(passport.initialize());
+  // 세션을 연결합니다.
   app.use(passport.session());
   if (!SERVER_PORT || !SERVER_HOST) {
     Logger.error('Unable to load environment variables!');
