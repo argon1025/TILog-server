@@ -339,4 +339,5 @@ export class PostsService {
       await queryRunner.release();
     }
   }
+  public async addViewCountByPostID(postID: number, userID: string) {}
 }
