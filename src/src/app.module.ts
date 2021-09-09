@@ -20,6 +20,7 @@ import { PostView } from './entities/PostView';
 // Load Module
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { CommentModule } from './comment/comment.module';
 
 // Load ENV
 const ENV = process.env;
@@ -45,6 +46,7 @@ const ENV = process.env;
     }),
     AuthModule,
     UsersModule,
+    CommentModule,
   ],
 })
 // Add Middleware
