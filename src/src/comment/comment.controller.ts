@@ -10,7 +10,7 @@ export class CommentController {
    * 새로운 댓글을 생성합니다.
    * *인증된 유저만 코멘트를 작성할 수 있습니다.
    */
-  @Post(':postid')
+  @Post('post/:postid')
   @UseGuards(AuthenticatedGuard)
   createNewComment(@UserStats('id') userID: number, @Param('postid') postID: string, @Body('contents') contents: string) {
     return this.commentService.createNewComment(userID, postID, contents);
