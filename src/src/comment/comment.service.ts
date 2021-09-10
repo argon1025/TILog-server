@@ -13,7 +13,7 @@ export class CommentService {
    * @param contents 코멘트 내용
    * @returns
    */
-  async createComment(userID: number, postID: string, contents: string) {
+  async createNewComment(userID: number, postID: string, contents: string) {
     const now = new Date();
     return await this.commentsRepo.save({
       usersId: userID,

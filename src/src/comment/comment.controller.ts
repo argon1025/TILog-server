@@ -13,6 +13,6 @@ export class CommentController {
   @Post(':postid')
   @UseGuards(AuthenticatedGuard)
   createNewComment(@UserStats('id') userID: number, @Param('postid') postID: string, @Body('contents') contents: string) {
-    return this.commentService.createComment(userID, postID, contents);
+    return this.commentService.createNewComment(userID, postID, contents);
   }
 }
