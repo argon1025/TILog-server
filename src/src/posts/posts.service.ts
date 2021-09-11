@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Posts } from 'src/entities/Posts';
+import { PostView } from 'src/entities/PostView';
 import { getConnection, Repository } from 'typeorm';
 import { PostDetailDto } from './dto/Posts.Detail.DTO';
 import { PostsListDto } from './dto/Posts.List.DTO';
@@ -339,5 +340,73 @@ export class PostsService {
       await queryRunner.release();
     }
   }
-  public async addViewCountByPostID(postID: number, userID: string) {}
+  public async addViewCountByPostID(postID: number, userIP: string) {
+    // 새 커넥션과 쿼리 러너객체를 생성합니다
+    const connection = getConnection();
+    const queryRunner = connection.createQueryRunner();
+
+    // 데이터 베이스에 연결합니다
+    await queryRunner.connect();
+
+    // 트랜잭션을 시작합니다.
+    await queryRunner.startTransaction();
+
+    try {
+      // postView 테이블에서 해당 아이피, 포스트ID와 동일한 기록이 있는지 찾고 있을경우 에러를 반환합니다
+      // 1. Posts 게시글 viewCount를 로드 하고 For Update Rock 합니다
+      // 2. viewCount 유효성을 확인하고 카운트를 갱신합니다
+      // 3. 변경 사항을 커밋합니다.
+
+      // postView 테이블에서 동일한 기록이 있는지 확인합니다.
+      let postViewCountHistory = await queryRunner.manager
+        .createQueryBuilder()
+        .useTransaction(true)
+        .select('postView.userIP')
+        .addSelect('postView.viewedAt')
+        .from(PostView, 'postView')
+        .where('postView.postsId = :postID', { postID: postID })
+        .andWhere('postView.userIp = :userIP', { userIP: userIP })
+        // getRawOne을 하더라도 실제 쿼리에는 Limit이 걸려있지 않기 때문에 설정
+        .limit(1)
+        .getRawOne();
+
+      // 동일한 기록을 찾았을 경우 추가 작업을 하지 않습니다
+      if (!!postViewCountHistory) {
+        throw new Error('THIS_IP_ALREADY_SEEN_THE_POST');
+      }
+
+      let postViewCount = await queryRunner.manager
+        .createQueryBuilder()
+        .useTransaction(true)
+        .select('post.viewCounts')
+        .from(Posts, 'post')
+        .where('post.id = :postID', { postID: postID })
+        // getRawOne을 하더라도 실제 쿼리에는 Limit이 걸려있지 않기 때문에 설정
+        .limit(1)
+        // 공유락
+        .setLock('pessimistic_read')
+        .getRawOne();
+
+      // 작업할 post를 찾지못했을 경우
+      if (!postViewCount) {
+        throw new Error('NOT_FOUND_POST');
+      }
+
+      let VIEW_COUNT = postViewCount.post_viewCounts + 1;
+      // viewCount 유효성을 확인하고 카운트를 갱신합니다
+      await queryRunner.manager.createQueryBuilder().useTransaction(true).update(Posts).set({ viewCounts: VIEW_COUNT }).where('id = :postID', { postID: postID }).updateEntity(false).execute();
+
+      // 변경사항을 커밋합니다.
+      await queryRunner.commitTransaction();
+      return true;
+    } catch (error) {
+      console.log(error.message);
+      // 롤백을 실행합니다.
+      await queryRunner.rollbackTransaction();
+      return false;
+    } finally {
+      // 생성된 커넥션을 해제합니다.
+      await queryRunner.release();
+    }
+  }
 }
