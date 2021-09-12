@@ -16,6 +16,7 @@ import { Tags } from './entities/Tags';
 import { UserblogCustomization } from './entities/UserblogCustomization';
 import { Users } from './entities/Users';
 import { PostView } from './entities/PostView';
+import { PostsModule } from './posts/posts.module';
 
 // Load Module
 import { AuthModule } from './auth/auth.module';
@@ -47,6 +48,7 @@ const ENV = process.env;
     AuthModule,
     UsersModule,
     CommentModule,
+    PostsModule,
   ],
 })
 // Add Middleware

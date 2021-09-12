@@ -1,95 +1,87 @@
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from "typeorm";
-import { Comments } from "./Comments";
-import { PostLike } from "./PostLike";
-import { PostView } from "./PostView";
-import { Category } from "./Category";
-import { Users } from "./Users";
-import { PostsTags } from "./PostsTags";
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Comments } from './Comments';
+import { PostLike } from './PostLike';
+import { PostView } from './PostView';
+import { Category } from './Category';
+import { Users } from './Users';
+import { PostsTags } from './PostsTags';
 
-@Index("FK_posts_usersID_users_id", ["usersId"], {})
-@Index("FK_posts_categoryID_category_id", ["categoryId"], {})
-@Entity("posts", { schema: "tilog" })
+@Index('FK_posts_usersID_users_id', ['usersId'], {})
+@Index('FK_posts_categoryID_category_id', ['categoryId'], {})
+@Entity('posts', { schema: 'tilog' })
 export class Posts {
   @PrimaryGeneratedColumn({
-    type: "bigint",
-    name: "id",
-    comment: "포스트 아이디",
+    type: 'bigint',
+    name: 'id',
+    comment: '포스트 아이디',
   })
   id: string;
 
-  @Column("int", { name: "usersID", comment: "유저 아이디", unsigned: true })
+  @Column('int', { name: 'usersID', comment: '유저 아이디', unsigned: true })
   usersId: number;
 
-  @Column("int", {
-    name: "categoryID",
-    comment: "카테고리 아이디",
+  @Column('int', {
+    name: 'categoryID',
+    comment: '카테고리 아이디',
     unsigned: true,
   })
   categoryId: number;
 
-  @Column("varchar", { name: "title", comment: "게시글 제목", length: 50 })
+  @Column('varchar', { name: 'title', comment: '게시글 제목', length: 50 })
   title: string;
 
-  @Column("varchar", {
-    name: "thumbNaillURL",
+  @Column('varchar', {
+    name: 'thumbNailURL',
     nullable: true,
-    comment: "썸네일 이미지 URL",
+    comment: '썸네일 이미지 URL',
     length: 300,
   })
-  thumbNaillUrl: string | null;
+  thumbNailUrl: string | null;
 
-  @Column("int", {
-    name: "viewcounts",
-    comment: "조회수",
+  @Column('int', {
+    name: 'viewCounts',
+    comment: '조회수',
     unsigned: true,
     default: () => "'0'",
   })
-  viewcounts: number;
+  viewCounts: number;
 
-  @Column("int", {
-    name: "lkes",
-    comment: "좋아요",
+  @Column('int', {
+    name: 'likes',
+    comment: '좋아요',
     unsigned: true,
     default: () => "'0'",
   })
-  lkes: number;
+  likes: number;
 
-  @Column("mediumtext", {
-    name: "markDownContent",
+  @Column('mediumtext', {
+    name: 'markDownContent',
     nullable: true,
-    comment: "마크 다운 형식의 본문",
+    comment: '마크 다운 형식의 본문',
   })
   markDownContent: string | null;
 
-  @Column("tinyint", {
-    name: "private",
-    comment: "비밀글 여부",
+  @Column('tinyint', {
+    name: 'private',
+    comment: '비밀글 여부',
     default: () => "'0'",
   })
   private: number;
 
-  @Column("datetime", { name: "createdAt", comment: "게시글 최초 작성일" })
+  @Column('datetime', { name: 'createdAt', comment: '게시글 최초 작성일' })
   createdAt: Date;
 
-  @Column("datetime", {
-    name: "updatedAt",
+  @Column('datetime', {
+    name: 'updatedAt',
     nullable: true,
-    comment: "게시글 마지막 업데이트일",
+    comment: '게시글 마지막 업데이트일',
   })
   updatedAt: Date | null;
 
-  @Column("datetime", {
-    name: "deletedAt",
+  @Column('datetime', {
+    name: 'deletedAt',
     nullable: true,
-    comment: "게시글 삭제일",
+    comment: '게시글 삭제일',
   })
   deletedAt: Date | null;
 
@@ -103,17 +95,17 @@ export class Posts {
   postViews: PostView[];
 
   @ManyToOne(() => Category, (category) => category.posts, {
-    onDelete: "CASCADE",
-    onUpdate: "CASCADE",
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
-  @JoinColumn([{ name: "categoryID", referencedColumnName: "id" }])
+  @JoinColumn([{ name: 'categoryID', referencedColumnName: 'id' }])
   category: Category;
 
   @ManyToOne(() => Users, (users) => users.posts, {
-    onDelete: "CASCADE",
-    onUpdate: "CASCADE",
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
-  @JoinColumn([{ name: "usersID", referencedColumnName: "id" }])
+  @JoinColumn([{ name: 'usersID', referencedColumnName: 'id' }])
   users: Users;
 
   @OneToMany(() => PostsTags, (postsTags) => postsTags.posts)
