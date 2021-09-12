@@ -27,6 +27,7 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^8.0.6",
     "@nestjs/typeorm": "^8.0.2",
+    "connect-redis": "^6.0.0",
     "cross-env": "^7.0.3",
     "express-session": "^1.17.2",
     "mysql2": "^2.3.0",
