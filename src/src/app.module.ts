@@ -1,8 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { LoggerMiddleware } from './middlewares/Logger.middleware';
 
 // Load Entities
@@ -19,6 +17,11 @@ import { UserblogCustomization } from './entities/UserblogCustomization';
 import { Users } from './entities/Users';
 import { PostView } from './entities/PostView';
 import { PostsModule } from './posts/posts.module';
+
+// Load Module
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { CommentModule } from './comment/comment.module';
 
 // Load ENV
 const ENV = process.env;
@@ -42,10 +45,11 @@ const ENV = process.env;
       keepConnectionAlive: true,
       autoLoadEntities: true,
     }),
+    AuthModule,
+    UsersModule,
+    CommentModule,
     PostsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 // Add Middleware
 export class AppModule implements NestModule {
