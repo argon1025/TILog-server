@@ -341,6 +341,9 @@ export class PostsService {
     }
   }
   public async addViewCountByPostID(postID: number, userIP: string) {
+    // 오늘 날자 반환
+    const NOW_DATE = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
     // 새 커넥션과 쿼리 러너객체를 생성합니다
     const connection = getConnection();
     const queryRunner = connection.createQueryRunner();
@@ -395,7 +398,16 @@ export class PostsService {
       let VIEW_COUNT = postViewCount.post_viewCounts + 1;
       // viewCount 유효성을 확인하고 카운트를 갱신합니다
       await queryRunner.manager.createQueryBuilder().useTransaction(true).update(Posts).set({ viewCounts: VIEW_COUNT }).where('id = :postID', { postID: postID }).updateEntity(false).execute();
-
+      // postView 테이블에 조회 내역을 기록합니다
+      await queryRunner.manager
+        .createQueryBuilder()
+        .useTransaction(true)
+        .insert()
+        .into(PostView)
+        // postID -> typeORM에서 String->bingInt로 자동 매핑됩니다.
+        .values([{ userIp: userIP, postsId: String(postID), viewedAt: NOW_DATE }])
+        .updateEntity(false)
+        .execute();
       // 변경사항을 커밋합니다.
       await queryRunner.commitTransaction();
       return true;
