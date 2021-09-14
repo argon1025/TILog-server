@@ -361,7 +361,7 @@ export class PostsService {
       // 3. 변경 사항을 커밋합니다.
 
       // postView 테이블에서 동일한 기록이 있는지 확인합니다.
-      let postViewCountHistory = await queryRunner.manager
+      const postViewCountHistory = await queryRunner.manager
         .createQueryBuilder()
         .useTransaction(true)
         .select('postView.userIP')
@@ -378,7 +378,7 @@ export class PostsService {
         throw new Error('THIS_IP_ALREADY_SEEN_THE_POST');
       }
 
-      let postViewCount = await queryRunner.manager
+      const postViewCount = await queryRunner.manager
         .createQueryBuilder()
         .useTransaction(true)
         .select('post.viewCounts')
@@ -395,7 +395,7 @@ export class PostsService {
         throw new Error('NOT_FOUND_POST');
       }
 
-      let VIEW_COUNT = postViewCount.post_viewCounts + 1;
+      const VIEW_COUNT = postViewCount.post_viewCounts + 1;
       // viewCount 유효성을 확인하고 카운트를 갱신합니다
       await queryRunner.manager.createQueryBuilder().useTransaction(true).update(Posts).set({ viewCounts: VIEW_COUNT }).where('id = :postID', { postID: postID }).updateEntity(false).execute();
       // postView 테이블에 조회 내역을 기록합니다
