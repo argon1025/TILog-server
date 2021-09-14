@@ -27,7 +27,14 @@ export class PostsService {
    * @param isPrivate
    * @returns
    */
-  public async createPost(userID: number, categoryID: number, title: string, thumbnailURL: string, markDownContent: string, isPrivate: boolean | number) {
+  public async createPost(
+    userID: number,
+    categoryID: number,
+    title: string,
+    thumbnailURL: string,
+    markDownContent: string,
+    isPrivate: boolean | number,
+  ) {
     // 생성일자 반환
     const NOW_DATE = this.nowDate();
     // Mysql TinyInt로 Boolean타입 변환
@@ -50,7 +57,17 @@ export class PostsService {
         // .setLock('pessimistic_write')
         .insert()
         .into(Posts)
-        .values([{ usersId: userID, categoryId: categoryID, title: title, thumbNailUrl: thumbnailURL, markDownContent: markDownContent, private: isPrivate, createdAt: NOW_DATE }])
+        .values([
+          {
+            usersId: userID,
+            categoryId: categoryID,
+            title: title,
+            thumbNailUrl: thumbnailURL,
+            markDownContent: markDownContent,
+            private: isPrivate,
+            createdAt: NOW_DATE,
+          },
+        ])
         .updateEntity(false)
         .execute();
 
@@ -82,7 +99,15 @@ export class PostsService {
    * 2. 게시글을 수정합니다.
    *
    */
-  public async modifyPostByPostID(personalRequest: boolean, postID: number, categoryID: number, title: string, thumbnailURL: string, markDownContent: string, isPrivate: boolean | number) {
+  public async modifyPostByPostID(
+    personalRequest: boolean,
+    postID: number,
+    categoryID: number,
+    title: string,
+    thumbnailURL: string,
+    markDownContent: string,
+    isPrivate: boolean | number,
+  ) {
     // 사용자 본인의 요청인지 확인합니다.
     if (!personalRequest) {
       return false;
@@ -108,7 +133,14 @@ export class PostsService {
         .createQueryBuilder()
         .useTransaction(true)
         .update(Posts)
-        .set({ categoryId: categoryID, title: title, thumbNailUrl: thumbnailURL, markDownContent: markDownContent, private: isPrivate, updatedAt: NOW_DATE })
+        .set({
+          categoryId: categoryID,
+          title: title,
+          thumbNailUrl: thumbnailURL,
+          markDownContent: markDownContent,
+          private: isPrivate,
+          updatedAt: NOW_DATE,
+        })
         .where('id = :postID', { postID: postID })
         .updateEntity(false)
         .execute();
@@ -142,7 +174,12 @@ export class PostsService {
    * 3. 질의 결과와 다음 cursorNumber를 반환합니다
    *
    */
-  public async getPostsByUserID(personalRequest: boolean, userID: number, cursorNumber: number, contentLimit: number): Promise<PostsListDto | boolean> {
+  public async getPostsByUserID(
+    personalRequest: boolean,
+    userID: number,
+    cursorNumber: number,
+    contentLimit: number,
+  ): Promise<PostsListDto | boolean> {
     // 새 커넥션과 쿼리 러너객체를 생성합니다
     const connection = getConnection();
     const queryRunner = connection.createQueryRunner();
@@ -327,7 +364,14 @@ export class PostsService {
 
     try {
       // 쿼리빌더를 통해 softDelete 구문을 실행합니다.
-      await queryRunner.manager.createQueryBuilder().useTransaction(true).update(Posts).set({ deletedAt: NOW_DATE }).where('id = :postID', { postID: postID }).updateEntity(false).execute();
+      await queryRunner.manager
+        .createQueryBuilder()
+        .useTransaction(true)
+        .update(Posts)
+        .set({ deletedAt: NOW_DATE })
+        .where('id = :postID', { postID: postID })
+        .updateEntity(false)
+        .execute();
       // 변경 사항을 커밋합니다.
       await queryRunner.commitTransaction();
       return true;
@@ -397,7 +441,14 @@ export class PostsService {
 
       const VIEW_COUNT = postViewCount.post_viewCounts + 1;
       // viewCount 유효성을 확인하고 카운트를 갱신합니다
-      await queryRunner.manager.createQueryBuilder().useTransaction(true).update(Posts).set({ viewCounts: VIEW_COUNT }).where('id = :postID', { postID: postID }).updateEntity(false).execute();
+      await queryRunner.manager
+        .createQueryBuilder()
+        .useTransaction(true)
+        .update(Posts)
+        .set({ viewCounts: VIEW_COUNT })
+        .where('id = :postID', { postID: postID })
+        .updateEntity(false)
+        .execute();
       // postView 테이블에 조회 내역을 기록합니다
       await queryRunner.manager
         .createQueryBuilder()
