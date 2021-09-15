@@ -15,42 +15,52 @@ async function bootstrap() {
   const SERVER_PORT = configService.get<number>('SERVER_PORT', null);
   const SERVER_ENV = configService.get<string>('NODE_ENV', 'product');
   const SERVER_HOST = configService.get<string>('SERVER_HOST', null);
+  // CORS config
+  const CORS_METHOD = configService.get<boolean>('CORS_METHOD', null);
+  const CORS_ORIGIN = configService.get<boolean>('CORS_ORIGIN', null);
+  const CORS_CREDENTIALS = configService.get<boolean>('CORS_CREDENTIALS', null);
+  // Redis config
+  const REDIS_HOST = configService.get<string>('REDIS_HOST', null);
+  const REDIS_PORT = configService.get<string>('REDIS_PORT', null);
+  //Ssession config
+  const SESSION_COOKIE_MAXAGE = configService.get<string>('SESSION_COOKIE_MAXAGE', null);
+  const SESSION_SECRET = configService.get<string>('SESSION_SECRET', null);
+  const SESSION_RESAVE = configService.get<boolean>('SESSION_RESAVE', null);
+  const SESSION_SAVEUNINITIALIZED = configService.get<boolean>('SESSION_SAVEUNINITIALIZED', null);
+
   //CORS Setting
   app.enableCors({
-    origin: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,
+    origin: CORS_ORIGIN,
+    methods: CORS_METHOD,
+    credentials: CORS_CREDENTIALS,
   });
 
-  // Redis Setting
   // Connect Local Redis
-  const client = redis.createClient({ url: `${process.env.REDIS_HOST}:${process.env.REDIS_PORT}` });
+  const client = redis.createClient({ url: `${REDIS_HOST}:${REDIS_PORT}` });
   // Redis Store Use Session
   const redisStore = connectRedis(session);
   // Redis Log
   client.on('connect', () => console.log('Redis Connect Success'));
-  client.on('error', (error) => console.log('Redis Connect error:' + error));
-
+  client.on('error', (error) => {
+    throw new Error(error);
+  });
   // Session Setting
   app.use(
     session({
       cookie: {
-        maxAge: 10000 * 24, // 24H
+        maxAge: parseInt(SESSION_COOKIE_MAXAGE),
       },
-      secret: process.env.SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
+      secret: SESSION_SECRET,
+      resave: SESSION_RESAVE,
+      saveUninitialized: SESSION_SAVEUNINITIALIZED,
       // 세션 스토어를 레지스로 설정합니다.
       store: new redisStore({ client }),
     }),
   );
-
-  // Passport Setting
   // 패스포트를 구동합니다.
   app.use(passport.initialize());
   // 세션을 연결합니다.
   app.use(passport.session());
-
   if (!SERVER_PORT || !SERVER_HOST) {
     Logger.error('Unable to load environment variables!');
     throw new Error('Unable to load environment variables!');
