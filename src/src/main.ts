@@ -18,39 +18,36 @@ async function bootstrap() {
   //CORS Setting
   app.enableCors({
     origin: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    methods: process.env.CORS_METHOD,
     credentials: true,
   });
 
-  // Redis Setting
   // Connect Local Redis
   const client = redis.createClient({ url: `${process.env.REDIS_HOST}:${process.env.REDIS_PORT}` });
   // Redis Store Use Session
   const redisStore = connectRedis(session);
   // Redis Log
   client.on('connect', () => console.log('Redis Connect Success'));
-  client.on('error', (error) => console.log('Redis Connect error:' + error));
-
+  client.on('error', (error) => {
+    throw new Error(error);
+  });
   // Session Setting
   app.use(
     session({
       cookie: {
-        maxAge: 10000 * 24, // 24H
+        maxAge: parseInt(process.env.SESSION_COOKIE_MAXAGE),
       },
       secret: process.env.SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
+      resave: process.env.SESSION_RESAVE,
+      saveUninitialized: process.env.SESSION_SAVEUNINITIALIZED,
       // 세션 스토어를 레지스로 설정합니다.
       store: new redisStore({ client }),
     }),
   );
-
-  // Passport Setting
   // 패스포트를 구동합니다.
   app.use(passport.initialize());
   // 세션을 연결합니다.
   app.use(passport.session());
-
   if (!SERVER_PORT || !SERVER_HOST) {
     Logger.error('Unable to load environment variables!');
     throw new Error('Unable to load environment variables!');
