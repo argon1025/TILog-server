@@ -15,15 +15,28 @@ async function bootstrap() {
   const SERVER_PORT = configService.get<number>('SERVER_PORT', null);
   const SERVER_ENV = configService.get<string>('NODE_ENV', 'product');
   const SERVER_HOST = configService.get<string>('SERVER_HOST', null);
+  // CORS config
+  const CORS_METHOD = configService.get<boolean>('CORS_METHOD', null);
+  const CORS_ORIGIN = configService.get<boolean>('CORS_ORIGIN', null);
+  const CORS_CREDENTIALS = configService.get<boolean>('CORS_CREDENTIALS', null);
+  // Redis config
+  const REDIS_HOST = configService.get<string>('REDIS_HOST', null);
+  const REDIS_PORT = configService.get<string>('REDIS_PORT', null);
+  //Ssession config
+  const SESSION_COOKIE_MAXAGE = configService.get<string>('SESSION_COOKIE_MAXAGE', null);
+  const SESSION_SECRET = configService.get<string>('SESSION_SECRET', null);
+  const SESSION_RESAVE = configService.get<boolean>('SESSION_RESAVE', null);
+  const SESSION_SAVEUNINITIALIZED = configService.get<boolean>('SESSION_SAVEUNINITIALIZED', null);
+
   //CORS Setting
   app.enableCors({
-    origin: true,
-    methods: process.env.CORS_METHOD,
-    credentials: true,
+    origin: CORS_ORIGIN,
+    methods: CORS_METHOD,
+    credentials: CORS_CREDENTIALS,
   });
 
   // Connect Local Redis
-  const client = redis.createClient({ url: `${process.env.REDIS_HOST}:${process.env.REDIS_PORT}` });
+  const client = redis.createClient({ url: `${REDIS_HOST}:${REDIS_PORT}` });
   // Redis Store Use Session
   const redisStore = connectRedis(session);
   // Redis Log
@@ -35,11 +48,11 @@ async function bootstrap() {
   app.use(
     session({
       cookie: {
-        maxAge: parseInt(process.env.SESSION_COOKIE_MAXAGE),
+        maxAge: parseInt(SESSION_COOKIE_MAXAGE),
       },
-      secret: process.env.SESSION_SECRET,
-      resave: process.env.SESSION_RESAVE,
-      saveUninitialized: process.env.SESSION_SAVEUNINITIALIZED,
+      secret: SESSION_SECRET,
+      resave: SESSION_RESAVE,
+      saveUninitialized: SESSION_SAVEUNINITIALIZED,
       // 세션 스토어를 레지스로 설정합니다.
       store: new redisStore({ client }),
     }),
