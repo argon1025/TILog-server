@@ -19,6 +19,7 @@ import { UserblogCustomization } from './entities/UserblogCustomization';
 import { Users } from './entities/Users';
 import { PostView } from './entities/PostView';
 import { PostsModule } from './posts/posts.module';
+import { AuthModule } from './auth/auth.module';
 
 // Load ENV
 const ENV = process.env;
@@ -43,6 +44,7 @@ const ENV = process.env;
       autoLoadEntities: true,
     }),
     PostsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
