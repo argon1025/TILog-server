@@ -20,6 +20,7 @@ import { Users } from './entities/Users';
 import { PostView } from './entities/PostView';
 import { PostsModule } from './posts/posts.module';
 import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
 
 // Load ENV
 const ENV = process.env;
@@ -45,6 +46,7 @@ const ENV = process.env;
     }),
     PostsModule,
     AuthModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
