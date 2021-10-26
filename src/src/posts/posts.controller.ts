@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException } from '@nestjs/common';
+import { PostNotFound } from 'src/ExceptionFilters/Errors/Posts/Post.error';
 import { PostsService } from './posts.service';
 
 @Controller('posts')
@@ -7,7 +8,15 @@ export class PostsController {
 
   @Get()
   async create(@Body() createPostDto: any) {
-    await this.postsService.getPostsByUserID(true, 1, 0, 10);
+    try {
+      console.log('실행됨');
+      this.postsService.postErrorTest();
+    } catch (errorData) {
+      // 에러 종류 특정
+      if (errorData instanceof PostNotFound) {
+        throw new HttpException(errorData, errorData.codeNumber);
+      }
+    }
     return 'this.postsService.create(createPostDto)';
   }
 }

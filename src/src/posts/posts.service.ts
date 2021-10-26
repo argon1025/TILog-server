@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Posts } from 'src/entities/Posts';
 import { PostView } from 'src/entities/PostView';
+import { PostNotFound } from 'src/ExceptionFilters/Errors/Posts/Post.error';
 import { getConnection, Repository } from 'typeorm';
 import { PostDetailDto } from './dto/Posts.Detail.DTO';
 import { PostsListDto } from './dto/Posts.List.DTO';
@@ -15,6 +16,9 @@ export class PostsService {
    */
   private nowDate(): string {
     return new Date().toISOString().slice(0, 19).replace('T', ' ');
+  }
+  public postErrorTest() {
+    throw new PostNotFound();
   }
 
   /**
