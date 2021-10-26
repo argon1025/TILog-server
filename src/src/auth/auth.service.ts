@@ -18,7 +18,7 @@ export class AuthService {
     // 깃허브 아이디
     const { oAuthServiceId } = userinfo;
     // DB에 해당하는 깃허브 아이디 찾기
-    const user = await this.userRepo.findOne({ oAuthServiceId });
+    const user = await this.usersService.findUser(oAuthServiceId);
     // 서비스에 가입되어있는 사용자인지 확인
     if (!user) {
       // 없으면 DB에 추가 후 유저정보 반환
