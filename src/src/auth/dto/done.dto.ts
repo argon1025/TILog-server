@@ -1,3 +1,3 @@
-import { Users } from 'src/entities/Users';
+import { SessionInfo } from './session-info.dto';
 
-export type Done = (err: Error, users: Users) => void;
+export type Done = (err: Error, users: SessionInfo) => void;
