@@ -6,6 +6,7 @@ import * as session from 'express-session';
 import * as passport from 'passport';
 import * as redis from 'redis';
 import * as connectRedis from 'connect-redis';
+import { HttpExceptionFilter } from './ExceptionFilters/HttpException.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -57,10 +58,16 @@ async function bootstrap() {
       store: new redisStore({ client }),
     }),
   );
+
   // 패스포트를 구동합니다.
   app.use(passport.initialize());
+
   // 세션을 연결합니다.
   app.use(passport.session());
+
+  // ExceptionFilter
+  app.useGlobalFilters(new HttpExceptionFilter());
+
   if (!SERVER_PORT || !SERVER_HOST) {
     Logger.error('Unable to load environment variables!');
     throw new Error('Unable to load environment variables!');
