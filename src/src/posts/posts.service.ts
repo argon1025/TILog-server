@@ -1,22 +1,60 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Posts } from 'src/entities/Posts';
-import { PostView } from 'src/entities/PostView';
-import { PostNotFound } from 'src/ExceptionFilters/Errors/Posts/Post.error';
-import { Connection, getConnection, Repository } from 'typeorm';
-import { PostDetailDto } from './dto/Posts.Detail.DTO';
-import { PostsListDto } from './dto/Posts.List.DTO';
+import { PostAuthorNotFound } from 'src/ExceptionFilters/Errors/Posts/Post.error';
+import { Connection, Repository } from 'typeorm';
+import { GetPostAuthorDto, GetPostAuthorResponseDto } from './dto/Services/GetPostAuthor.DTO';
 
 @Injectable()
 export class PostsService {
-  constructor(private connection: Connection) {}
+  constructor(@InjectRepository(Posts) private postsRepository: Repository<Posts>, private connection: Connection) {}
 
   /**
-   * 포스트를 작성자 데이터베이스 아이디를 요청합니다.
+   * 포스트 작성자를 조회합니다
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async getPostAuthor() {}
+  public async getPostAuthor(getPostAuthorData: GetPostAuthorDto): Promise<GetPostAuthorResponseDto | PostAuthorNotFound> {
+    // 쿼리러너 객체 생성
+    const queryRunner = this.connection.createQueryRunner();
+
+    // 데이터 베이스 연결
+    await queryRunner.connect();
+
+    // 트랜잭션 시작
+    await queryRunner.startTransaction();
+
+    try {
+      // 쿼리 작성
+      const query = queryRunner.manager
+        .createQueryBuilder()
+        .select('postTable.usersId')
+        .from(Posts, 'postTable')
+        .where('postTable.id = :postId', { postId: getPostAuthorData.id });
+
+      /**
+       * @Returns Posts { usersId: 1 }
+       */
+      const queryResult = await query.getOneOrFail();
+
+      // DTO Mapper
+      let resultData = new GetPostAuthorResponseDto();
+      resultData.usersId = queryResult.usersId;
+
+      // 트랜잭션 커밋
+      await queryRunner.commitTransaction();
+
+      return resultData;
+    } catch (error) {
+      // 트랜잭션 롤백
+      await queryRunner.rollbackTransaction();
+      // 에러
+      throw new PostAuthorNotFound('service.post.getPostAuthor 에러입니다.');
+    } finally {
+      // 데이터베이스 커넥션 해제
+      await queryRunner.release();
+    }
+  }
 
   /**
    * 포스트를 생성 합니다.
