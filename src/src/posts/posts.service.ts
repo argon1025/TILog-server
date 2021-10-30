@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Posts } from 'src/entities/Posts';
-import { PostAuthorNotFound } from 'src/ExceptionFilters/Errors/Posts/Post.error';
+import { PostWriterNotFound } from 'src/ExceptionFilters/Errors/Posts/Post.error';
 import { Connection, Repository } from 'typeorm';
-import { GetPostAuthorDto, GetPostAuthorResponseDto } from './dto/Services/GetPostAuthor.DTO';
+import { GetPostWriterDto, GetPostWriterResponseDto } from './dto/Services/GetPostWriter.DTO';
 
 @Injectable()
 export class PostsService {
@@ -14,7 +14,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async getPostAuthor(getPostAuthorData: GetPostAuthorDto): Promise<GetPostAuthorResponseDto | PostAuthorNotFound> {
+  public async getPostWriterId(getPostWriterData: GetPostWriterDto): Promise<GetPostWriterResponseDto | PostWriterNotFound> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -30,15 +30,15 @@ export class PostsService {
         .createQueryBuilder()
         .select('postTable.usersId')
         .from(Posts, 'postTable')
-        .where('postTable.id = :postId', { postId: getPostAuthorData.id });
+        .where('postTable.id = :postId', { postId: getPostWriterData.id });
 
       /**
        * @Returns Posts { usersId: 1 }
        */
       const queryResult = await query.getOneOrFail();
 
-      // DTO Mapper
-      let resultData = new GetPostAuthorResponseDto();
+      // DTO Mapping
+      let resultData = new GetPostWriterResponseDto();
       resultData.usersId = queryResult.usersId;
 
       // 트랜잭션 커밋
@@ -49,7 +49,7 @@ export class PostsService {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
       // 에러
-      throw new PostAuthorNotFound('service.post.getPostAuthor 에러입니다.');
+      throw new PostWriterNotFound('service.post.getPostWriter 에러입니다.');
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
