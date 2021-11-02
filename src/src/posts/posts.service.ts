@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Posts } from 'src/entities/Posts';
-import { PostWriterNotFound } from 'src/ExceptionFilters/Errors/Posts/Post.error';
+import { Posts } from '../entities/Posts';
+import { PostWriterNotFound } from '../ExceptionFilters/Errors/Posts/Post.error';
 import { Connection, Repository } from 'typeorm';
 import { GetPostWriterDto, GetPostWriterResponseDto } from './dto/Services/GetPostWriter.DTO';
 
@@ -30,7 +30,8 @@ export class PostsService {
         .createQueryBuilder()
         .select('postTable.usersId')
         .from(Posts, 'postTable')
-        .where('postTable.id = :postId', { postId: getPostWriterData.id });
+        .where('postTable.id = :postId', { postId: getPostWriterData.id })
+        .maxExecutionTime(1000);
 
       /**
        * @Returns Posts { usersId: 1 }
