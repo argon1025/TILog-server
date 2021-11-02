@@ -9,8 +9,17 @@ export class PostsController {
   @Get()
   async create(@Body() createPostDto: any) {
     try {
+      console.log(await this.postsService.getPostWriterId({ id: '123' }));
+    } catch (error) {
+      console.log(error);
+      if ('codeText' in error) {
+        console.log('!!');
+      }
+    }
+    this.postsService.getPostWriterId({ id: '1' });
+    try {
       console.log('실행됨');
-      this.postsService.postErrorTest();
+      //this.postsService.postErrorTest();
     } catch (errorData) {
       // 에러 종류 특정
       if (errorData instanceof PostNotFound) {
