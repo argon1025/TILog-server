@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Posts } from '../entities/Posts';
 import { PostWriterNotFound } from '../ExceptionFilters/Errors/Posts/Post.error';
-import { Connection, Repository } from 'typeorm';
+import { Connection } from 'typeorm';
 import { GetPostWriterDto, GetPostWriterResponseDto } from './dto/Services/GetPostWriter.DTO';
 
 @Injectable()
 export class PostsService {
-  constructor(@InjectRepository(Posts) private postsRepository: Repository<Posts>, private connection: Connection) {}
+  constructor(private connection: Connection) {}
 
   /**
    * 포스트 작성자를 조회합니다
