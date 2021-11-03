@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Posts } from '../entities/Posts';
-import { PostCreateFail, PostWriterNotFound } from '../ExceptionFilters/Errors/Posts/Post.error';
+import { PostCreateFail, PostUpdateFail, PostWriterNotFound } from '../ExceptionFilters/Errors/Posts/Post.error';
 import { Connection } from 'typeorm';
 import { GetPostWriterDto, GetPostWriterResponseDto } from './dto/Services/GetPostWriter.DTO';
 import { CreatePostDto } from './dto/Services/CreatePost.DTO';
 import Time from '../utilities/Time.utility';
+import { UpdatePostDto } from './dto/Services/UpdatePost.DTO';
+import { timeLog } from 'console';
 
 @Injectable()
 export class PostsService {
@@ -129,7 +131,56 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async updatePost() {}
+  public async updatePost(postData: UpdatePostDto) {
+    // 쿼리러너 객체 생성
+    const queryRunner = this.connection.createQueryRunner();
+
+    // 데이터 베이스 연결
+    await queryRunner.connect();
+
+    // 트랜잭션 시작
+    await queryRunner.startTransaction();
+
+    try {
+      // 쿼리 작성
+      const query = queryRunner.manager
+        .createQueryBuilder()
+        .update(Posts)
+        .set({
+          categoryId: postData.categoryId,
+          title: postData.title,
+          thumbNailUrl: postData.thumbNailUrl,
+          markDownContent: postData.markDownContent,
+          private: postData.private,
+          updatedAt: Time.nowDate(),
+        })
+        .where('id = :postID', { postID: postData.id })
+        .updateEntity(false);
+
+      /**
+       * @Returns UpdateResult { generatedMaps: [], raw: [], affected: 3 }, UpdateResult { generatedMaps: [], raw: [], affected: 0 }
+       */
+      const queryResult = await query.execute();
+      // 수정된 사항이 없을경우
+      if (queryResult.affected === 0) {
+        throw new Error('affected is 0');
+      }
+      // console.log(queryResult);
+
+      // 트랜잭션 커밋
+      await queryRunner.commitTransaction();
+      // return
+      return true;
+    } catch (error) {
+      // 트랜잭션 롤백
+      await queryRunner.rollbackTransaction();
+      // 에러
+      throw new PostUpdateFail('service.post.updatePost 에러입니다.');
+    } finally {
+      // 데이터베이스 커넥션 해제
+      await queryRunner.release();
+    }
+  }
 
   /**
    * 포스트를 삭제 합니다.
