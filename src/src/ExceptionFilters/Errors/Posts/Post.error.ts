@@ -33,3 +33,20 @@ export class PostWriterNotFound implements Error {
     kr: '포스트 작성자를 찾을 수 없습니다.',
   };
 }
+
+// 포스트 생성에 실패
+export class PostCreateFail implements Error {
+  // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
+  constructor(public readonly description?) {}
+
+  // 미리 정의된 에러코드
+  public readonly codeNumber = 400;
+
+  public readonly codeText = 'PostCreateFail';
+
+  // 미리 정의된 메시지 객체
+  public readonly message = {
+    en: 'fail to create post',
+    kr: '포스트를 생성하는데 실패했습니다.',
+  };
+}
