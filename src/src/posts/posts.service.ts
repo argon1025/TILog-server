@@ -597,4 +597,23 @@ export class PostsService {
       await queryRunner.release();
     }
   }
+
+  /**
+   * 해당 게시글에 Like를 설정합니다
+   * - 유저는 포스트마다 '좋아요'를 하나만 설정할 수 있습니다.
+   * - 이미 '좋아요'를 설정하였을 경우 오류를 반환합니다.
+   * - 좋아요를 등록했을 경우 현재 '좋아요' 갯수를 반환합니다
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  async setPostToLike() {}
+
+  /**
+   * 게시글에 설정된 Like를 해제합니다
+   * - 유저가 해당 포스트에 '좋아요'를 설정했을 경우에만 가능합니다
+   * - 성공적으로 해제되었을 경우 현재 '좋아요' 갯수가 반환됩니다.
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  async setPostToDislike() {}
 }
