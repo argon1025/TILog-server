@@ -277,7 +277,8 @@ export class PostsService {
         .where('postView.postsId = :postID', { postID: viewData.id })
         .andWhere('postView.userIp = :userIP', { userIP: viewData.userIp })
         // getRawOne을 하더라도 실제 쿼리에는 Limit가 걸려있지 않기 때문에 설정합니다.
-        .limit(1);
+        .limit(1)
+        .maxExecutionTime(1000);
 
       /**
        * @Returns TextRow { postView_id: '1' } | undefined
@@ -300,7 +301,8 @@ export class PostsService {
         // getRawOne을 하더라도 실제 쿼리에는 Limit가 걸려있지 않기 때문에 설정합니다.
         .limit(1)
         // 공유락
-        .setLock('pessimistic_read');
+        .setLock('pessimistic_read')
+        .maxExecutionTime(1000);
 
       /**
        * @Returns TextRow { post_viewCounts: 3 } | undefined
@@ -426,7 +428,8 @@ export class PostsService {
         // IndexID 오름차순으로 정렬
         .orderBy('posts.id', 'ASC')
         // 최대 반환 게시글 수
-        .limit(getPostData.contentLimit);
+        .limit(getPostData.contentLimit)
+        .maxExecutionTime(1000);
 
       // 유저 본인의 요청이 아닌경우
       if (!getPostData.personalRequest) {
@@ -530,7 +533,8 @@ export class PostsService {
         ])
         .from(Posts, 'post')
         .innerJoin(Users, 'user', 'user.id = post.usersId')
-        .where('post.id = :postID', { postID: postData.id });
+        .where('post.id = :postID', { postID: postData.id })
+        .maxExecutionTime(1000);
 
       /**
        * @Returns TextRow {
