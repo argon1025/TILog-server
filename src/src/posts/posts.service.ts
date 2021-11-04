@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { Connection } from 'typeorm';
 import { Posts } from '../entities/Posts';
+import { PostView } from 'src/entities/PostView';
+import { Users } from 'src/entities/Users';
+import Time from '../utilities/Time.utility';
+
+// ERROR
 import {
   PostCreateFail,
   PostDetailGetFail,
@@ -9,18 +15,15 @@ import {
   PostViewCountAddFail,
   PostWriterNotFound,
 } from '../ExceptionFilters/Errors/Posts/Post.error';
-import { Connection } from 'typeorm';
+
+// DTO
 import { GetPostWriterDto, GetPostWriterResponseDto } from './dto/Services/GetPostWriter.DTO';
 import { CreatePostDto } from './dto/Services/CreatePost.DTO';
-import Time from '../utilities/Time.utility';
 import { UpdatePostDto } from './dto/Services/UpdatePost.DTO';
-import { timeLog } from 'console';
 import { SoftDeletePostDto } from './dto/Services/SoftDeletePost.DTO';
 import { AddPostViewCountDto } from './dto/Services/AddPostViewCount.DTO';
-import { PostView } from 'src/entities/PostView';
 import { GetPostsDto, GetPostsResponseDto } from './dto/Services/GetPosts.DTO';
 import { GetPostDetailDto, GetPostDetailResponseDto } from './dto/Services/GetPostDetail.DTO';
-import { Users } from 'src/entities/Users';
 
 @Injectable()
 export class PostsService {
