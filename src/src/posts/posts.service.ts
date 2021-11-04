@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Posts } from '../entities/Posts';
 import {
   PostCreateFail,
+  PostDetailGetFail,
   PostGetFail,
   PostSoftDeleteFail,
   PostUpdateFail,
@@ -18,6 +19,8 @@ import { SoftDeletePostDto } from './dto/Services/SoftDeletePost.DTO';
 import { AddPostViewCountDto } from './dto/Services/AddPostViewCount.DTO';
 import { PostView } from 'src/entities/PostView';
 import { GetPostsDto, GetPostsResponseDto } from './dto/Services/GetPosts.DTO';
+import { GetPostDetailDto, GetPostDetailResponseDto } from './dto/Services/GetPostDetail.DTO';
+import { Users } from 'src/entities/Users';
 
 @Injectable()
 export class PostsService {
@@ -490,5 +493,100 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async getPostDetail() {}
+  public async getPostDetail(postData: GetPostDetailDto) {
+    // 쿼리러너 객체 생성
+    const queryRunner = this.connection.createQueryRunner();
+
+    // 데이터 베이스 연결
+    await queryRunner.connect();
+
+    // 트랜잭션 시작
+    await queryRunner.startTransaction();
+
+    try {
+      const query = queryRunner.manager
+        .createQueryBuilder()
+        .select([
+          'post.id',
+          'post.usersId',
+          'post.categoryId',
+          'post.title',
+          'post.thumbNailUrl',
+          'post.viewCounts',
+          'post.likes',
+          'post.markDownContent',
+          'post.private',
+          'post.createdAt',
+          'post.updatedAt',
+          'post.deletedAt',
+          'user.userName',
+          'user.proFileImageUrl',
+          'user.mailAddress',
+          'user.admin',
+        ])
+        .from(Posts, 'post')
+        .innerJoin(Users, 'user', 'user.id = post.usersId')
+        .where('post.id = :postID', { postID: postData.id });
+
+      /**
+       * @Returns TextRow {
+       *   post_id: '1',
+       *   post_usersID: 1,
+       *   post_categoryID: 1,
+       *   post_title: 'testTitle',
+       *   post_thumbNailURL: 'testurl',
+       *   post_viewCounts: 3,
+       *   post_likes: 0,
+       *   post_markDownContent: 'asd',
+       *   post_private: 0,
+       *   post_deletedAt 2021-05-05T15:00:00.000Z,
+       *   post_createdAt: 2021-05-05T15:00:00.000Z,
+       *   post_updatedAt: 2021-11-03T02:29:21.000Z,
+       *   user_userName: 'name',
+       *   user_proFileImageURL: 'url',
+       *   user_mailAddress: 'address',
+       *   user_admin: 0
+       * }
+       * | undefined
+       */
+      const queryResult = await query.getRawOne();
+      // 포스트를 찾지 못했을 경우
+      if (!queryResult) {
+        throw new Error('POST_NOT_FOUND');
+      }
+
+      //DTO Mapping
+      let response = new GetPostDetailResponseDto();
+      response.id = queryResult.post_id;
+      response.usersId = queryResult.post_usersID;
+      response.categoryId = queryResult.post_categoryID;
+      response.title = queryResult.post_title;
+      response.thumbNailUrl = queryResult.post_thumbNailURL;
+      response.viewCounts = queryResult.post_viewCounts;
+      response.likes = queryResult.post_likes;
+      response.markDownContent = queryResult.post_markDownContent;
+      response.private = queryResult.post_private;
+      response.createdAt = queryResult.post_createdAt;
+      response.updatedAt = queryResult.post_updatedAt;
+      response.deletedAt = queryResult.post_deletedAt;
+      response.userName = queryResult.user_userName;
+      response.proFileImageUrl = queryResult.user_proFileImageURL;
+      response.mailAddress = queryResult.user_mailAddress;
+      response.admin = queryResult.user_admin;
+
+      // 변경 사항을 커밋합니다.
+      await queryRunner.commitTransaction();
+
+      // 포스트 데이터를 리턴합니다.
+      return response;
+    } catch (error) {
+      console.log(error);
+      // 롤백을 실행합니다.
+      await queryRunner.rollbackTransaction();
+      throw new PostDetailGetFail('posts.service.getPostDetail');
+    } finally {
+      // 생성된 커넥션을 해제합니다.
+      await queryRunner.release();
+    }
+  }
 }
