@@ -80,7 +80,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async createPost(postData: CreatePostDto) {
+  public async createPost(postData: CreatePostDto): Promise<boolean | PostCreateFail> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -110,7 +110,7 @@ export class PostsService {
         .updateEntity(false);
 
       /**
-       * @Returns Posts InsertResult {
+       * @Returns InsertResult {
        * identifiers: [],
        * generatedMaps: [],
        * raw: ResultSetHeader {
@@ -127,6 +127,7 @@ export class PostsService {
 
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();
+
       // return
       return true;
     } catch (error) {
@@ -145,7 +146,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async updatePost(postData: UpdatePostDto) {
+  public async updatePost(postData: UpdatePostDto): Promise<boolean | PostUpdateFail> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -201,7 +202,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async softDeletePost(postData: SoftDeletePostDto) {
+  public async softDeletePost(postData: SoftDeletePostDto): Promise<boolean | PostSoftDeleteFail> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -252,7 +253,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async addPostViews(viewData: AddPostViewCountDto) {
+  public async addPostViews(viewData: AddPostViewCountDto): Promise<boolean | PostViewCountAddFail> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -387,7 +388,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async getPostsFoundByMemberId(getPostData: GetPostsDto) {
+  public async getPostsFoundByMemberId(getPostData: GetPostsDto): Promise<GetPostsResponseDto | PostGetFail> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -493,7 +494,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async getPostDetail(postData: GetPostDetailDto) {
+  public async getPostDetail(postData: GetPostDetailDto): Promise<GetPostDetailResponseDto | PostDetailGetFail> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
