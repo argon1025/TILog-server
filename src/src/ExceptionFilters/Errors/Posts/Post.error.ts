@@ -101,3 +101,20 @@ export class PostViewCountAddFail implements Error {
     kr: '조회수를 카운트하지 못했습니다.',
   };
 }
+
+// 포스트 조회 실패
+export class PostGetFail implements Error {
+  // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
+  constructor(public readonly description?) {}
+
+  // 미리 정의된 에러코드
+  public readonly codeNumber = 404;
+
+  public readonly codeText = 'PostsNotFound';
+
+  // 미리 정의된 메시지 객체
+  public readonly message = {
+    en: 'fail to get Posts',
+    kr: '표시할 포스트가 없습니다.',
+  };
+}

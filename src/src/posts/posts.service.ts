@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Posts } from '../entities/Posts';
 import {
   PostCreateFail,
+  PostGetFail,
   PostSoftDeleteFail,
   PostUpdateFail,
   PostViewCountAddFail,
@@ -16,6 +17,7 @@ import { timeLog } from 'console';
 import { SoftDeletePostDto } from './dto/Services/SoftDeletePost.DTO';
 import { AddPostViewCountDto } from './dto/Services/AddPostViewCount.DTO';
 import { PostView } from 'src/entities/PostView';
+import { GetPostsDto, GetPostsResponseDto } from './dto/Services/GetPosts.DTO';
 
 @Injectable()
 export class PostsService {
@@ -356,6 +358,7 @@ export class PostsService {
        * }
        */
       const updatePostViewResult = await updatePostViewQuery.execute();
+
       // 테이블 업데이트가 반영되었는지 확인합니다.
       if (updatePostViewResult.raw.affectedRows === 0) {
         throw new Error('updatePostViewResult_AFFECTED_IS_0');
@@ -363,6 +366,8 @@ export class PostsService {
 
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();
+
+      return true;
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
@@ -375,10 +380,110 @@ export class PostsService {
 
   /**
    * 특정 멤버가 작성한 게시글 리스트를 요청합니다
+   * - Posts 테이블의 Index가 생성일 순으로 지정된다는 가정하에 작성되었습니다
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async getPostsFoundByMemberId() {}
+  public async getPostsFoundByMemberId(getPostData: GetPostsDto) {
+    // 쿼리러너 객체 생성
+    const queryRunner = this.connection.createQueryRunner();
+
+    // 데이터 베이스 연결
+    await queryRunner.connect();
+
+    // 트랜잭션 시작
+    await queryRunner.startTransaction();
+
+    try {
+      let query = queryRunner.manager
+        .createQueryBuilder()
+        .select([
+          'posts.id',
+          'posts.usersId',
+          'posts.categoryId',
+          'posts.title',
+          'posts.thumbNailUrl',
+          'posts.viewCounts',
+          'posts.likes',
+          'posts.private',
+          'posts.createdAt',
+          'posts.updatedAt',
+        ])
+        .from(Posts, 'posts')
+        // 커서 다음에 있는 게시글이고
+        .where('posts.id > :cursorNumber', { cursorNumber: getPostData.cursorNumber })
+        // 해당 유저가 작성한
+        .andWhere('posts.usersId = :userID', { userID: getPostData.usersId })
+        // 삭제되지 않은 게시글만
+        .andWhere('posts.deletedAt is NULL')
+        // IndexID 오름차순으로 정렬
+        .orderBy('posts.id', 'ASC')
+        // 최대 반환 게시글 수
+        .limit(getPostData.contentLimit);
+
+      // 유저 본인의 요청이 아닌경우
+      if (!getPostData.personalRequest) {
+        // 비밀글이 아닌 게시글만 검색한다
+        query.andWhere('posts.private = 0');
+      }
+
+      /**
+       * @returns [
+       *  Posts {
+       *    id: '5',
+       *    usersId: 1,
+       *    categoryId: 1,
+       *    title: 'test',
+       *    thumbNailUrl: 'test',
+       *    viewCounts: 0,
+       *    likes: 0,
+       *    private: 0,
+       *    createdAt: 2021-11-03T02:04:50.000Z,
+       *    updatedAt: 2021-11-03T02:25:44.000Z
+       *  },
+       *  Posts {
+       *    id: '6',
+       *    usersId: 1,
+       *    categoryId: 1,
+       *    title: 'test',
+       *    thumbNailUrl: 'test',
+       *    viewCounts: 1,
+       *    likes: 0,
+       *    private: 0,
+       *    createdAt: 2021-11-03T02:07:56.000Z,
+       *    updatedAt: 2021-11-03T02:25:44.000Z
+       *  }
+       *]
+       */
+      const queryResult = await query.getMany();
+
+      // 찾은 포스트가 없다면 에러를 반환합니다.
+      if (queryResult.length === 0) {
+        throw new Error('POSTS_NOT_FOUND');
+      }
+
+      //DTO Mapping
+      let response = new GetPostsResponseDto();
+      // 포스트 리스트 데이터
+      response.postListData = queryResult;
+      // 포스트 마지막 데이터의 id를 커서 넘버로 저장
+      response.nextCursorNumber = queryResult.length === 0 ? 0 : queryResult[queryResult.length - 1].id;
+
+      // 변경 사항을 커밋합니다.
+      await queryRunner.commitTransaction();
+
+      // 결과를 리턴합니다
+      return response;
+    } catch (error) {
+      console.log(error);
+      // 롤백을 실행합니다.
+      await queryRunner.rollbackTransaction();
+      throw new PostGetFail('posts.service.getPostsFoundByMemberId');
+    } finally {
+      // 생성된 커넥션을 해제합니다.
+      await queryRunner.release();
+    }
+  }
 
   /**
    * 게시글 디테일 정보를 요청합니다
