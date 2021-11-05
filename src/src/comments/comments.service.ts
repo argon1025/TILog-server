@@ -53,4 +53,14 @@ export class CommentsService {
       throw new Error(error);
     }
   }
+  // 코멘트의 리플만 모두 반환
+  async viewReplyComments(rootCommentID: string) {
+    try {
+      return await this.commentsRepo.find({
+        replyTo: rootCommentID,
+      });
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
 }
