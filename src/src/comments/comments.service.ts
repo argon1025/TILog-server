@@ -4,6 +4,7 @@ import { Comments } from 'src/entities/Comments';
 import { Repository } from 'typeorm/repository/Repository';
 import { writePostCommentDTO } from './dto/service/writePostComments.dto';
 import { writeReplyCommentDTO } from './dto/service/writeReplyComment.dto';
+import Time from '../utilities/time.utility';
 @Injectable()
 export class CommentsService {
   constructor(@InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
@@ -17,7 +18,7 @@ export class CommentsService {
         postsId: postID,
         htmlContent: contents,
         replyLevel: 0,
-        createdAt: 0,
+        createdAt: Time.nowDate(),
       });
     } catch (error) {
       throw new Error(error);
@@ -34,7 +35,7 @@ export class CommentsService {
         htmlContent: contents,
         replyTo: replyTo,
         replyLevel: 1,
-        createdAt: 0,
+        createdAt: Time.nowDate(),
       });
     } catch (error) {
       throw new Error(error);
@@ -64,11 +65,10 @@ export class CommentsService {
   // 코멘트를 수정합니다.
   async updateComment(commentID: string, contents: string) {
     try {
-      const now = new Date();
       return await this.commentsRepo.save({
         id: commentID,
         htmlContent: contents,
-        updateAt: now,
+        updateAt: Time.nowDate(),
       });
     } catch (error) {
       throw new Error(error);
