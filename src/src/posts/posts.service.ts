@@ -35,7 +35,7 @@ export class PostsService {
   constructor(private connection: Connection) {}
 
   /**
-   * 포스트 작성자를 조회합니다
+   * 포스트 아이디로 작성자 아이디, 비밀글 유무, 삭제 유무를 반환합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -53,7 +53,7 @@ export class PostsService {
       // 쿼리 작성
       const query = queryRunner.manager
         .createQueryBuilder()
-        .select('postTable.usersId')
+        .select(['postTable.usersId', 'postTable.private'])
         .from(Posts, 'postTable')
         .where('postTable.id = :postId', { postId: postWriterData.id })
         .maxExecutionTime(1000);
@@ -64,19 +64,21 @@ export class PostsService {
       const queryResult = await query.getOneOrFail();
 
       // DTO Mapping
-      let resultData = new GetPostWriterResponseDto();
-      resultData.usersId = queryResult.usersId;
+      let responseData = new GetPostWriterResponseDto();
+      responseData.usersId = queryResult.usersId;
+      responseData.private = queryResult.private;
+      responseData.deletedAt = queryResult.deletedAt;
 
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();
 
       // return
-      return resultData;
+      return responseData;
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
-      // 에러
-      throw new PostWriterNotFound('service.post.getPostWriter 에러입니다.');
+      // 에러 생성
+      throw new PostWriterNotFound(`service.post.getPostWriter.${!!error.message ? error.message : 'Unknown_Error'}`);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -142,7 +144,7 @@ export class PostsService {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
       // 에러
-      throw new PostCreateFail('service.post.createPost 에러입니다.');
+      throw new PostCreateFail(`service.post.createPost.${!!error.message ? error.message : 'Unknown_Error'}`);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -151,6 +153,7 @@ export class PostsService {
 
   /**
    * 포스트를 수정 합니다.
+   * - 서비스 로직 요청전 비밀글, 삭제글 여부 확인이 필요합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -184,21 +187,22 @@ export class PostsService {
        * @Returns UpdateResult { generatedMaps: [], raw: [], affected: 3 }, UpdateResult { generatedMaps: [], raw: [], affected: 0 }
        */
       const queryResult = await query.execute();
+
       // 수정된 사항이 없을경우
       if (queryResult.affected === 0) {
         throw new Error('affected is 0');
       }
-      // console.log(queryResult);
 
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();
+
       // return
       return true;
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
       // 에러
-      throw new PostUpdateFail('service.post.updatePost 에러입니다.');
+      throw new PostUpdateFail(`service.post.updatePost.${!!error.message ? error.message : 'Unknown_Error'}`);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -207,6 +211,7 @@ export class PostsService {
 
   /**
    * 포스트를 삭제 합니다.
+   * - 서비스 로직 요청전 유저인가 확인이 필요합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -229,6 +234,7 @@ export class PostsService {
           deletedAt: Time.nowDate(),
         })
         .where('id = :postID', { postID: postData.id })
+        .andWhere('deletedAt IS NULL')
         .updateEntity(false);
 
       /**
@@ -237,19 +243,19 @@ export class PostsService {
       const queryResult = await query.execute();
       // 수정된 사항이 없을경우
       if (queryResult.affected === 0) {
-        throw new Error('affected is 0');
+        throw new Error('deletePostQuery_AFFECTED_IS_0');
       }
-      // console.log(queryResult);
 
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();
+
       // return
       return true;
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
       // 에러
-      throw new PostSoftDeleteFail('service.post.softDeletePost 에러입니다.');
+      throw new PostSoftDeleteFail(`service.post.softDeletePost.${!!error.message ? error.message : 'Unknown_Error'}`);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -305,8 +311,8 @@ export class PostsService {
         .where('post.id = :postID', { postID: viewData.id })
         // getRawOne을 하더라도 실제 쿼리에는 Limit가 걸려있지 않기 때문에 설정합니다.
         .limit(1)
-        // 공유락
-        .setLock('pessimistic_read')
+        // LostUpdate 문제로 공유락 -> 쓰기락 변경
+        .setLock('pessimistic_write')
         .maxExecutionTime(1000);
 
       /**
@@ -385,7 +391,7 @@ export class PostsService {
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
-      throw new PostViewCountAddFail(`posts.service.addPostViews ${error.message}`);
+      throw new PostViewCountAddFail(`posts.service.addPostViews.${!!error.message ? error.message : 'Unknown_Error'}`);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -502,6 +508,7 @@ export class PostsService {
 
   /**
    * 게시글 디테일 정보를 요청합니다
+   * - 서비스 요청전 해당 포스트 비밀글, 삭제글 여부를 확인해야합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -596,7 +603,8 @@ export class PostsService {
       console.log(error);
       // 롤백을 실행합니다.
       await queryRunner.rollbackTransaction();
-      throw new PostDetailGetFail('posts.service.getPostDetail');
+      // 에러를 반환합니다.
+      throw new PostDetailGetFail(`posts.service.getPostDetail.${!!error.message ? error.message : 'Unknown_Error'}`);
     } finally {
       // 생성된 커넥션을 해제합니다.
       await queryRunner.release();
@@ -652,7 +660,8 @@ export class PostsService {
         // 삭제된 게시글인 경우 좋아요를 등록할 수 없습니다
         .andWhere('post.deletedAt IS NULL')
         .limit(1)
-        .setLock('pessimistic_read')
+        // LostUpdate 문제로 공유락 -> 쓰기락 변경
+        .setLock('pessimistic_write')
         .maxExecutionTime(1000);
 
       /**
@@ -726,7 +735,7 @@ export class PostsService {
       // 롤백, 오류 리턴
       console.log(error);
       await queryRunner.rollbackTransaction();
-      throw new SetPostToLikeFail(`posts.service.setPostToLike ${error.name ? error.name : 'Unknown Error'}`);
+      throw new SetPostToLikeFail(`posts.service.setPostToLike ${!!error.message ? error.message : 'Unknown_Error'}`);
     } finally {
       // 커넥션 해제
       await queryRunner.release();
@@ -787,7 +796,8 @@ export class PostsService {
         // 삭제된 게시글인 경우 좋아요를 취소할 수 없습니다
         .andWhere('post.deletedAt IS NULL')
         .limit(1)
-        .setLock('pessimistic_read')
+        // LostUpdate 문제로 공유락 -> 쓰기락 변경
+        .setLock('pessimistic_write')
         .maxExecutionTime(1000);
 
       /**
@@ -851,7 +861,8 @@ export class PostsService {
       // 롤백, 오류 리턴
       await queryRunner.rollbackTransaction();
 
-      throw new SetPostToDislikeFail(`posts.service.setPostToLike ${error.name ? error.name : 'Unknown Error'}`);
+      // 에러 반환
+      throw new SetPostToDislikeFail(`posts.service.setPostToLike ${!!error.message ? error.message : 'Unknown_Error'}`);
     } finally {
       // 커넥션 해제
       await queryRunner.release();
