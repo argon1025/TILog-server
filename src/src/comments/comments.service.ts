@@ -63,4 +63,17 @@ export class CommentsService {
       throw new Error(error);
     }
   }
+  // 코멘트를 수정합니다.
+  async updateComment(commentID: string, contents: string) {
+    try {
+      const now = new Date();
+      return await this.commentsRepo.save({
+        id: commentID,
+        htmlContent: contents,
+        updateAt: now,
+      });
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
 }
