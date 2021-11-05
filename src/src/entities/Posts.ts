@@ -5,6 +5,7 @@ import { PostView } from './PostView';
 import { Category } from './Category';
 import { Users } from './Users';
 import { PostsTags } from './PostsTags';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Index('FK_posts_usersID_users_id', ['usersId'], {})
 @Index('FK_posts_categoryID_category_id', ['categoryId'], {})
@@ -15,9 +16,21 @@ export class Posts {
     name: 'id',
     comment: '포스트 아이디',
   })
+  @ApiProperty({
+    example: '1',
+    description: '포스트 아이디',
+    type: String,
+    required: true,
+  })
   id: string;
 
   @Column('int', { name: 'usersID', comment: '유저 아이디', unsigned: true })
+  @ApiProperty({
+    example: '1',
+    description: '유저 아이디',
+    type: Number,
+    required: true,
+  })
   usersId: number;
 
   @Column('int', {
@@ -25,9 +38,21 @@ export class Posts {
     comment: '카테고리 아이디',
     unsigned: true,
   })
+  @ApiProperty({
+    example: '1',
+    description: '카테고리 아이디',
+    type: Number,
+    required: true,
+  })
   categoryId: number;
 
   @Column('varchar', { name: 'title', comment: '게시글 제목', length: 50 })
+  @ApiProperty({
+    example: 'Title example',
+    description: '포스트 타이틀',
+    type: String,
+    required: true,
+  })
   title: string;
 
   @Column('varchar', {
@@ -35,6 +60,12 @@ export class Posts {
     nullable: true,
     comment: '썸네일 이미지 URL',
     length: 300,
+  })
+  @ApiProperty({
+    example: 'thumbNailUrl.com',
+    description: '썸네일 URL',
+    type: [String, null],
+    required: true,
   })
   thumbNailUrl: string | null;
 
@@ -44,6 +75,12 @@ export class Posts {
     unsigned: true,
     default: () => "'0'",
   })
+  @ApiProperty({
+    example: 1,
+    description: '조회수',
+    type: Number,
+    required: true,
+  })
   viewCounts: number;
 
   @Column('int', {
@@ -52,12 +89,24 @@ export class Posts {
     unsigned: true,
     default: () => "'0'",
   })
+  @ApiProperty({
+    example: 0,
+    description: '좋아요',
+    type: Number,
+    required: true,
+  })
   likes: number;
 
   @Column('mediumtext', {
     name: 'markDownContent',
     nullable: true,
     comment: '마크 다운 형식의 본문',
+  })
+  @ApiProperty({
+    example: 'markDownContent Example',
+    description: '본문',
+    type: [String, null],
+    required: true,
   })
   markDownContent: string | null;
 
@@ -66,9 +115,21 @@ export class Posts {
     comment: '비밀글 여부',
     default: () => "'0'",
   })
+  @ApiProperty({
+    example: 0,
+    description: '비밀글 여부',
+    type: Number,
+    required: true,
+  })
   private: number;
 
   @Column('datetime', { name: 'createdAt', comment: '게시글 최초 작성일' })
+  @ApiProperty({
+    example: '2021-10-25',
+    description: '게시글 최초 작성일',
+    type: String,
+    required: true,
+  })
   createdAt: Date;
 
   @Column('datetime', {
@@ -76,12 +137,24 @@ export class Posts {
     nullable: true,
     comment: '게시글 마지막 업데이트일',
   })
+  @ApiProperty({
+    example: '2021-10-25',
+    description: '게시글 마지막 업데이트일',
+    type: [String, null],
+    required: true,
+  })
   updatedAt: Date | null;
 
   @Column('datetime', {
     name: 'deletedAt',
     nullable: true,
     comment: '게시글 삭제일',
+  })
+  @ApiProperty({
+    example: '2021-10-25',
+    description: '게시글 삭제일',
+    type: [String, null],
+    required: true,
   })
   deletedAt: Date | null;
 

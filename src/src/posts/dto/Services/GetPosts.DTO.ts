@@ -1,4 +1,4 @@
-import { PickType } from '@nestjs/mapped-types';
+import { PickType } from '@nestjs/swagger';
 import { Posts } from '../../../entities/Posts';
 
 export class GetPostsDto extends PickType(Posts, ['usersId']) {
