@@ -1,4 +1,4 @@
-import { PickType } from '@nestjs/mapped-types';
+import { PickType } from '@nestjs/swagger';
 import { PostLike } from 'src/entities/PostLike';
 import { Posts } from '../../../entities/Posts';
 

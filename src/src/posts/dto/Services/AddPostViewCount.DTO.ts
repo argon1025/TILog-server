@@ -1,4 +1,5 @@
-import { IntersectionType, PickType } from '@nestjs/mapped-types';
+import { IntersectionType } from '@nestjs/mapped-types';
+import { PickType } from '@nestjs/swagger';
 import { PostView } from 'src/entities/PostView';
 import { Posts } from '../../../entities/Posts';
 
