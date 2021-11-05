@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Comments } from 'src/entities/Comments';
 import { Repository } from 'typeorm/repository/Repository';
 import { writePostCommentDTO } from './dto/service/writePostComments.dto';
+import { writeReplyCommentDTO } from './dto/service/writeReplyComment.dto';
 @Injectable()
 export class CommentsService {
   constructor(@InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
@@ -25,10 +26,9 @@ export class CommentsService {
     }
   }
   //  리플 작성
-  async writeReplyComment(userID: number, postID: string, replyTo: string, commentInfo: any) {
+  async writeReplyComment(writeReplyCommentDto: writeReplyCommentDTO) {
     try {
-      const now = new Date();
-      const { contents, replyLevel } = commentInfo;
+      const { userID, postID, contents, replyLevel, replyTo } = writeReplyCommentDto;
       if (replyLevel != 0) throw new Error('대댓을 작성할 수 없습니다.');
       return await this.commentsRepo.save({
         usersId: userID,
@@ -36,7 +36,7 @@ export class CommentsService {
         htmlContent: contents,
         replyTo: replyTo,
         replyLevel: 1,
-        createdAt: now,
+        createdAt: 0,
       });
     } catch (error) {
       throw new Error(error);
