@@ -27,6 +27,7 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/passport": "^8.0.1",
     "@nestjs/platform-express": "^8.0.6",
+    "@nestjs/swagger": "^5.1.4",
     "@nestjs/typeorm": "^8.0.2",
     "connect-redis": "^6.0.0",
     "cross-env": "^7.0.3",
@@ -38,6 +39,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.3.0",
+    "swagger-ui-express": "^4.1.6",
     "typeorm": "^0.2.36"
   },
   "devDependencies": {

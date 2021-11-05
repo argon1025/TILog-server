@@ -7,6 +7,7 @@ import * as passport from 'passport';
 import * as redis from 'redis';
 import * as connectRedis from 'connect-redis';
 import { HttpExceptionFilter } from './ExceptionFilters/HttpException.filter';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -58,6 +59,11 @@ async function bootstrap() {
       store: new redisStore({ client }),
     }),
   );
+
+  // Swagger
+  const config = new DocumentBuilder().setTitle('TILog').setDescription('TILog API').setVersion('1.0.0').build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
 
   // 패스포트를 구동합니다.
   app.use(passport.initialize());
