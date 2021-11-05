@@ -15,6 +15,7 @@ import {
   PostUpdateFail,
   PostViewCountAddFail,
   PostWriterNotFound,
+  SetPostToDislikeFail,
 } from '../ExceptionFilters/Errors/Posts/Post.error';
 
 // DTO
@@ -26,6 +27,7 @@ import { AddPostViewCountDto } from './dto/Services/AddPostViewCount.DTO';
 import { GetPostsDto, GetPostsResponseDto } from './dto/Services/GetPosts.DTO';
 import { GetPostDetailDto, GetPostDetailResponseDto } from './dto/Services/GetPostDetail.DTO';
 import { SetPostToLikeDto, SetPostToLikeResponseDto } from './dto/Services/SetPostToLike.DTO';
+import { SetPostToDislikeDto, SetPostToDislikeResponseDto } from './dto/Services/SetPostToDislike.DTO';
 
 @Injectable()
 export class PostsService {
@@ -609,10 +611,6 @@ export class PostsService {
    * @version 1.0.0
    */
   async setPostToLike(requestData: SetPostToLikeDto) {
-    // PostLike 테이블에 기록이 있는지 조회
-    // 없을경우 공유락으로 Post 테이블 like 카운트 조회
-    // 카운트 반영 및 PostLike 테이블에 기록 후 리턴
-
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -741,5 +739,121 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async setPostToDislike() {}
+  async setPostToDislike(requestData: SetPostToDislikeDto) {
+    // 쿼리러너 객체 생성
+    const queryRunner = this.connection.createQueryRunner();
+
+    // 데이터 베이스 연결
+    await queryRunner.connect();
+
+    // 트랜잭션 시작
+    await queryRunner.startTransaction();
+
+    try {
+      // PostLike 테이블에 '좋아요' 기록이 있는지 확인합니다.
+      const getPostLikeQuery = queryRunner.manager
+        .createQueryBuilder()
+        .select('*')
+        .from(PostLike, 'postLike')
+        .where('postLike.usersId = :userID', { userID: requestData.usersId })
+        .andWhere('postLike.postsId = :postID', { postID: requestData.postsId })
+        .limit(1)
+        .maxExecutionTime(1000);
+
+      /**
+       * @returns TextRow {
+       *   id: '1',
+       *   usersID: 1,
+       *   postsID: '6',
+       *   likedAt: 2021-11-04T08:33:52.000Z
+       * } | undefined
+       */
+      const getPostLikeQueryResult = await getPostLikeQuery.getRawOne();
+
+      // 유저가 '좋아요'를 설정한 기록이 없을경우 에러를 리턴합니다.
+      if (!getPostLikeQueryResult) {
+        throw new Error('ALREADY_SET_DISLIKE');
+      }
+
+      // Post 테이블의 현재 Like 카운트를 구하고 공유락을 설정합니다
+      const getPostQuery = queryRunner.manager
+        .createQueryBuilder()
+        .select('post.likes')
+        .from(Posts, 'post')
+        .where('post.id = :postID', { postID: requestData.postsId })
+        // 비밀 게시글인 경우 좋아요 기능을 비활성화 합니다.
+        .andWhere('post.private = 0')
+        // 삭제된 게시글인 경우 좋아요를 취소할 수 없습니다
+        .andWhere('post.deletedAt IS NULL')
+        .limit(1)
+        .setLock('pessimistic_read')
+        .maxExecutionTime(1000);
+
+      /**
+       * @returns TextRow { post_likes: 0 }
+       */
+      const getPostQueryResult = await getPostQuery.getRawOne();
+
+      // 만족하는 포스트를 찾을 수 없을 경우 에러를 리턴합니다
+      if (!getPostQueryResult) {
+        throw new Error('POST_NOT_FOUND');
+      }
+      // 갱신할 카운트를 설정합니다.
+      const LIKE_COUNT = getPostQueryResult.post_likes - 1;
+
+      // Post 테이블의 Like 카운트를 업데이트 합니다.
+      const setPostQuery = queryRunner.manager
+        .createQueryBuilder()
+        .update(Posts)
+        .set({ likes: LIKE_COUNT })
+        .where('id = :postID', { postID: requestData.postsId })
+        .updateEntity(false);
+
+      /**
+       * @Returns UpdateResult { generatedMaps: [], raw: [], affected: 1 }
+       */
+      const PostUpdateResult = await setPostQuery.execute();
+
+      // 테이블 업데이트가 반영되었는지 확인합니다
+      if (PostUpdateResult.affected === 0) {
+        throw new Error('PostUpdateResult_AFFECTED_IS_0');
+      }
+
+      // PostLike 테이블의 '좋아요' 기록을 삭제합니다.
+      const deletePostLikeQuery = queryRunner.manager
+        .createQueryBuilder()
+        .delete()
+        .from(PostLike)
+        .where('usersId = :userID', { userID: requestData.usersId })
+        .andWhere('postsId = :postID', { postID: requestData.postsId });
+
+      /**
+       * @returns DeleteResult { raw: [], affected: 1 }
+       */
+      const deletePostLikeQueryResult = await deletePostLikeQuery.execute();
+
+      // 테이블 업데이트가 반영되었는지 확인합니다.
+      if (deletePostLikeQueryResult.affected === 0) {
+        throw new Error('deletePostLikeQueryResult_AFFECTED_IS_0');
+      }
+
+      // DTO Mapping
+      let response = new SetPostToDislikeResponseDto();
+      response.likes = LIKE_COUNT;
+
+      // 트랜잭션 커밋
+      await queryRunner.commitTransaction();
+
+      // 응답 리턴
+      return response;
+    } catch (error) {
+      // 롤백, 오류 리턴
+      await queryRunner.rollbackTransaction();
+
+      throw new SetPostToDislikeFail(`posts.service.setPostToLike ${error.name ? error.name : 'Unknown Error'}`);
+    } finally {
+      // 커넥션 해제
+      await queryRunner.release();
+    }
+  }
 }
