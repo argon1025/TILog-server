@@ -8,10 +8,8 @@ import { writeReplyCommentDTO } from './dto/service/writeReplyComment.dto';
 export class CommentsService {
   constructor(@InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
 
-  //////////////////// WriteComments
-
   // 코멘트 작성
-  async writePostComment(writePostCommentDto: writePostCommentDTO): Promise<Comments> {
+  async writePostComment(writePostCommentDto: writePostCommentDTO) {
     try {
       const { userID, postID, contents } = writePostCommentDto;
       return await this.commentsRepo.save({
