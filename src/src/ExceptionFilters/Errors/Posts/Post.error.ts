@@ -135,3 +135,37 @@ export class PostDetailGetFail implements Error {
     kr: '자세히 표시할 포스트가 없습니다.',
   };
 }
+
+// 좋아요 등록 실패
+export class SetPostToLikeFail implements Error {
+  // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
+  constructor(public readonly description?) {}
+
+  // 미리 정의된 에러코드
+  public readonly codeNumber = 400;
+
+  public readonly codeText = 'SetPostToLikeFail';
+
+  // 미리 정의된 메시지 객체
+  public readonly message = {
+    en: 'fail to Post Like',
+    kr: '좋아요를 설정할 수 없습니다.',
+  };
+}
+
+// 좋아요 해제 실패
+export class SetPostToDislikeFail implements Error {
+  // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
+  constructor(public readonly description?) {}
+
+  // 미리 정의된 에러코드
+  public readonly codeNumber = 400;
+
+  public readonly codeText = 'SetPostToDislikeFail';
+
+  // 미리 정의된 메시지 객체
+  public readonly message = {
+    en: 'fail to Post Dislike',
+    kr: '좋아요를 해제할 수 없습니다.',
+  };
+}
