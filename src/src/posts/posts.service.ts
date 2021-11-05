@@ -35,7 +35,7 @@ export class PostsService {
   constructor(private connection: Connection) {}
 
   /**
-   * 포스트 작성자를 조회합니다
+   * 포스트 아이디로 작성자 아이디, 비밀글 유무, 삭제 유무를 반환합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -53,7 +53,7 @@ export class PostsService {
       // 쿼리 작성
       const query = queryRunner.manager
         .createQueryBuilder()
-        .select('postTable.usersId')
+        .select(['postTable.usersId', 'postTable.private'])
         .from(Posts, 'postTable')
         .where('postTable.id = :postId', { postId: postWriterData.id })
         .maxExecutionTime(1000);
@@ -66,6 +66,8 @@ export class PostsService {
       // DTO Mapping
       let responseData = new GetPostWriterResponseDto();
       responseData.usersId = queryResult.usersId;
+      responseData.private = queryResult.private;
+      responseData.deletedAt = queryResult.deletedAt;
 
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();
@@ -151,6 +153,7 @@ export class PostsService {
 
   /**
    * 포스트를 수정 합니다.
+   * - 서비스 로직 요청전 비밀글, 삭제글 여부 확인이 필요합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -208,6 +211,7 @@ export class PostsService {
 
   /**
    * 포스트를 삭제 합니다.
+   * - 서비스 로직 요청전 유저인가 확인이 필요합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -230,6 +234,7 @@ export class PostsService {
           deletedAt: Time.nowDate(),
         })
         .where('id = :postID', { postID: postData.id })
+        .andWhere('deletedAt IS NULL')
         .updateEntity(false);
 
       /**
@@ -238,7 +243,7 @@ export class PostsService {
       const queryResult = await query.execute();
       // 수정된 사항이 없을경우
       if (queryResult.affected === 0) {
-        throw new Error('affected is 0');
+        throw new Error('deletePostQuery_AFFECTED_IS_0');
       }
 
       // 트랜잭션 커밋
@@ -503,6 +508,7 @@ export class PostsService {
 
   /**
    * 게시글 디테일 정보를 요청합니다
+   * - 서비스 요청전 해당 포스트 비밀글, 삭제글 여부를 확인해야합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
