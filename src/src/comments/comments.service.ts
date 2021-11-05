@@ -42,4 +42,15 @@ export class CommentsService {
       throw new Error(error);
     }
   }
+  // 포스트의 코멘트만 모두 반환
+  async viewPostComments(postID: string) {
+    try {
+      return await this.commentsRepo.find({
+        postsId: postID,
+        replyTo: null,
+      });
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
 }
