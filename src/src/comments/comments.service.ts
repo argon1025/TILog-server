@@ -76,4 +76,14 @@ export class CommentsService {
       throw new Error(error);
     }
   }
+  // 코멘트를 삭제합니다.
+  async deleteComment(commentID: string) {
+    try {
+      return await this.commentsRepo.softRemove({
+        id: commentID,
+      });
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
 }
