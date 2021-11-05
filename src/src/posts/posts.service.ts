@@ -16,6 +16,7 @@ import {
   PostViewCountAddFail,
   PostWriterNotFound,
   SetPostToDislikeFail,
+  SetPostToLikeFail,
 } from '../ExceptionFilters/Errors/Posts/Post.error';
 
 // DTO
@@ -610,7 +611,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async setPostToLike(requestData: SetPostToLikeDto) {
+  async setPostToLike(requestData: SetPostToLikeDto): Promise<SetPostToLikeResponseDto | SetPostToLikeFail> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -725,7 +726,7 @@ export class PostsService {
       // 롤백, 오류 리턴
       console.log(error);
       await queryRunner.rollbackTransaction();
-      throw new PostDetailGetFail(`posts.service.setPostToLike ${error.name ? error.name : 'Unknown Error'}`);
+      throw new SetPostToLikeFail(`posts.service.setPostToLike ${error.name ? error.name : 'Unknown Error'}`);
     } finally {
       // 커넥션 해제
       await queryRunner.release();
@@ -739,7 +740,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async setPostToDislike(requestData: SetPostToDislikeDto) {
+  async setPostToDislike(requestData: SetPostToDislikeDto): Promise<SetPostToDislikeResponseDto | SetPostToDislikeFail> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
