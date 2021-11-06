@@ -5,7 +5,7 @@ import { Repository } from 'typeorm/repository/Repository';
 import { writePostCommentDTO } from './dto/service/writePostComments.dto';
 import { writeReplyCommentDTO } from './dto/service/writeReplyComment.dto';
 import Time from '../utilities/time.utility';
-import { CommentWriteFailed } from 'src/ExceptionFilters/Errors/Comments/Comment.error';
+import { CommentWriteFailed, ReplyWriteFailed } from 'src/ExceptionFilters/Errors/Comments/Comment.error';
 @Injectable()
 export class CommentsService {
   constructor(@InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
@@ -27,7 +27,7 @@ export class CommentsService {
     }
   }
   //  리플 작성
-  async writeReplyComment(writeReplyCommentDto: writeReplyCommentDTO) {
+  async writeReplyComment(writeReplyCommentDto: writeReplyCommentDTO): Promise<Comments | ReplyWriteFailed> {
     try {
       const { userID, postID, contents, replyLevel, replyTo } = writeReplyCommentDto;
       if (replyLevel != 0) throw new Error('대댓을 작성할 수 없습니다.');
@@ -40,7 +40,8 @@ export class CommentsService {
         createdAt: Time.nowDate(),
       });
     } catch (error) {
-      throw new Error(error);
+      // 에러 생성
+      throw new ReplyWriteFailed(`service.comment.writeReplycomment.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
   // 포스트의 코멘트만 모두 반환
