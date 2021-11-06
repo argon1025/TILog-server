@@ -6,5 +6,6 @@ export class S3FileUploadDto {
 
 export class S3FileUploadResponseDto {
   location: string;
+  // fileName = S3.Key
   fileName: string;
 }
