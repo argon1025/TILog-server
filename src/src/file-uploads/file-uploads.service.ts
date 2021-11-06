@@ -22,8 +22,9 @@ export class FileUploadsService {
    * s3 파일 업로드를 요청합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
+   * @throws {S3FileUploadFail}
    */
-  public async s3FileUpload(requestData: S3FileUploadDto): Promise<S3FileUploadResponseDto | S3FileUploadFail> {
+  public async s3FileUpload(requestData: S3FileUploadDto): Promise<S3FileUploadResponseDto> {
     try {
       // 파일 업로드를 요청합니다.
       const s3FileUploadRequestResult = await this.S3.upload({
@@ -48,7 +49,7 @@ export class FileUploadsService {
       // console.log(s3FileUploadRequestResult);
 
       // DTO Mapping
-      let response = new S3FileUploadResponseDto();
+      let response: S3FileUploadResponseDto = new S3FileUploadResponseDto();
       response.fileName = s3FileUploadRequestResult.Key;
       response.location = s3FileUploadRequestResult.Location;
 
