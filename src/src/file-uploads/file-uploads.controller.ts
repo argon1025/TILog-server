@@ -8,12 +8,19 @@ export class FileUploadsController {
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
-  findAll(@UploadedFile() file: Express.Multer.File) {
+  async findAll(@UploadedFile() file: Express.Multer.File) {
     try {
       console.log(file);
+      console.log(
+        await this.fileUploadsService.s3FileUpload({
+          fileRaw: file.buffer,
+          fileName: file.originalname,
+          mimeType: file.mimetype,
+        }),
+      );
     } catch (error) {
       console.log(error);
     }
-    return this.fileUploadsService.findAll();
+    return 'file upload test';
   }
 }
