@@ -5,12 +5,13 @@ import { Repository } from 'typeorm/repository/Repository';
 import { writePostCommentDTO } from './dto/service/writePostComments.dto';
 import { writeReplyCommentDTO } from './dto/service/writeReplyComment.dto';
 import Time from '../utilities/time.utility';
+import { CommentWriteFailed } from 'src/ExceptionFilters/Errors/Comments/Comment.error';
 @Injectable()
 export class CommentsService {
   constructor(@InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
 
   // 코멘트 작성
-  async writePostComment(writePostCommentDto: writePostCommentDTO) {
+  async writePostComment(writePostCommentDto: writePostCommentDTO): Promise<Comments | CommentWriteFailed> {
     try {
       const { userID, postID, contents } = writePostCommentDto;
       return await this.commentsRepo.save({
@@ -21,7 +22,8 @@ export class CommentsService {
         createdAt: Time.nowDate(),
       });
     } catch (error) {
-      throw new Error(error);
+      // 에러 생성
+      throw new CommentWriteFailed(`service.comment.writepostcomment.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
   //  리플 작성
