@@ -23,7 +23,7 @@ export class FileUploadsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async s3FileUpload(requestData: S3FileUploadDto) {
+  public async s3FileUpload(requestData: S3FileUploadDto): Promise<S3FileUploadResponseDto | S3FileUploadFail> {
     try {
       // 파일 업로드를 요청합니다.
       const s3FileUploadRequestResult = await this.S3.upload({
@@ -63,9 +63,12 @@ export class FileUploadsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async s3FileDelete(requestData: S3FileDeleteDto) {
+  public async s3FileDelete(requestData: S3FileDeleteDto): Promise<boolean> {
     try {
-      // 파일 삭제를 요청합니다.
+      /**
+       * 파일 삭제를 요청합니다
+       * @Returns void
+       */
       await this.S3.deleteObject({ Bucket: this.S3_BUCKET_NAME, Key: requestData.key }).promise();
       return true;
     } catch (error) {
@@ -75,7 +78,7 @@ export class FileUploadsService {
 
   /**
    * 하나의 이미지를 업로드하고 URL을 반환합니다.
-   * - 파일버퍼, 파일이름,
+   * - 파일버퍼, 커스텀 파일이름, 유저 아이디
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
