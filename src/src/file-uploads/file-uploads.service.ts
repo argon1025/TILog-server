@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as AWS from 'aws-sdk';
 import { S3FileUploadFail } from 'src/ExceptionFilters/Errors/FileUploads/FileUpload.error';
-import { S3FileUploadDto, S3FileUploadResponseDto } from './dto/service/s3FileUpload.DTO';
+import { S3FileDeleteDto } from './dto/service/S3FileDelete.DTO';
+import { S3FileUploadDto, S3FileUploadResponseDto } from './dto/service/S3FileUpload.DTO';
 
 @Injectable()
 export class FileUploadsService {
@@ -57,9 +58,24 @@ export class FileUploadsService {
       throw new S3FileUploadFail(`fileUpload.service.s3FileUpload.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
+  /**
+   * s3 파일 삭제를 요청합니다.
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  public async s3FileDelete(requestData: S3FileDeleteDto) {
+    try {
+      // 파일 삭제를 요청합니다.
+      await this.S3.deleteObject({ Bucket: this.S3_BUCKET_NAME, Key: requestData.key }).promise();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
 
   /**
    * 하나의 이미지를 업로드하고 URL을 반환합니다.
+   * - 파일버퍼, 파일이름,
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
