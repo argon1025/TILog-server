@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UserCreateFailed } from 'src/ExceptionFilters/Errors/Users/User.error';
 import { UsersService } from 'src/users/users.service';
 import { Repository } from 'typeorm';
 import { Users } from '../entities/Users';
@@ -15,7 +16,7 @@ export class AuthService {
    * 1. 유저정보가 없을 경우 유저를 생성 후 반환합니다.
    * 2. 유저 정보가 있을 경우 DB의 정보를 반환합니다.
    */
-  async validateUser(userinfo: UserInfo) {
+  async validateUser(userinfo: UserInfo): Promise<SessionInfo | UserCreateFailed> {
     // 깃허브 아이디
     const { oAuthServiceId } = userinfo;
     // DB에 해당하는 깃허브 아이디 찾기
