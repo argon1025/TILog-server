@@ -11,13 +11,13 @@ export class FileUploadsController {
   async findAll(@UploadedFile() file: Express.Multer.File) {
     try {
       console.log(file);
-      console.log(
-        await this.fileUploadsService.s3FileUpload({
-          fileRaw: file.buffer,
-          fileName: file.originalname,
-          mimeType: file.mimetype,
-        }),
-      );
+      const result = await this.fileUploadsService.imageFileUpload({
+        file: file,
+        usersId: 1,
+        fileName: 'test',
+      });
+
+      console.log(result);
     } catch (error) {
       console.log(error);
     }
