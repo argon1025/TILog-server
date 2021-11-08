@@ -22,6 +22,7 @@ import { PostsModule } from './posts/posts.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CommentsModule } from './comments/comments.module';
+import { FileUploadsModule } from './file-uploads/file-uploads.module';
 
 // Load ENV
 const ENV = process.env;
@@ -49,6 +50,7 @@ const ENV = process.env;
     AuthModule,
     UsersModule,
     CommentsModule,
+    FileUploadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
