@@ -71,11 +71,11 @@ export class Users {
   @Column('datetime', { name: 'createdAt', comment: '유저 가입일' })
   createdAt: Date;
 
-  @Column('datetime', { name: 'updatedAt', comment: '유저 갱신일' })
-  updatedAt: Date;
+  @Column('datetime', { name: 'updatedAt', nullable: true, comment: '유저 갱신일' })
+  updatedAt: Date | null;
 
-  @Column('datetime', { name: 'deletedAt', comment: '유저 삭제일' })
-  deletedAt: Date;
+  @Column('datetime', { name: 'deletedAt', nullable: true, comment: '유저 삭제일' })
+  deletedAt: Date | null;
 
   @Column('tinyint', {
     name: 'admin',
