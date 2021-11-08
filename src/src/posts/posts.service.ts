@@ -104,7 +104,25 @@ export class PostsService {
       return false;
     }
   }
+  /**
+   * 게시글이 비밀글인지 확인합니다
+   * @todo 매개변수 DTO를 작성해야합니다
+   * @todo 오류처리 구문을 추가해야합니다
+   * @todo getPostWriterId DTO를 생성후 요청해야합니다
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  async isPrivate(requestData: { id: string }): Promise<boolean> {
+    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
 
+    if (getPostWriterIdResult.private === 0) {
+      // 비밀글이 아닐경우
+      return false;
+    } else {
+      // 비밀글일 경우
+      return true;
+    }
+  }
   /**
    * 게시글이 지워졌는지 확인합니다
    * @todo 매개변수 DTO를 작성해야합니다
@@ -556,7 +574,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async getPostDetail(postData: GetPostDetailDto): Promise<GetPostDetailResponseDto | PostDetailGetFail> {
+  public async getPostDetail(postData: GetPostDetailDto): Promise<GetPostDetailResponseDto> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
