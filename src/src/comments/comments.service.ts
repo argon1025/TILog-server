@@ -2,9 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Comments } from 'src/entities/Comments';
 import { Repository } from 'typeorm/repository/Repository';
-import { writeNewCommentOnPostDTO } from './dto/service/writeNewCommentOnPost.dto';
-import { writeNewCommentToCommentDTO } from './dto/service/writeNewCommentToComment.dto';
+import { WriteNewCommentOnPostDTO } from './dto/service/writeNewCommentOnPost.dto';
+import { WriteNewCommentToCommentDTO } from './dto/service/writeNewCommentToComment.dto';
 import Time from '../utilities/time.utility';
+import { Connection, getRepository } from 'typeorm';
 import {
   CommentWriteFailed,
   DeleteCommentsFaild,
@@ -13,9 +14,10 @@ import {
   ViewPostCommentsFaild,
   DisableLevel,
 } from 'src/ExceptionFilters/Errors/Comments/Comment.error';
+import { Users } from 'src/entities/Users';
 @Injectable()
 export class CommentsService {
-  constructor(@InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
+  constructor(private connection: Connection, @InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
 
   /**
    * write New comment on post
@@ -25,18 +27,18 @@ export class CommentsService {
    * no contents
    * no postID
    */
-  async writeNewCommentOnPost(reqData: writeNewCommentOnPostDTO): Promise<Comments> {
+  async writeNewCommentOnPost(reqData: WriteNewCommentOnPostDTO): Promise<Comments> {
     try {
       const { userID, postID, contents } = reqData;
       return await this.commentsRepo.save({
-        usersId: userID,
+        usersId: 6,
         postsId: postID,
         htmlContent: contents,
         createdAt: Time.nowDate(),
       });
     } catch (error) {
       // 에러 생성
-      throw new CommentWriteFailed(`service.comments.writepostcomment.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new CommentWriteFailed(`service.comments.writenewcommentonpost.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
 
@@ -61,14 +63,14 @@ export class CommentsService {
    *  write new comment to comment
    *  답글 작성를 작성합니다.
    */
-  async writeNewCommentToComment(reqData: writeNewCommentToCommentDTO): Promise<Comments> {
+  async writeNewCommentToComment(reqData: WriteNewCommentToCommentDTO): Promise<Comments> {
     try {
       const { userID, postID, contents, replyLevel, replyTo } = reqData;
       // 답글의 레벨 검증
       await this.vaildateCommentLevel(replyTo);
       // 답글 저장
       return await this.commentsRepo.save({
-        usersId: userID,
+        usersId: 5,
         postsId: postID,
         htmlContent: contents,
         replyTo: replyTo,
@@ -80,19 +82,53 @@ export class CommentsService {
       throw new CommentToCommentWriteFailed(`service.comment.writnewcommenttocomment.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
-  // 포스트의 코멘트만 모두 반환
-  async viewPostComments(postID: string) {
+
+  // level 0 인 코멘트 가져오기
+  async viewAllComments(postID: string): Promise<Array<Comments>> {
+    // 쿼리러너 객체 생성
+    const queryRunner = this.connection.createQueryRunner();
+
+    // 데이터 베이스 연결
+    await queryRunner.connect();
+
+    // 트랜잭션 시작
+    await queryRunner.startTransaction();
     try {
-      return await this.commentsRepo.find({
-        postsId: postID,
-        replyTo: null,
-      });
+      const query = await queryRunner.manager
+        .createQueryBuilder()
+        .select([
+          'c.id',
+          'c.postsId',
+          'c.htmlContent',
+          'c.replyTo',
+          'c.replyLevel',
+          'c.createdAt',
+          'c.updatedAt',
+          'c.deletedAt',
+          'c.usersId',
+          'u.userName',
+          'u.proFileImageUrl',
+        ])
+        .from(Comments, 'c')
+        .innerJoin(Users, 'u', 'c.usersID = u.id')
+        .where('c.postsId = :postID', { postID: postID })
+        .andWhere('c.replyLevel = :replyLevel', { replyLevel: 0 })
+        .maxExecutionTime(10000);
+      const queryResult = await query.getRawMany();
+      // 트랜잭션 커밋
+      await queryRunner.commitTransaction();
+      // 데이터 반환
+      return queryResult;
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       throw new ViewPostCommentsFaild(`service.comment.viewpostcomments.${!!error.message ? error.message : 'Unknown_Error'}`);
+    } finally {
+      // 생성된 커넥션을 해제합니다.
+      await queryRunner.release();
     }
   }
-  // 코멘트의 리플만 모두 반환
-  async viewReplyComments(rootCommentID: string) {
+  // 특정 코멘트의  답글 모두 반환
+  async viewCommentsComments(rootCommentID: string) {
     try {
       return await this.commentsRepo.find({
         replyTo: rootCommentID,
