@@ -1,31 +1,50 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException } from '@nestjs/common';
-import { PostNotFound } from 'src/ExceptionFilters/Errors/Posts/Post.error';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, UseGuards, Version } from '@nestjs/common';
+import { UserStats } from 'src/auth/decorators/userStats.decorator';
+import { SessionInfo } from 'src/auth/dto/session-info.dto';
+import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
+import { ErrorHandlerNotFound } from 'src/ExceptionFilters/Errors/ErrorHandlerNotFound.error';
+import ResponseUtility from 'src/utilities/Response.utility';
+import { CreateDto } from './dto/Controller/Create.Posts.controller.DTO';
+import { CreatePostDto } from './dto/Services/CreatePost.DTO';
 import { PostsService } from './posts.service';
 
-@Controller('posts')
+@Controller('')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  @Get()
-  async create(@Body() createPostDto: any) {
+  /**
+   * 포스트 생성요청을 처리합니다.
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  @Version('1')
+  @Post('posts')
+  @UseGuards(AuthenticatedGuard)
+  async create(@Body() requestData: CreateDto, @UserStats() userData: SessionInfo) {
     try {
-      console.log(await this.postsService.getPostWriterId({ id: '123' }));
+      // 포스트 생성에 필요한 DTO
+      let createPostRequestDto = new CreatePostDto();
+      createPostRequestDto.usersId = userData.id;
+      createPostRequestDto.categoryId = requestData.categoryId;
+      createPostRequestDto.title = requestData.title;
+      createPostRequestDto.thumbNailUrl = requestData.thumbNailUrl;
+      createPostRequestDto.markDownContent = requestData.markDownContent;
+      createPostRequestDto.private = requestData.private;
+
+      // 포스트 생성요청
+      await this.postsService.createPost(createPostRequestDto);
+
+      // 응답
+      return ResponseUtility.create(false, 'ok');
     } catch (error) {
-      console.log(error);
-      if ('codeText' in error) {
-        console.log('!!');
+      // 사전 정의된 에러인 경우
+      if ('codeNumber' in error || 'codeText' in error || 'message' in error) {
+        throw new HttpException(error, error.codeNumber);
+      } else {
+        // 사전 정의되지 않은 에러인 경우
+        const errorResponse = new ErrorHandlerNotFound(`posts.controller.create.${!!error.message ? error.message : 'Unknown_Error'}`);
+        throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }
-    this.postsService.getPostWriterId({ id: '1' });
-    try {
-      console.log('실행됨');
-      //this.postsService.postErrorTest();
-    } catch (errorData) {
-      // 에러 종류 특정
-      if (errorData instanceof PostNotFound) {
-        throw new HttpException(errorData, errorData.codeNumber);
-      }
-    }
-    return 'this.postsService.create(createPostDto)';
   }
 }
