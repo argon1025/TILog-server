@@ -49,7 +49,7 @@ export class DisableLevel implements Error {
     kr: '더이상 답글을 작성할 수 없습니다.',
   };
 }
-// 코멘트 작성 실패
+// 모든 코멘트 보기
 export class ViewPostCommentsFaild implements Error {
   // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
   constructor(public readonly description?) {}
