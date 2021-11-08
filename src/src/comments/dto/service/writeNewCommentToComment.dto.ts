@@ -1,4 +1,4 @@
-export class writeNewCommentToCommentDTO {
+export class WriteNewCommentToCommentDTO {
   userID: number;
   postID: string;
   contents: string;
