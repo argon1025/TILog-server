@@ -259,7 +259,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async softDeletePost(postData: SoftDeletePostDto): Promise<boolean | PostSoftDeleteFail> {
+  public async softDeletePost(postData: SoftDeletePostDto): Promise<boolean> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
