@@ -90,7 +90,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async createPost(postData: CreatePostDto): Promise<boolean | PostCreateFail> {
+  public async createPost(postData: CreatePostDto): Promise<boolean> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
