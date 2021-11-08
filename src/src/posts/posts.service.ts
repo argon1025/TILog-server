@@ -134,6 +134,10 @@ export class PostsService {
        * }
        */
       const queryResult = await query.execute();
+      // 테이블 업데이트가 반영되었는지 확인합니다.
+      if (queryResult.raw.affectedRows === 0) {
+        throw new Error('createPostQueryResult_AFFECTED_IS_0');
+      }
 
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();
