@@ -1,16 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Comments } from 'src/entities/Comments';
 import { Repository } from 'typeorm/repository/Repository';
-import { writePostCommentDTO } from './dto/service/writeNewCommentonPost';
-import { writeReplyCommentDTO } from './dto/service/writeReplyComment.dto';
+import { writeNewCommentOnPostDTO } from './dto/service/writeNewCommentOnPost.dto';
+import { writeNewCommentToCommentDTO } from './dto/service/writeNewCommentToComment.dto';
 import Time from '../utilities/time.utility';
 import {
   CommentWriteFailed,
   DeleteCommentsFaild,
-  ReplyWriteFailed,
+  CommentToCommentWriteFailed,
   UpdateCommentsFaild,
   ViewPostCommentsFaild,
+  DisableLevel,
 } from 'src/ExceptionFilters/Errors/Comments/Comment.error';
 @Injectable()
 export class CommentsService {
@@ -19,15 +20,14 @@ export class CommentsService {
   /**
    * write New comment on post
    * 포스트에 새로운 코멘트를 작성합니다.
-   * 
+   * @returns Comments
    * Revert
    * no contents
-   * no userID
    * no postID
    */
-  async writeNewCommentOnPost(writePostCommentDto: writePostCommentDTO): Promise<Comments> {
+  async writeNewCommentOnPost(reqData: writeNewCommentOnPostDTO): Promise<Comments> {
     try {
-      const { userID, postID, contents } = writePostCommentDto;
+      const { userID, postID, contents } = reqData;
       return await this.commentsRepo.save({
         usersId: userID,
         postsId: postID,
@@ -36,30 +36,48 @@ export class CommentsService {
       });
     } catch (error) {
       // 에러 생성
-      throw new CommentWriteFailed(`service.comment.writepostcomment.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new CommentWriteFailed(`service.comments.writepostcomment.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
 
-  requireWriteriteNewComment(writePostCommentDto: ){
-    
+  /**
+   * vaildate comment level
+   * 코멘트의 레벨을 검증합니다.
+   * @returns boolean
+   */
+  async vaildateCommentLevel(commentID: string): Promise<void> {
+    try {
+      const { replyLevel } = await this.commentsRepo.findOne({
+        id: commentID,
+      });
+      if (replyLevel) throw new Error('답글을 더이상 작성할 수 없습니다.');
+    } catch (error) {
+      // 에러 생성
+      throw new DisableLevel(`service.comment.vaildateCommentLevel.${!!error.message ? error.message : 'Unknown_Error'}`);
+    }
   }
 
-  //  리플 작성
-  async writeReplyComment(writeReplyCommentDto: writeReplyCommentDTO): Promise<Comments> {
+  /**
+   *  write new comment to comment
+   *  답글 작성를 작성합니다.
+   */
+  async writeNewCommentToComment(reqData: writeNewCommentToCommentDTO): Promise<Comments> {
     try {
-      const { userID, postID, contents, replyLevel, replyTo } = writeReplyCommentDto;
-      if (replyLevel != 0) throw new Error('대댓을 작성할 수 없습니다.');
+      const { userID, postID, contents, replyLevel, replyTo } = reqData;
+      // 답글의 레벨 검증
+      await this.vaildateCommentLevel(replyTo);
+      // 답글 저장
       return await this.commentsRepo.save({
         usersId: userID,
         postsId: postID,
         htmlContent: contents,
         replyTo: replyTo,
-        replyLevel: 1,
+        replyLevel: replyLevel,
         createdAt: Time.nowDate(),
       });
     } catch (error) {
       // 에러 생성
-      throw new ReplyWriteFailed(`service.comment.writeReplycomment.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new CommentToCommentWriteFailed(`service.comment.writnewcommenttocomment.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
   // 포스트의 코멘트만 모두 반환
