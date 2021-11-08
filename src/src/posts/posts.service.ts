@@ -39,7 +39,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async getPostWriterId(postWriterData: GetPostWriterDto): Promise<GetPostWriterResponseDto | PostWriterNotFound> {
+  public async getPostWriterId(postWriterData: GetPostWriterDto): Promise<GetPostWriterResponseDto> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -82,6 +82,46 @@ export class PostsService {
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
+    }
+  }
+
+  /**
+   * 게시글의 소유주가 맞는지 확인합니다
+   * @todo 매개변수 DTO를 작성해야합니다
+   * @todo 오류처리 구문을 추가해야합니다
+   * @todo getPostWriterId DTO를 생성후 요청해야합니다
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  async isOwner(requestData: { usersId: number; id: string }): Promise<boolean> {
+    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
+
+    if (getPostWriterIdResult.usersId === requestData.usersId) {
+      // 유저 아이디가 맞을경우
+      return true;
+    } else {
+      // 유저 아이디가 다를경우
+      return false;
+    }
+  }
+
+  /**
+   * 게시글이 지워졌는지 확인합니다
+   * @todo 매개변수 DTO를 작성해야합니다
+   * @todo 오류처리 구문을 추가해야합니다
+   * @todo getPostWriterId DTO를 생성후 요청해야합니다
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  async isDeleted(requestData: { id: string }): Promise<boolean> {
+    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
+
+    if (getPostWriterIdResult.deletedAt === null) {
+      // 삭제된 기록이 없을 경우
+      return false;
+    } else {
+      // 삭제된 기록이 있을경우
+      return true;
     }
   }
 
