@@ -1,4 +1,17 @@
-import { Column, Entity, Index, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Posts } from './Posts';
 import { Users } from './Users';
 
@@ -36,21 +49,13 @@ export class Comments {
   })
   replyLevel: number;
 
-  @Column('datetime', { name: 'createdAt', comment: '코멘트 생성일' })
+  @CreateDateColumn()
   createdAt: Date;
 
-  @Column('datetime', {
-    name: 'updatedAt',
-    nullable: true,
-    comment: '코멘트 수정일',
-  })
+  @UpdateDateColumn()
   updatedAt: Date | null;
 
-  @Column('datetime', {
-    name: 'deletedAt',
-    nullable: true,
-    comment: '코멘트 삭제일',
-  })
+  @DeleteDateColumn()
   deletedAt: Date | null;
 
   @ManyToOne(() => Posts, (posts) => posts.comments, {
