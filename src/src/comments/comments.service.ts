@@ -1,87 +1,176 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Comments } from 'src/entities/Comments';
 import { Repository } from 'typeorm/repository/Repository';
-import { writePostCommentDTO } from './dto/service/writePostComments.dto';
-import { writeReplyCommentDTO } from './dto/service/writeReplyComment.dto';
+import { WriteNewCommentOnPostDTO } from './dto/service/writeNewCommentOnPost.dto';
+import { WriteNewCommentToCommentDTO } from './dto/service/writeNewCommentToComment.dto';
 import Time from '../utilities/time.utility';
+import { Connection, getRepository } from 'typeorm';
+import {
+  CommentWriteFailed,
+  DeleteCommentFaild,
+  CommentToCommentWriteFailed,
+  UpdateCommentFaild,
+  ViewAllCommentsFaild,
+  DisableLevel,
+  ViewOneCommentFaild,
+  NotCommentOwner,
+} from 'src/ExceptionFilters/Errors/Comments/Comment.error';
+import { UpdateCommentDTO } from './dto/service/updateComment.dto';
+import { DeleteCommentDTO } from './dto/service/deleteComment.dto';
 @Injectable()
 export class CommentsService {
-  constructor(@InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
+  constructor(private connection: Connection, @InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
 
-  // 코멘트 작성
-  async writePostComment(writePostCommentDto: writePostCommentDTO) {
+  /**
+   * write New comment on post
+   * 포스트에 새로운 코멘트를 작성합니다.
+   * @returns Comments
+   */
+  async writeNewCommentOnPost(reqData: WriteNewCommentOnPostDTO): Promise<Comments> {
     try {
-      const { userID, postID, contents } = writePostCommentDto;
+      const { userID, postID, contents } = reqData;
       return await this.commentsRepo.save({
         usersId: userID,
         postsId: postID,
         htmlContent: contents,
-        replyLevel: 0,
         createdAt: Time.nowDate(),
       });
     } catch (error) {
-      throw new Error(error);
+      // 에러 생성
+      throw new CommentWriteFailed(`service.comments.writenewcommentonpost.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
-  //  리플 작성
-  async writeReplyComment(writeReplyCommentDto: writeReplyCommentDTO) {
+
+  /**
+   *  write new comment to comment
+   *  답글 작성를 작성합니다.
+   * @param reqData
+   * @returns Promise<Comments>
+   */
+  async writeNewCommentToComment(reqData: WriteNewCommentToCommentDTO): Promise<Comments> {
     try {
-      const { userID, postID, contents, replyLevel, replyTo } = writeReplyCommentDto;
-      if (replyLevel != 0) throw new Error('대댓을 작성할 수 없습니다.');
+      const { userID, postID, contents, replyLevel, replyTo } = reqData;
+      // 답글의 레벨 검증
+      await this.vaildateCommentLevel(replyTo);
+      // 답글 저장
       return await this.commentsRepo.save({
         usersId: userID,
         postsId: postID,
         htmlContent: contents,
         replyTo: replyTo,
-        replyLevel: 1,
+        replyLevel: replyLevel,
         createdAt: Time.nowDate(),
       });
     } catch (error) {
-      throw new Error(error);
+      if (error instanceof DisableLevel) throw error;
+      throw new CommentToCommentWriteFailed(`service.comment.writnewcommenttocomment.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
-  // 포스트의 코멘트만 모두 반환
-  async viewPostComments(postID: string) {
+
+  /**
+   * view all comments
+   * 특정 포스트의 모든 코멘트를 반환합니다.
+   * @param postID
+   * @returns Array<Comments>
+   */
+  async viewAllComments(postID: string): Promise<Array<Comments>> {
     try {
-      return await this.commentsRepo.find({
-        postsId: postID,
-        replyTo: null,
-      });
+      return await this.commentsRepo.find({ where: { postsId: postID, replyLevel: 0 }, relations: ['childComment'] });
     } catch (error) {
-      throw new Error(error);
+      throw new ViewAllCommentsFaild(`service.comment.viewpostcomments.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
-  // 코멘트의 리플만 모두 반환
-  async viewReplyComments(rootCommentID: string) {
+  /**
+   * view one comments
+   * 특정 코멘트를 1개 반환합니다.
+   * @param commentID
+   * @returns Promise<Comments>
+   */
+  async viewOneComments(commentID: string): Promise<Comments> {
+    Logger.log('viewOneComments');
     try {
-      return await this.commentsRepo.find({
-        replyTo: rootCommentID,
-      });
+      return await this.commentsRepo.findOne({ id: commentID });
     } catch (error) {
-      throw new Error(error);
+      throw new ViewOneCommentFaild(`service.comment.viewonecomment.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
-  // 코멘트를 수정합니다.
-  async updateComment(commentID: string, contents: string) {
+
+  /**
+   * update comment
+   * 코멘트를 업데이트합니다.
+   * @param reqData
+   * @returns
+   */
+  async updateComment(reqData: UpdateCommentDTO) {
+    Logger.log('updateComment');
+    const { userID, commentID, contents } = reqData;
     try {
+      // 요청한 유저의 코멘트인지 확인
+      await this.isCommentOwner(userID, commentID);
+      // 자신의 코멘트가 맞다면 코멘트 업데이트
       return await this.commentsRepo.save({
         id: commentID,
         htmlContent: contents,
         updateAt: Time.nowDate(),
       });
     } catch (error) {
-      throw new Error(error);
+      // not owner
+      if (error instanceof NotCommentOwner) throw error;
+      // not found comment
+      if (error instanceof ViewOneCommentFaild) throw error;
+      // update error
+      throw new UpdateCommentFaild(`service.comment.updatecomment.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
-  // 코멘트를 삭제합니다.
-  async deleteComment(commentID: string) {
+
+  /**
+   * soft delete comment
+   * 코멘트를 소프트 딜리트합니다.
+   * @param reqData
+   * @returns
+   */
+  async deleteComment(reqData: DeleteCommentDTO) {
+    const { userID, commentID } = reqData;
     try {
+      // 요청한 유저의 코멘트인지 확인
+      await this.isCommentOwner(userID, commentID);
+      // 코멘트 삭제
       return await this.commentsRepo.softRemove({
         id: commentID,
       });
     } catch (error) {
-      throw new Error(error);
+      // not owner
+      if (error instanceof NotCommentOwner) throw error;
+      // not found comment
+      if (error instanceof ViewOneCommentFaild) throw error;
+      // delete error
+      throw new DeleteCommentFaild(`service.comment.deletecomment.${!!error.message ? error.message : 'Unknown_Error'}`);
+    }
+  }
+  /**
+   * vaildate comment level
+   * 코멘트의 레벨을 검증합니다.
+   * @param commentID
+   */
+  async vaildateCommentLevel(commentID: string): Promise<void> {
+    const { replyLevel } = await this.commentsRepo.findOne({
+      id: commentID,
+    });
+    if (replyLevel) throw new DisableLevel(`service.comment.vaildateCommentLevel.this comment is child`);
+  }
+  /**
+   * check comment owner
+   * 코멘트의 오너를 확인합니다.
+   * @param requestUserID
+   * @param commentID
+   * @returns Promise<Boolean>
+   */
+  async isCommentOwner(requestUserID: number, commentID: string): Promise<void> {
+    Logger.log('isCommentOwner');
+    const { usersId } = await this.viewOneComments(commentID);
+    if (usersId != requestUserID) {
+      throw new NotCommentOwner(`service.comment.iscommentowner.you are not owner`);
     }
   }
 }
