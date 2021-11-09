@@ -8,13 +8,13 @@ import Time from '../utilities/time.utility';
 import { Connection, getRepository } from 'typeorm';
 import {
   CommentWriteFailed,
-  DeleteCommentsFaild,
+  DeleteCommentFaild,
   CommentToCommentWriteFailed,
-  UpdateCommentsFaild,
-  ViewPostCommentsFaild,
+  UpdateCommentFaild,
+  ViewAllCommentsFaild,
   DisableLevel,
 } from 'src/ExceptionFilters/Errors/Comments/Comment.error';
-import { Users } from 'src/entities/Users';
+import { UpdateCommentDTO } from './dto/service/updateComment.dto';
 @Injectable()
 export class CommentsService {
   constructor(private connection: Connection, @InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
@@ -83,32 +83,33 @@ export class CommentsService {
     }
   }
 
-  // POST의 코멘트 전체 가져오기
+  /**
+   * view all comments
+   * 특정 포스트의 모든 코멘트를 반환합니다.
+   * @param postID
+   * @returns Array<Comments>
+   */
   async viewAllComments(postID: string): Promise<Array<Comments>> {
     try {
       return await this.commentsRepo.find({ where: { postsId: postID, replyLevel: 0 }, relations: ['childComment'] });
     } catch (error) {
-      throw new ViewPostCommentsFaild(`service.comment.viewpostcomments.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new ViewAllCommentsFaild(`service.comment.viewpostcomments.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
   // 코멘트를 수정합니다.
-  async updateComment(commentID: string, contents: string) {
-    // 쿼리러너 객체 생성
-    const queryRunner = this.connection.createQueryRunner();
-
-    // 데이터 베이스 연결
-    await queryRunner.connect();
-
-    // 트랜잭션 시작
-    await queryRunner.startTransaction();
+  async updateComment(reqData: UpdateCommentDTO) {
+    const { userID, commentID, contents } = reqData;
     try {
+      // 자신의 코멘트인지 확인
+      // 자신의 코멘트가 맞다면 코멘트 업데이트
+      // 틀리다면 에러
       return await this.commentsRepo.save({
         id: commentID,
         htmlContent: contents,
         updateAt: Time.nowDate(),
       });
     } catch (error) {
-      throw new UpdateCommentsFaild(`service.comment.updatecomments.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new UpdateCommentFaild(`service.comment.updatecomments.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
   // 코멘트를 삭제합니다.
@@ -118,7 +119,7 @@ export class CommentsService {
         id: commentID,
       });
     } catch (error) {
-      throw new DeleteCommentsFaild(`service.comment.deletecomments.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new DeleteCommentFaild(`service.comment.deletecomments.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
 }
