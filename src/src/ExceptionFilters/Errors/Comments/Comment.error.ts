@@ -29,7 +29,7 @@ export class CommentToCommentWriteFailed implements Error {
 
   // 미리 정의된 메시지 객체
   public readonly message = {
-    en: 'failed to write a reply.',
+    en: 'failed to write a comment to comment.',
     kr: '답글 작성에 실패하였습니다.',
   };
 }
@@ -50,52 +50,54 @@ export class DisableLevel implements Error {
   };
 }
 // 모든 코멘트 보기
-export class ViewPostCommentsFaild implements Error {
+export class ViewAllCommentsFaild implements Error {
   // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
   constructor(public readonly description?) {}
 
   // 미리 정의된 에러코드
-  public readonly codeNumber = 404;
+  public readonly codeNumber = 400;
 
-  public readonly codeText = 'ViewPostCommentsFaild';
+  public readonly codeText = 'ViewAllCommentsFaild';
 
   // 미리 정의된 메시지 객체
   public readonly message = {
-    en: 'view post comments failed',
+    en: 'failed view all comments',
     kr: '코멘트 데이터를 가져오는데 실패하였습니다.',
   };
 }
 
 // 코멘트 수정 실패
-export class UpdateCommentsFaild implements Error {
+export class UpdateCommentFaild implements Error {
   // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
   constructor(public readonly description?) {}
 
   // 미리 정의된 에러코드
   public readonly codeNumber = 400;
 
-  public readonly codeText = 'UpdateCommentsFaild';
+  public readonly codeText = 'UpdateCommentFaild';
 
   // 미리 정의된 메시지 객체
   public readonly message = {
-    en: 'update comments failed',
+    en: 'failed update comment',
     kr: '코멘트 데이터를 수정하는데 실패하였습니다.',
   };
 }
 
 // 코멘트 삭제 실패
-export class DeleteCommentsFaild implements Error {
+export class DeleteCommentFaild implements Error {
   // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
   constructor(public readonly description?) {}
 
   // 미리 정의된 에러코드
   public readonly codeNumber = 400;
 
-  public readonly codeText = 'DeleteCommentsFaild';
+  public readonly codeText = 'DeleteCommentFaild';
 
   // 미리 정의된 메시지 객체
   public readonly message = {
-    en: 'delete comments failed',
+    en: 'failed delete comment',
     kr: '코멘트 데이터를 삭제하는데 실패하였습니다.',
   };
+}
+
 }
