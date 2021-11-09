@@ -1,4 +1,4 @@
 export class DeleteCommentDTO {
-  userid: number;
-  commentid: string;
+  userID: number;
+  commentID: string;
 }
