@@ -116,3 +116,20 @@ export class ViewOneCommentFaild implements Error {
     kr: '코멘트를 읽는데 실패하였습니다.',
   };
 }
+
+// 코멘트 소유주 확인
+export class NotCommentOwner implements Error {
+  // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
+  constructor(public readonly description?) {}
+
+  // 미리 정의된 에러코드
+  public readonly codeNumber = 400;
+
+  public readonly codeText = 'NotCommentOwner';
+
+  // 미리 정의된 메시지 객체
+  public readonly message = {
+    en: 'you are not comment owner',
+    kr: '코멘트의 작성자가 아닙니다.',
+  };
+}
