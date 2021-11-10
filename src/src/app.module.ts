@@ -23,6 +23,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CommentsModule } from './comments/comments.module';
 import { FileUploadsModule } from './file-uploads/file-uploads.module';
+import { UserBlogCustomizationModule } from './user-blog-customization/user-blog-customization.module';
 
 // Load ENV
 const ENV = process.env;
@@ -51,6 +52,7 @@ const ENV = process.env;
     UsersModule,
     CommentsModule,
     FileUploadsModule,
+    UserBlogCustomizationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
