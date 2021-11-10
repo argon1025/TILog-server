@@ -4,6 +4,7 @@ import { UserblogCustomization } from 'src/entities/UserblogCustomization';
 import {
   CreateUserBlogCustomizationFailed,
   GetUserBlogCustomizationFailed,
+  UpdateUserBlogCustomizationFailed,
 } from 'src/ExceptionFilters/Errors/UserBlogCustomization/UserBlogCustomization.Error';
 import { Repository } from 'typeorm';
 import { CreateUserBlogCustomizationDto } from './dto/create-user-blog-customization.dto';
@@ -50,11 +51,25 @@ export class UserBlogCustomizationService {
       );
     }
   }
-  updateUserBlogCustomization(id: number, updateUserBlogCustomizationDto: UpdateUserBlogCustomizationDto) {
-    return `This action updates a #${id} userBlogCustomization`;
-  }
-
-  deleteUserBlogCustomization(id: number) {
-    return `This action removes a #${id} userBlogCustomization`;
+  /**
+   * update UserBlogCustomization
+   * 유저의개인 블로그 설정 업데이트
+   * @param updateUserBlogCustomizationDto
+   * @returns
+   */
+  async updateUserBlogCustomization(updateUserBlogCustomizationDto: UpdateUserBlogCustomizationDto): Promise<UserblogCustomization> {
+    const { userID, blogTitle, statusMessage, selfIntroduction } = updateUserBlogCustomizationDto;
+    try {
+      return await this.userblogCustomizationRepo.save({
+        usersId: userID,
+        blogTitle: blogTitle,
+        statusMessage: statusMessage,
+        selfIntroduction: selfIntroduction,
+      });
+    } catch (error) {
+      throw new UpdateUserBlogCustomizationFailed(
+        `service.userblogcustomization.updateuserblogcustomization.${!!error.message ? error.message : 'Unknown_Error'}`,
+      );
+    }
   }
 }
