@@ -466,7 +466,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async getPostsFoundByMemberId(getPostData: GetPostsDto): Promise<GetPostsResponseDto | PostGetFail> {
+  public async getPostsFoundByMemberId(getPostData: GetPostsDto): Promise<GetPostsResponseDto> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -550,7 +550,7 @@ export class PostsService {
       // 포스트 리스트 데이터
       response.postListData = queryResult;
       // 포스트 마지막 데이터의 id를 커서 넘버로 저장
-      response.nextCursorNumber = queryResult.length === 0 ? 0 : queryResult[queryResult.length - 1].id;
+      response.nextCursorNumber = queryResult.length === 0 ? 0 : Number(queryResult[queryResult.length - 1].id);
 
       // 변경 사항을 커밋합니다.
       await queryRunner.commitTransaction();
@@ -681,7 +681,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async setPostToLike(requestData: SetPostToLikeDto): Promise<SetPostToLikeResponseDto | SetPostToLikeFail> {
+  async setPostToLike(requestData: SetPostToLikeDto): Promise<SetPostToLikeResponseDto> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -811,7 +811,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async setPostToDislike(requestData: SetPostToDislikeDto): Promise<SetPostToDislikeResponseDto | SetPostToDislikeFail> {
+  async setPostToDislike(requestData: SetPostToDislikeDto): Promise<SetPostToDislikeResponseDto> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 

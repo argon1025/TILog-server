@@ -13,5 +13,5 @@ export class GetPostsResponseDto {
   // 유저 본인 유무
   public postListData: Posts[];
   // 페이지 커서
-  public nextCursorNumber: String | Number;
+  public nextCursorNumber: Number;
 }
