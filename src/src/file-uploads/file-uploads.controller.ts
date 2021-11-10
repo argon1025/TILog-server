@@ -1,18 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Req,
-  UseInterceptors,
-  UploadedFile,
-  HttpException,
-  UseGuards,
-  Version,
-} from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, HttpException, UseGuards, Version } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserStats } from 'src/auth/decorators/userStats.decorator';
@@ -24,6 +10,7 @@ import { ImageFileUploadDto } from './dto/service/ImageFileUpload.DTO';
 import { FileUploadsService } from './file-uploads.service';
 import Time from '../utilities/time.utility';
 import { FileSizeExceeded } from 'src/ExceptionFilters/Errors/FileUploads/FileUpload.error';
+import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @Controller('')
 export class FileUploadsController {
@@ -40,6 +27,20 @@ export class FileUploadsController {
   @Post('files/images')
   @UseGuards(AuthenticatedGuard)
   @UseInterceptors(FileInterceptor('file'))
+  @ApiTags('Upload')
+  @ApiOperation({ summary: '이미지 파일을 업로드합니다.' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   async uploadImage(@UserStats() userData: SessionInfo, @UploadedFile() file: Express.Multer.File) {
     try {
       // 최대 파일사이즈 환경설정 로드
