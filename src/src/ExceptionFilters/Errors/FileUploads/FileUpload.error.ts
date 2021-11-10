@@ -31,3 +31,20 @@ export class ImageUploadFail implements Error {
     kr: '이미지 파일 업로드에 실패했습니다.',
   };
 }
+
+// FILE_SIZE_EXCEEDED
+export class FileSizeExceeded implements Error {
+  // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
+  constructor(public readonly description?) {}
+
+  // 미리 정의된 에러코드
+  public readonly codeNumber = 400;
+
+  public readonly codeText = 'FileSizeExceeded';
+
+  // 미리 정의된 메시지 객체
+  public readonly message = {
+    en: 'File Size Exceeded',
+    kr: '파일 크기를 초과했습니다.',
+  };
+}
