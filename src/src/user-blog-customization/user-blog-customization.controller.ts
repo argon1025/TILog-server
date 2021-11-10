@@ -25,10 +25,16 @@ export class UserBlogCustomizationController {
     return this.userBlogCustomizationService.getUserBlogCustomization(userID);
   }
 
-  // @Patch()
-  // update(@Param('id') id: string, @Body() updateUserBlogCustomizationDto: UpdateUserBlogCustomizationDto) {
-  //   return this.userBlogCustomizationService.update(+id, updateUserBlogCustomizationDto);
-  // }
+  @Patch()
+  // @UseGuards(AuthenticatedGuard)
+  async updateUserBlogCustomization(@UserStats('id') userID: number, @Body() updateUserBlogCustomizationDto: UpdateUserBlogCustomizationDto) {
+    updateUserBlogCustomizationDto.userID = userID;
+    try {
+      return await this.userBlogCustomizationService.updateUserBlogCustomization(updateUserBlogCustomizationDto);
+    } catch (error) {
+      throw new HttpException(error, error.codeNumber);
+    }
+  }
 
   // @Delete()
   // remove(@Param('id') id: string) {
