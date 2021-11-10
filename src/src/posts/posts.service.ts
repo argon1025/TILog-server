@@ -39,7 +39,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async getPostWriterId(postWriterData: GetPostWriterDto): Promise<GetPostWriterResponseDto | PostWriterNotFound> {
+  public async getPostWriterId(postWriterData: GetPostWriterDto): Promise<GetPostWriterResponseDto> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -86,11 +86,69 @@ export class PostsService {
   }
 
   /**
+   * 게시글의 소유주가 맞는지 확인합니다
+   * @todo 매개변수 DTO를 작성해야합니다
+   * @todo 오류처리 구문을 추가해야합니다
+   * @todo getPostWriterId DTO를 생성후 요청해야합니다
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  async isOwner(requestData: { usersId: number; id: string }): Promise<boolean> {
+    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
+
+    if (getPostWriterIdResult.usersId === requestData.usersId) {
+      // 유저 아이디가 맞을경우
+      return true;
+    } else {
+      // 유저 아이디가 다를경우
+      return false;
+    }
+  }
+  /**
+   * 게시글이 비밀글인지 확인합니다
+   * @todo 매개변수 DTO를 작성해야합니다
+   * @todo 오류처리 구문을 추가해야합니다
+   * @todo getPostWriterId DTO를 생성후 요청해야합니다
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  async isPrivate(requestData: { id: string }): Promise<boolean> {
+    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
+
+    if (getPostWriterIdResult.private === 0) {
+      // 비밀글이 아닐경우
+      return false;
+    } else {
+      // 비밀글일 경우
+      return true;
+    }
+  }
+  /**
+   * 게시글이 지워졌는지 확인합니다
+   * @todo 매개변수 DTO를 작성해야합니다
+   * @todo 오류처리 구문을 추가해야합니다
+   * @todo getPostWriterId DTO를 생성후 요청해야합니다
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  async isDeleted(requestData: { id: string }): Promise<boolean> {
+    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
+
+    if (getPostWriterIdResult.deletedAt === null) {
+      // 삭제된 기록이 없을 경우
+      return false;
+    } else {
+      // 삭제된 기록이 있을경우
+      return true;
+    }
+  }
+
+  /**
    * 포스트를 생성 합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async createPost(postData: CreatePostDto): Promise<boolean | PostCreateFail> {
+  public async createPost(postData: CreatePostDto): Promise<boolean> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -134,6 +192,10 @@ export class PostsService {
        * }
        */
       const queryResult = await query.execute();
+      // 테이블 업데이트가 반영되었는지 확인합니다.
+      if (queryResult.raw.affectedRows === 0) {
+        throw new Error('createPostQueryResult_AFFECTED_IS_0');
+      }
 
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();
@@ -215,7 +277,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async softDeletePost(postData: SoftDeletePostDto): Promise<boolean | PostSoftDeleteFail> {
+  public async softDeletePost(postData: SoftDeletePostDto): Promise<boolean> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -404,7 +466,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async getPostsFoundByMemberId(getPostData: GetPostsDto): Promise<GetPostsResponseDto | PostGetFail> {
+  public async getPostsFoundByMemberId(getPostData: GetPostsDto): Promise<GetPostsResponseDto> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -488,7 +550,7 @@ export class PostsService {
       // 포스트 리스트 데이터
       response.postListData = queryResult;
       // 포스트 마지막 데이터의 id를 커서 넘버로 저장
-      response.nextCursorNumber = queryResult.length === 0 ? 0 : queryResult[queryResult.length - 1].id;
+      response.nextCursorNumber = queryResult.length === 0 ? 0 : Number(queryResult[queryResult.length - 1].id);
 
       // 변경 사항을 커밋합니다.
       await queryRunner.commitTransaction();
@@ -512,7 +574,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async getPostDetail(postData: GetPostDetailDto): Promise<GetPostDetailResponseDto | PostDetailGetFail> {
+  public async getPostDetail(postData: GetPostDetailDto): Promise<GetPostDetailResponseDto> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -619,7 +681,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async setPostToLike(requestData: SetPostToLikeDto): Promise<SetPostToLikeResponseDto | SetPostToLikeFail> {
+  async setPostToLike(requestData: SetPostToLikeDto): Promise<SetPostToLikeResponseDto> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -749,7 +811,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async setPostToDislike(requestData: SetPostToDislikeDto): Promise<SetPostToDislikeResponseDto | SetPostToDislikeFail> {
+  async setPostToDislike(requestData: SetPostToDislikeDto): Promise<SetPostToDislikeResponseDto> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 

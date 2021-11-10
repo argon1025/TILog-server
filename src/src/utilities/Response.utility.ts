@@ -1,12 +1,6 @@
-interface Response {
-  error: boolean;
-  message: string;
-  data?: any;
-}
-
-export default class ResponseUtility {
-  create(error: boolean, message: string, data?: any): Response {
-    let response: Response = {
+export default new (class ResponseUtility {
+  create(error: boolean, message: string, data?: any) {
+    let response = {
       error: error,
       message: message,
     };
@@ -15,4 +9,4 @@ export default class ResponseUtility {
     }
     return response;
   }
-}
+})();
