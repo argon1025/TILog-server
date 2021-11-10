@@ -36,8 +36,9 @@ export class UserBlogCustomizationController {
     }
   }
 
-  // @Delete()
-  // remove(@Param('id') id: string) {
-  //   return this.userBlogCustomizationService.remove(+id);
-  // }
+  @Delete()
+  // @UseGuards(AuthenticatedGuard)
+  deleteUserBlogCustomization(@UserStats('id') userID: number) {
+    return this.userBlogCustomizationService.deleteUserBlogCustomization(userID);
+  }
 }
