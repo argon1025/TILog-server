@@ -5,7 +5,6 @@ import { Repository } from 'typeorm/repository/Repository';
 import { WriteNewCommentOnPostDTO } from './dto/service/writeNewCommentOnPost.dto';
 import { WriteNewCommentToCommentDTO } from './dto/service/writeNewCommentToComment.dto';
 import Time from '../utilities/time.utility';
-import { Connection, getRepository } from 'typeorm';
 import {
   CommentWriteFailed,
   DeleteCommentFaild,
@@ -15,12 +14,14 @@ import {
   DisableLevel,
   ViewOneCommentFaild,
   NotCommentOwner,
+  UnDeleteCommentFaild,
 } from 'src/ExceptionFilters/Errors/Comments/Comment.error';
 import { UpdateCommentDTO } from './dto/service/updateComment.dto';
 import { DeleteCommentDTO } from './dto/service/deleteComment.dto';
+import { UnDeleteCommentDTO } from './dto/service/unDeleteComment.dto';
 @Injectable()
 export class CommentsService {
-  constructor(private connection: Connection, @InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
+  constructor(@InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
 
   /**
    * write New comment on post
@@ -90,7 +91,7 @@ export class CommentsService {
   async viewOneComments(commentID: string): Promise<Comments> {
     Logger.log('viewOneComments');
     try {
-      return await this.commentsRepo.findOne({ id: commentID });
+      return await this.commentsRepo.createQueryBuilder('comments').withDeleted().where('comments.id = :commentID', { commentID }).getOne();
     } catch (error) {
       throw new ViewOneCommentFaild(`service.comment.viewonecomment.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
@@ -148,6 +149,21 @@ export class CommentsService {
       throw new DeleteCommentFaild(`service.comment.deletecomment.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
+  async unDeleteComment(reqData: UnDeleteCommentDTO) {
+    const { userID, commentID } = reqData;
+    try {
+      // 요청한 유저의 코멘트인지 확인
+      await this.isCommentOwner(userID, commentID);
+      return await this.commentsRepo.restore({ id: commentID });
+    } catch (error) {
+      // not owner
+      if (error instanceof NotCommentOwner) throw error;
+      // not found comment
+      if (error instanceof ViewOneCommentFaild) throw error;
+      // delete error
+      throw new UnDeleteCommentFaild(`service.comment.undeletecomment.${!!error.message ? error.message : 'Unknown_Error'}`);
+    }
+  }
   /**
    * vaildate comment level
    * 코멘트의 레벨을 검증합니다.
@@ -167,7 +183,6 @@ export class CommentsService {
    * @returns Promise<Boolean>
    */
   async isCommentOwner(requestUserID: number, commentID: string): Promise<void> {
-    Logger.log('isCommentOwner');
     const { usersId } = await this.viewOneComments(commentID);
     if (usersId != requestUserID) {
       throw new NotCommentOwner(`service.comment.iscommentowner.you are not owner`);
