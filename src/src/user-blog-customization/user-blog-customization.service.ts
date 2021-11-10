@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserblogCustomization } from 'src/entities/UserblogCustomization';
-import { CreateUserBlogCustomizationFailed } from 'src/ExceptionFilters/Errors/UserBlogCustomization/UserBlogCustomization.Error';
+import {
+  CreateUserBlogCustomizationFailed,
+  GetUserBlogCustomizationFailed,
+} from 'src/ExceptionFilters/Errors/UserBlogCustomization/UserBlogCustomization.Error';
 import { Repository } from 'typeorm';
 import { CreateUserBlogCustomizationDto } from './dto/create-user-blog-customization.dto';
 import { UpdateUserBlogCustomizationDto } from './dto/update-user-blog-customization.dto';
@@ -32,9 +35,20 @@ export class UserBlogCustomizationService {
       );
     }
   }
-
-  getUserBlogCustomization() {
-    return `This action returns one userBlogCustomization`;
+  /**
+   * get UserBlogCustomization
+   * 유저의 개인 블로그 설정 보기
+   * @param userID
+   * @returns Promise<UserblogCustomization>
+   */
+  async getUserBlogCustomization(userID: number): Promise<UserblogCustomization> {
+    try {
+      return await this.userblogCustomizationRepo.findOne({ usersId: userID });
+    } catch (error) {
+      throw new GetUserBlogCustomizationFailed(
+        `service.userblogcustomization.getserblogcustomization.${!!error.message ? error.message : 'Unknown_Error'}`,
+      );
+    }
   }
   updateUserBlogCustomization(id: number, updateUserBlogCustomizationDto: UpdateUserBlogCustomizationDto) {
     return `This action updates a #${id} userBlogCustomization`;

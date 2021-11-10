@@ -20,10 +20,10 @@ export class UserBlogCustomizationController {
     }
   }
 
-  // @Get(':userid')
-  // findOne(@Param('id') id: string) {
-  //   return this.userBlogCustomizationService.findOne(+id);
-  // }
+  @Get(':userid')
+  getUserBlogCustomization(@Param('userid') userID: number) {
+    return this.userBlogCustomizationService.getUserBlogCustomization(userID);
+  }
 
   // @Patch()
   // update(@Param('id') id: string, @Body() updateUserBlogCustomizationDto: UpdateUserBlogCustomizationDto) {

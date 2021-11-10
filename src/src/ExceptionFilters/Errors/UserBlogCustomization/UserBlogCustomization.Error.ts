@@ -1,6 +1,6 @@
 import Error from 'src/ExceptionFilters/Interface/error.interface';
 
-// 지정 게시글을 찾을 수 없을때 발생한다
+// 개인 블로그 설정 생성 실패
 export class CreateUserBlogCustomizationFailed implements Error {
   // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
   constructor(public readonly description?) {}
@@ -13,6 +13,22 @@ export class CreateUserBlogCustomizationFailed implements Error {
   // 미리 정의된 메시지 객체
   public readonly message = {
     en: 'failed create user-blog-customiztion',
-    kr: '블로그 개인설정 생성 실패',
+    kr: '개인 블로그 설정 생성 실패하였습니다.',
+  };
+}
+// 개인 블로그 설정 가져오기 실패
+export class GetUserBlogCustomizationFailed implements Error {
+  // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
+  constructor(public readonly description?) {}
+
+  // 미리 정의된 에러코드
+  public readonly codeNumber = 400;
+
+  public readonly codeText = 'GetUserBlogCustomizationFailed';
+
+  // 미리 정의된 메시지 객체
+  public readonly message = {
+    en: 'failed get user-blog-customiztion',
+    kr: '개인 블로그 설정 가져오기 실패하였습니다.',
   };
 }
