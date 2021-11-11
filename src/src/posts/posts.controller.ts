@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, UseGuards, Version, Put, Query } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UserStats } from 'src/auth/decorators/userStats.decorator';
 import { SessionInfo } from 'src/auth/dto/session-info.dto';
 import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
@@ -29,6 +30,11 @@ export class PostsController {
   @Version('1')
   @Post('posts')
   @UseGuards(AuthenticatedGuard)
+  @ApiTags('Posts')
+  @ApiOperation({ summary: '포스트를 생성합니다.' })
+  @ApiBody({
+    type: CreateDto,
+  })
   async create(@Body() requestData: CreateDto, @UserStats() userData: SessionInfo) {
     try {
       // 포스트 생성에 필요한 DTO
@@ -70,6 +76,17 @@ export class PostsController {
   @Version('1')
   @Put('posts/:postID')
   @UseGuards(AuthenticatedGuard)
+  @ApiTags('Posts')
+  @ApiOperation({ summary: '포스트를 수정합니다.' })
+  @ApiBody({
+    type: UpdateDto,
+  })
+  @ApiParam({
+    name: 'postID',
+    type: 'number',
+    required: true,
+    description: '포스트 아이디',
+  })
   async update(@Body() requestData: UpdateDto, @UserStats() userData: SessionInfo, @Param('postID') postID: Number) {
     try {
       // 게시물의 소유주와 요청한 유저의 아이디가 동일한지 검증합니다
@@ -120,6 +137,14 @@ export class PostsController {
   @Version('1')
   @Delete('posts/:postID')
   @UseGuards(AuthenticatedGuard)
+  @ApiTags('Posts')
+  @ApiOperation({ summary: '포스트를 삭제합니다.' })
+  @ApiParam({
+    name: 'postID',
+    type: 'number',
+    required: true,
+    description: '포스트 아이디',
+  })
   async delete(@UserStats() userData: SessionInfo, @Param('postID') postID: Number) {
     try {
       // 게시물의 소유주와 요청한 유저의 아이디가 동일한지 검증합니다
@@ -165,6 +190,14 @@ export class PostsController {
    */
   @Version('1')
   @Get('posts/:postID')
+  @ApiTags('Posts')
+  @ApiOperation({ summary: '포스트 디테일 정보를 요청합니다.' })
+  @ApiParam({
+    name: 'postID',
+    type: 'number',
+    required: true,
+    description: '포스트 아이디',
+  })
   async getDetailFindByPostID(@UserStats() userData: SessionInfo, @Param('postID') postID: Number) {
     try {
       // 삭제된 게시글 여부를 확인하고 저장합니다.
@@ -226,6 +259,20 @@ export class PostsController {
    */
   @Version('1')
   @Get('users/:userID/posts')
+  @ApiTags('Posts')
+  @ApiOperation({ summary: '특정 유저가 작성한 게시글 리스트를 요청합니다.' })
+  @ApiParam({
+    name: 'userID',
+    type: 'number',
+    required: true,
+    description: '유저 아이디',
+  })
+  @ApiQuery({
+    name: 'cursor',
+    type: 'number',
+    required: true,
+    description: '포스트 커서 아이디',
+  })
   async getAllFindByUserID(@UserStats() userData: SessionInfo, @Param('userID') userID: number, @Query('cursor') cursor: number = 0) {
     try {
       // Dto Mapping
@@ -237,17 +284,20 @@ export class PostsController {
       // 요청하기 원하는 유저 아이디
       getPostsRequestDto.usersId = userID;
       // 게시글 소유주의 요청인지 유무
-      getPostsRequestDto.personalRequest = userData.id === userID ? true : false;
+      getPostsRequestDto.personalRequest = userData?.id === userID ? true : false;
 
       const getPostsResult = await this.postsService.getPostsFoundByMemberId(getPostsRequestDto);
 
       // 응답 리턴
       return ResponseUtility.create(false, 'ok', getPostsResult);
     } catch (error) {
+      console.log(error);
       // 사전 정의된 에러인 경우
-      if ('codeNumber' in error || 'codeText' in error || 'message' in error) {
+      if ('codeNumber' in error || 'codeText' in error) {
+        console.log('??');
         throw new HttpException(error, error.codeNumber);
       } else {
+        console.log('!!');
         // 사전 정의되지 않은 에러인 경우
         const errorResponse = new ErrorHandlerNotFound(`posts.controller.getAllFindByUserID.${!!error.message ? error.message : 'Unknown_Error'}`);
         throw new HttpException(errorResponse, errorResponse.codeNumber);
@@ -263,6 +313,14 @@ export class PostsController {
   @Version('1')
   @Post('posts/:postID/like')
   @UseGuards(AuthenticatedGuard)
+  @ApiTags('Posts')
+  @ApiOperation({ summary: '포스트에 좋아요를 설정합니다.' })
+  @ApiParam({
+    name: 'postID',
+    type: 'number',
+    required: true,
+    description: '포스트 아이디',
+  })
   async setLike(@UserStats() userData: SessionInfo, @Param('postID') postID: number) {
     try {
       let setLikeRequestDto = new SetPostToLikeDto();
@@ -294,6 +352,14 @@ export class PostsController {
   @Version('1')
   @Delete('posts/:postsID/like')
   @UseGuards(AuthenticatedGuard)
+  @ApiTags('Posts')
+  @ApiOperation({ summary: '포스트에 설정된 좋아요를 해제합니다.' })
+  @ApiParam({
+    name: 'postID',
+    type: 'number',
+    required: true,
+    description: '포스트 아이디',
+  })
   async setDislike(@UserStats() userData: SessionInfo, @Param('postID') postID: number) {
     try {
       let setDislikeRequestDto = new SetPostToDislikeDto();
