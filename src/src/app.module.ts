@@ -25,6 +25,7 @@ import { CommentsModule } from './comments/comments.module';
 import { FileUploadsModule } from './file-uploads/file-uploads.module';
 import { UserBlogCustomizationModule } from './user-blog-customization/user-blog-customization.module';
 import { TagsModule } from './tags/tags.module';
+import { CategoriesModule } from './categories/categories.module';
 
 // Load ENV
 const ENV = process.env;
@@ -68,6 +69,7 @@ const ENV = process.env;
     FileUploadsModule,
     UserBlogCustomizationModule,
     TagsModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
