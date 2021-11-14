@@ -2,7 +2,7 @@ import { Controller, Get, Redirect, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RedirectClient } from './decorators/redirect.decorator';
 import { Session } from './decorators/session.decorator';
-import { UserStats } from './decorators/userStats.decorator';
+import { UserStats } from './decorators/userstats.decorator';
 import { AuthenticatedGuard } from './guard/auth.guard';
 import { GithubGuard } from './guard/github.guard';
 

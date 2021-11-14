@@ -4,7 +4,7 @@ import { Posts } from '../entities/Posts';
 import { PostView } from 'src/entities/PostView';
 import { Users } from 'src/entities/Users';
 import { PostLike } from 'src/entities/PostLike';
-import Time from '../utilities/Time.utility';
+import Time from 'src/utilities/time.utility';
 
 // ERROR
 import {

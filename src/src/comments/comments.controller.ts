@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, HttpException } from '@nestjs/common';
-import { UserStats } from 'src/auth/decorators/userStats.decorator';
+import { UserStats } from 'src/auth/decorators/userstats.decorator';
 import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
 import { CommentsService } from './comments.service';
 import { DeleteCommentDTO } from './dto/service/deleteComment.dto';

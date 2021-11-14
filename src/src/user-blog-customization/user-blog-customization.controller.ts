@@ -3,7 +3,7 @@ import { UserBlogCustomizationService } from './user-blog-customization.service'
 import { CreateUserBlogCustomizationDto } from './dto/create-user-blog-customization.dto';
 import { UpdateUserBlogCustomizationDto } from './dto/update-user-blog-customization.dto';
 import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
-import { UserStats } from 'src/auth/decorators/userStats.decorator';
+import { UserStats } from 'src/auth/decorators/userstats.decorator';
 
 @Controller('user-blog-customization')
 export class UserBlogCustomizationController {

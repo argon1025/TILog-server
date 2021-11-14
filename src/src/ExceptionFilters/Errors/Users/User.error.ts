@@ -1,4 +1,4 @@
-import Error from 'src/ExceptionFilters/Interface/error.interface';
+import Error from 'src/ExceptionFilters/Interface/Error.interface';
 
 // 유저 등록에 실패했을 때
 export class UserCreateFailed implements Error {

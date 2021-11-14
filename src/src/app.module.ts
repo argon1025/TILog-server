@@ -24,6 +24,7 @@ import { UsersModule } from './users/users.module';
 import { CommentsModule } from './comments/comments.module';
 import { FileUploadsModule } from './file-uploads/file-uploads.module';
 import { UserBlogCustomizationModule } from './user-blog-customization/user-blog-customization.module';
+import { TagsModule } from './tags/tags.module';
 
 // Load ENV
 const ENV = process.env;
@@ -41,7 +42,20 @@ const ENV = process.env;
       username: ENV.DB_USERNAME,
       password: ENV.DB_PASSWORD,
       database: ENV.DB_DATABASE,
-      entities: [Users, UserblogCustomization, Tags, PostsTags, Posts, PostLike, PinnedRepositoryCategories, PinnedRepositories, ImageUpload, Comments, Category, PostView],
+      entities: [
+        Users,
+        UserblogCustomization,
+        Tags,
+        PostsTags,
+        Posts,
+        PostLike,
+        PinnedRepositoryCategories,
+        PinnedRepositories,
+        ImageUpload,
+        Comments,
+        Category,
+        PostView,
+      ],
       synchronize: false,
       logging: true,
       keepConnectionAlive: true,
@@ -53,6 +67,7 @@ const ENV = process.env;
     CommentsModule,
     FileUploadsModule,
     UserBlogCustomizationModule,
+    TagsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
