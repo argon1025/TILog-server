@@ -80,6 +80,7 @@ async function bootstrap() {
   } else {
     await app.listen(SERVER_PORT);
     Logger.log(`--------->>> ${SERVER_ENV}://${SERVER_HOST}:${SERVER_PORT} <<<---------`, 'SERVER_INFO');
+    Logger.log(`--------->>> swagger path ${SERVER_ENV}://${SERVER_HOST}:${SERVER_PORT}/api <<<---------`, 'SERVER_INFO');
   }
 }
 bootstrap();

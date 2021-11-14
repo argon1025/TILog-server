@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, UseGuards, Version, Put, Query } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { UserStats } from 'src/auth/decorators/userStats.decorator';
+import { UserStats } from 'src/auth/decorators/userstats.decorator';
 import { SessionInfo } from 'src/auth/dto/session-info.dto';
 import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
 import { ErrorHandlerNotFound } from 'src/ExceptionFilters/Errors/ErrorHandlerNotFound.error';

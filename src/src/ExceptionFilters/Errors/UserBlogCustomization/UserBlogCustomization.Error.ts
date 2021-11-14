@@ -1,4 +1,4 @@
-import Error from 'src/ExceptionFilters/Interface/error.interface';
+import Error from 'src/ExceptionFilters/Interface/Error.interface';
 
 // 개인 블로그 설정 생성 실패
 export class CreateUserBlogCustomizationFailed implements Error {

@@ -1,4 +1,4 @@
-import Error from 'src/ExceptionFilters/Interface/error.interface';
+import Error from 'src/ExceptionFilters/Interface/Error.interface';
 
 // 지정 게시글을 찾을 수 없을때 발생한다
 export class PostNotFound implements Error {

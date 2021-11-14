@@ -6,8 +6,8 @@ import { ImageUploadFail, S3FileUploadFail } from 'src/ExceptionFilters/Errors/F
 import { Connection } from 'typeorm';
 import { ImageFileUploadDto, ImageFileUploadResponseDto } from './dto/service/ImageFileUpload.DTO';
 import { S3FileDeleteDto } from './dto/service/S3FileDelete.DTO';
-import { S3FileUploadDto, S3FileUploadResponseDto } from './dto/service/S3FileUpload.DTO';
 import Time from '../utilities/time.utility';
+import { S3FileUploadDto, S3FileUploadResponseDto } from './dto/service/s3FileUpload.DTO';
 
 @Injectable()
 export class FileUploadsService {

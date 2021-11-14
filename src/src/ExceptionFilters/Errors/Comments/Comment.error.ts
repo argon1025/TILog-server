@@ -1,4 +1,4 @@
-import Error from 'src/ExceptionFilters/Interface/error.interface';
+import Error from 'src/ExceptionFilters/Interface/Error.interface';
 
 // 코멘트 작성 실패
 export class CommentWriteFailed implements Error {
