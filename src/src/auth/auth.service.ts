@@ -24,7 +24,9 @@ export class AuthService {
     // 서비스에 가입되어있는 사용자인지 확인
     if (!user) {
       // 없으면 DB에 추가 후 유저정보 반환
-      return await this.usersService.createUser(userinfo);
+      await this.usersService.createUser(userinfo);
+      const result: SessionInfo = await this.usersService.findUser(oAuthServiceId);
+      return result;
     }
     // 가입되어 있으면 유저정보 반환
     return user;

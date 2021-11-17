@@ -8,8 +8,8 @@ import {
   UpdateUserBlogCustomizationFailed,
 } from 'src/ExceptionFilters/Errors/UserBlogCustomization/UserBlogCustomization.Error';
 import { Repository } from 'typeorm';
-import { CreateUserBlogCustomizationDto } from './dto/create-user-blog-customization.dto';
-import { UpdateUserBlogCustomizationDto } from './dto/update-user-blog-customization.dto';
+import { CreateUserBlogCustomizationDto } from './dto/service/CreateUserBlogCustomization.dto';
+import { UpdateUserBlogCustomizationDto } from './dto/service/UpdateUserBlogCustomization.dto';
 
 @Injectable()
 export class UserBlogCustomizationService {
@@ -23,10 +23,10 @@ export class UserBlogCustomizationService {
    * @returns Promise<UserblogCustomization>
    */
   async createUserBlogCustomization(createUserBlogCustomizationDto: CreateUserBlogCustomizationDto): Promise<UserblogCustomization> {
-    const { userID, blogTitle, statusMessage, selfIntroduction } = createUserBlogCustomizationDto;
+    const { usersId, blogTitle, statusMessage, selfIntroduction } = createUserBlogCustomizationDto;
     try {
       return await this.userblogCustomizationRepo.save({
-        usersId: userID,
+        usersId: usersId,
         blogTitle: blogTitle,
         statusMessage: statusMessage,
         selfIntroduction: selfIntroduction,
@@ -60,10 +60,10 @@ export class UserBlogCustomizationService {
    * @returns
    */
   async updateUserBlogCustomization(updateUserBlogCustomizationDto: UpdateUserBlogCustomizationDto): Promise<UserblogCustomization> {
-    const { userID, blogTitle, statusMessage, selfIntroduction } = updateUserBlogCustomizationDto;
+    const { usersId, blogTitle, statusMessage, selfIntroduction } = updateUserBlogCustomizationDto;
     try {
       return await this.userblogCustomizationRepo.save({
-        usersId: userID,
+        usersId: usersId,
         blogTitle: blogTitle,
         statusMessage: statusMessage,
         selfIntroduction: selfIntroduction,
