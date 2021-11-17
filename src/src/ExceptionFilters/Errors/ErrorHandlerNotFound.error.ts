@@ -1,4 +1,4 @@
-import Error from 'src/ExceptionFilters/Interface/error.interface';
+import Error from 'src/ExceptionFilters/Interface/Error.interface';
 
 // 정의된 에러 핸들러가 없는 오류일 경우
 export class ErrorHandlerNotFound implements Error {
