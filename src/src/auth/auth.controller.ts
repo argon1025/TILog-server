@@ -1,15 +1,18 @@
-import { Controller, Get, Redirect, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards, Version } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RedirectClient } from './decorators/redirect.decorator';
 import { Session } from './decorators/session.decorator';
 import { UserStats } from './decorators/userStats.decorator';
+import { SessionInfo } from './dto/session-info.dto';
 import { AuthenticatedGuard } from './guard/auth.guard';
 import { GithubGuard } from './guard/github.guard';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-  // github 로그인을 요청합니다.
+
   @Get('github')
   @UseGuards(GithubGuard)
   login() {
@@ -24,14 +27,21 @@ export class AuthController {
   }
 
   // 로그인한 유저 정보를 반환합니다.
+  @Version('1')
   @Get('status')
-  // @UseGuards(AuthenticatedGuard)
-  status(@UserStats() userStats) {
+  @ApiOperation({ summary: '유저 정보를 반환합니다.' })
+  @ApiBody({
+    type: SessionInfo,
+  })
+  @UseGuards(AuthenticatedGuard)
+  status(@UserStats() userStats: SessionInfo) {
     return userStats;
   }
 
   // 로그인한 유저의 세션을 파기시킵니다.
+  @Version('1')
   @Get('logout')
+  @ApiOperation({ summary: '유저가 로그아웃을 합니다.' })
   @UseGuards(AuthenticatedGuard)
   logout(@Session() session, @RedirectClient() redirect) {
     // 세션을 제거합니다.
