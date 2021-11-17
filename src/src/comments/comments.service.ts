@@ -2,8 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Comments } from 'src/entities/Comments';
 import { Repository } from 'typeorm/repository/Repository';
-import { WriteNewCommentOnPostDTO } from './dto/service/writeNewCommentOnPost.dto';
-import { WriteNewCommentToCommentDTO } from './dto/service/writeNewCommentToComment.dto';
 import Time from '../utilities/time.utility';
 import {
   CommentWriteFailed,
@@ -16,9 +14,11 @@ import {
   NotCommentOwner,
   UnDeleteCommentFaild,
 } from 'src/ExceptionFilters/Errors/Comments/Comment.error';
-import { UpdateCommentDTO } from './dto/service/updateComment.dto';
-import { DeleteCommentDTO } from './dto/service/deleteComment.dto';
-import { UnDeleteCommentDTO } from './dto/service/unDeleteComment.dto';
+import { WriteNewCommentOnPostDto } from './dto/service/writeNewCommentOnPost.dto';
+import { WriteNewCommentToCommentDto } from './dto/service/writeNewCommentToComment.dto';
+import { UpdateCommentDto } from './dto/service/updateComment.dto';
+import { DeleteCommentDto } from './dto/service/deleteComment.dto';
+import { UnDeleteCommentDto } from './dto/service/unDeleteComment.dto';
 @Injectable()
 export class CommentsService {
   constructor(@InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
@@ -28,13 +28,13 @@ export class CommentsService {
    * 포스트에 새로운 코멘트를 작성합니다.
    * @returns Comments
    */
-  async writeNewCommentOnPost(reqData: WriteNewCommentOnPostDTO): Promise<Comments> {
+  async writeNewCommentOnPost(writeNewCommentOnPostDto: WriteNewCommentOnPostDto): Promise<Comments> {
     try {
-      const { userID, postID, contents } = reqData;
+      const { usersId, postsId, htmlContent } = writeNewCommentOnPostDto;
       return await this.commentsRepo.save({
-        usersId: userID,
-        postsId: postID,
-        htmlContent: contents,
+        usersId: usersId,
+        postsId: postsId,
+        htmlContent: htmlContent,
         createdAt: Time.nowDate(),
       });
     } catch (error) {
@@ -49,16 +49,16 @@ export class CommentsService {
    * @param reqData
    * @returns Promise<Comments>
    */
-  async writeNewCommentToComment(reqData: WriteNewCommentToCommentDTO): Promise<Comments> {
+  async writeNewCommentToComment(writeNewCommentToCommentDto: WriteNewCommentToCommentDto): Promise<Comments> {
     try {
-      const { userID, postID, contents, replyLevel, replyTo } = reqData;
+      const { usersId, postsId, htmlContent, replyLevel, replyTo } = writeNewCommentToCommentDto;
       // 답글의 레벨 검증
       await this.vaildateCommentLevel(replyTo);
       // 답글 저장
       return await this.commentsRepo.save({
-        usersId: userID,
-        postsId: postID,
-        htmlContent: contents,
+        usersId: usersId,
+        postsId: postsId,
+        htmlContent: htmlContent,
         replyTo: replyTo,
         replyLevel: replyLevel,
         createdAt: Time.nowDate(),
@@ -89,7 +89,6 @@ export class CommentsService {
    * @returns Promise<Comments>
    */
   async viewOneComments(commentID: string): Promise<Comments> {
-    Logger.log('viewOneComments');
     try {
       return await this.commentsRepo.createQueryBuilder('comments').withDeleted().where('comments.id = :commentID', { commentID }).getOne();
     } catch (error) {
@@ -103,16 +102,15 @@ export class CommentsService {
    * @param reqData
    * @returns
    */
-  async updateComment(reqData: UpdateCommentDTO) {
-    Logger.log('updateComment');
-    const { userID, commentID, contents } = reqData;
+  async updateComment(updateCommentDto: UpdateCommentDto) {
+    const { usersId, id, htmlContent } = updateCommentDto;
     try {
       // 요청한 유저의 코멘트인지 확인
-      await this.isCommentOwner(userID, commentID);
+      await this.isCommentOwner(usersId, id);
       // 자신의 코멘트가 맞다면 코멘트 업데이트
       return await this.commentsRepo.save({
-        id: commentID,
-        htmlContent: contents,
+        id: id,
+        htmlContent: htmlContent,
         updateAt: Time.nowDate(),
       });
     } catch (error) {
@@ -131,14 +129,14 @@ export class CommentsService {
    * @param reqData
    * @returns
    */
-  async deleteComment(reqData: DeleteCommentDTO) {
-    const { userID, commentID } = reqData;
+  async deleteComment(deleteCommentDto: DeleteCommentDto) {
+    const { usersId, id } = deleteCommentDto;
     try {
       // 요청한 유저의 코멘트인지 확인
-      await this.isCommentOwner(userID, commentID);
+      await this.isCommentOwner(usersId, id);
       // 코멘트 삭제
       return await this.commentsRepo.softRemove({
-        id: commentID,
+        id: id,
       });
     } catch (error) {
       // not owner
@@ -149,12 +147,12 @@ export class CommentsService {
       throw new DeleteCommentFaild(`service.comment.deletecomment.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
-  async unDeleteComment(reqData: UnDeleteCommentDTO) {
-    const { userID, commentID } = reqData;
+  async unDeleteComment(unDeleteCommentDto: UnDeleteCommentDto) {
+    const { usersId, id } = unDeleteCommentDto;
     try {
       // 요청한 유저의 코멘트인지 확인
-      await this.isCommentOwner(userID, commentID);
-      return await this.commentsRepo.restore({ id: commentID });
+      await this.isCommentOwner(usersId, id);
+      return await this.commentsRepo.restore({ id: id });
     } catch (error) {
       // not owner
       if (error instanceof NotCommentOwner) throw error;
