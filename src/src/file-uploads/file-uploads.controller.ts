@@ -66,7 +66,8 @@ export class FileUploadsController {
       return ResponseUtility.create(false, 'ok', fileUploadResult.pathUrl);
     } catch (error) {
       // 사전 정의된 에러인 경우
-      if ('codeNumber' in error || 'codeText' in error || 'message' in error) {
+      // Error interface Type Guard
+      if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else if (error.message === 'IMAGE_FILE_SIZE_EXCEEDED') {
         // 파일사이즈 초과 에러
