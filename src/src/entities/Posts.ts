@@ -6,6 +6,7 @@ import { Category } from './Category';
 import { Users } from './Users';
 import { PostsTags } from './PostsTags';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsInt, IsString, MinLength, MaxLength, IsPositive, Min, Max } from 'class-validator';
 
 @Index('FK_posts_usersID_users_id', ['usersId'], {})
 @Index('FK_posts_categoryID_category_id', ['categoryId'], {})
@@ -44,6 +45,9 @@ export class Posts {
     type: Number,
     required: true,
   })
+  @IsInt() // Number
+  @IsNotEmpty() // Not Null
+  @IsPositive() // +
   categoryId: number;
 
   @Column('varchar', { name: 'title', comment: '게시글 제목', length: 50 })
@@ -53,6 +57,10 @@ export class Posts {
     type: String,
     required: true,
   })
+  @IsNotEmpty() // Not null
+  @IsString() // string
+  @MinLength(1) // min length
+  @MaxLength(49) // max length
   title: string;
 
   @Column('varchar', {
@@ -67,6 +75,8 @@ export class Posts {
     type: [String, null],
     required: true,
   })
+  @IsString() // string
+  @MaxLength(299) // max length
   thumbNailUrl: string | null;
 
   @Column('int', {
@@ -108,6 +118,9 @@ export class Posts {
     type: [String, null],
     required: true,
   })
+  @IsNotEmpty() // Not null
+  @IsString() // string
+  @MaxLength(17000) // max length
   markDownContent: string | null;
 
   @Column('tinyint', {
@@ -121,6 +134,10 @@ export class Posts {
     type: Number,
     required: true,
   })
+  @IsInt() // Number
+  @IsNotEmpty() // Not Null
+  @Min(0)
+  @Max(1)
   private: number;
 
   @Column('datetime', { name: 'createdAt', comment: '게시글 최초 작성일' })

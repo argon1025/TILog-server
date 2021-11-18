@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, UseGuards, Version, Put, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, UseGuards, Version, Put, Query, ParseIntPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UserStats } from 'src/auth/decorators/userstats.decorator';
@@ -88,7 +88,7 @@ export class PostsController {
     required: true,
     description: '포스트 아이디',
   })
-  async update(@Body() requestData: UpdateDto, @UserStats() userData: SessionInfo, @Param('postID') postID: Number) {
+  async update(@Body() requestData: UpdateDto, @UserStats() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
     try {
       // 게시물의 소유주와 요청한 유저의 아이디가 동일한지 검증합니다
       if (!(await this.postsService.isOwner({ usersId: userData.id, id: String(postID) }))) {
@@ -147,7 +147,7 @@ export class PostsController {
     required: true,
     description: '포스트 아이디',
   })
-  async delete(@UserStats() userData: SessionInfo, @Param('postID') postID: Number) {
+  async delete(@UserStats() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
     try {
       // 게시물의 소유주와 요청한 유저의 아이디가 동일한지 검증합니다
       if (!(await this.postsService.isOwner({ usersId: userData.id, id: String(postID) }))) {
@@ -201,7 +201,7 @@ export class PostsController {
     required: true,
     description: '포스트 아이디',
   })
-  async getDetailFindByPostID(@UserStats() userData: SessionInfo, @Param('postID') postID: Number) {
+  async getDetailFindByPostID(@UserStats() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
     try {
       // 삭제된 게시글 여부를 확인하고 저장합니다.
       const IS_DELETE: boolean = await this.postsService.isDeleted({ id: String(postID) });
@@ -277,7 +277,11 @@ export class PostsController {
     required: true,
     description: '포스트 커서 아이디',
   })
-  async getAllFindByUserID(@UserStats() userData: SessionInfo, @Param('userID') userID: number, @Query('cursor') cursor: number = 0) {
+  async getAllFindByUserID(
+    @UserStats() userData: SessionInfo,
+    @Param('userID', ParseIntPipe) userID: number,
+    @Query('cursor', ParseIntPipe) cursor: number = 0,
+  ) {
     try {
       // Dto Mapping
       let getPostsRequestDto = new GetPostsDto();
@@ -324,7 +328,7 @@ export class PostsController {
     required: true,
     description: '포스트 아이디',
   })
-  async setLike(@UserStats() userData: SessionInfo, @Param('postID') postID: number) {
+  async setLike(@UserStats() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: number) {
     try {
       let setLikeRequestDto = new SetPostToLikeDto();
       setLikeRequestDto.postsId = String(postID);
@@ -364,7 +368,7 @@ export class PostsController {
     required: true,
     description: '포스트 아이디',
   })
-  async setDislike(@UserStats() userData: SessionInfo, @Param('postID') postID: number) {
+  async setDislike(@UserStats() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: number) {
     try {
       let setDislikeRequestDto = new SetPostToDislikeDto();
       setDislikeRequestDto.postsId = String(postID);
