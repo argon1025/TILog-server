@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Comments } from './Comments';
 import { ImageUpload } from './ImageUpload';
@@ -13,6 +14,12 @@ export class Users {
     comment: '데이터 베이스 유저 PK',
     unsigned: true,
   })
+  @ApiProperty({
+    example: '1',
+    description: '유저 아이디',
+    type: Number,
+    required: true,
+  })
   id: number;
 
   @Column('varchar', {
@@ -20,12 +27,24 @@ export class Users {
     comment: 'Oauth 로그인 타입 구분',
     length: 10,
   })
+  @ApiProperty({
+    example: 'github',
+    description: 'Oauth 로그인 타입 구분',
+    type: String,
+    required: true,
+  })
   oAuthType: string;
 
   @Column('varchar', {
     name: 'oAuthServiceID',
     comment: 'Oauth 서비스 별 고유 유저 아이디',
     length: 50,
+  })
+  @ApiProperty({
+    example: 'MDQ6VXNlcjU2NDU5MDc5',
+    description: 'Oauth 서비스 별 고유 유저 아이디',
+    type: String,
+    required: true,
   })
   oAuthServiceId: string;
 
@@ -35,6 +54,12 @@ export class Users {
     length: 50,
     default: () => "'User'",
   })
+  @ApiProperty({
+    example: 'MINJE-98',
+    description: '서비스 유저 닉네임',
+    type: String,
+    required: true,
+  })
   userName: string;
 
   @Column('varchar', {
@@ -42,6 +67,11 @@ export class Users {
     nullable: true,
     comment: '서비스 유저 프로필 이미지 링크',
     length: 300,
+  })
+  @ApiProperty({
+    example: '',
+    description: '서비스 유저 프로필 이미지 링크',
+    type: String,
   })
   proFileImageUrl: string | null;
 
@@ -51,6 +81,11 @@ export class Users {
     comment: '서비스 메일 주소',
     length: 50,
   })
+  @ApiProperty({
+    example: 'jmj012100@gmail.com',
+    description: '서비스 유저 메일 주소',
+    type: String,
+  })
   mailAddress: string | null;
 
   @Column('varchar', {
@@ -59,12 +94,23 @@ export class Users {
     comment: '사용자 암호, Oauth 사용자는 NULL',
     length: 50,
   })
+  @ApiProperty({
+    example: '*******',
+    description: '사용자 암호, Oauth 사용자는 NULL',
+    type: String,
+  })
   password: string | null;
 
   @Column('varchar', {
     name: 'accessToken',
     comment: '서비스 엑세스 토큰',
     length: 255,
+  })
+  @ApiProperty({
+    example: 'gho_J2LTQG8nZxdnvow3YCd0merN3JFmEz2Yt6y',
+    description: '서비스 엑세스 토큰',
+    type: String,
+    required: true,
   })
   accessToken: string;
 

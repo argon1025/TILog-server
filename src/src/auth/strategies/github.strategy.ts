@@ -3,7 +3,7 @@ import { Strategy, VerifyCallback } from 'passport-github2';
 import { Injectable, Logger } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { UserInfo } from '../dto/userinfo.dto';
-
+import Time from '../../utilities/time.utility';
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
   constructor(private readonly authService: AuthService) {
@@ -18,14 +18,13 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
   async validate(accessToken: string, refreshToken: string, profile: any, done: VerifyCallback): Promise<any> {
     Logger.log('Callback');
     const { nodeId, username, profileUrl, provider } = profile;
-    const now = new Date();
     const userinfo: UserInfo = {
       oAuthServiceId: nodeId,
       userName: username,
       proFileImageURL: profileUrl,
       oAuthType: provider,
       accessToken: accessToken,
-      createdAt: now,
+      createdAt: Time.nowDate(),
     };
     return await this.authService.validateUser(userinfo);
   }

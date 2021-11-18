@@ -1,8 +1,4 @@
-export class UserInfo {
-  oAuthServiceId: string;
-  userName: string;
-  proFileImageURL: string;
-  oAuthType: string;
-  accessToken: string;
-  createdAt: Date;
-}
+import { PickType } from '@nestjs/swagger';
+import { Users } from 'src/entities/Users';
+
+export class UserInfo extends PickType(Users, ['oAuthServiceId', 'userName', 'proFileImageUrl', 'oAuthType', 'accessToken', 'createdAt']) {}
