@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -73,6 +73,9 @@ async function bootstrap() {
 
   // ExceptionFilter
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  // ValidationPipe
+  app.useGlobalPipes(new ValidationPipe());
 
   if (!SERVER_PORT || !SERVER_HOST) {
     Logger.error('Unable to load environment variables!');
