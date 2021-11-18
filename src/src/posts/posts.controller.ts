@@ -53,7 +53,8 @@ export class PostsController {
       return ResponseUtility.create(false, 'ok');
     } catch (error) {
       // 사전 정의된 에러인 경우
-      if ('codeNumber' in error || 'codeText' in error || 'message' in error) {
+      // Error interface Type Guard
+      if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
         // 사전 정의되지 않은 에러인 경우
@@ -114,7 +115,8 @@ export class PostsController {
       return ResponseUtility.create(false, 'ok');
     } catch (error) {
       // 사전 정의된 에러인 경우
-      if ('codeNumber' in error || 'codeText' in error || 'message' in error) {
+      // Error interface Type Guard
+      if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
         // 사전 정의되지 않은 에러인 경우
@@ -167,7 +169,8 @@ export class PostsController {
       return ResponseUtility.create(false, 'ok');
     } catch (error) {
       // 사전 정의된 에러인 경우
-      if ('codeNumber' in error || 'codeText' in error || 'message' in error) {
+      // Error interface Type Guard
+      if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
         // 사전 정의되지 않은 에러인 경우
@@ -206,8 +209,8 @@ export class PostsController {
       // 비밀글 여부를 확인하고 저장합니다.
       const IS_PRIVATE: boolean = await this.postsService.isPrivate({ id: String(postID) });
 
-      // 게시글 소유주 여부를 확인하고 저장합니다.
-      const IS_OWNER: boolean = await this.postsService.isOwner({ usersId: userData.id, id: String(postID) });
+      // 유저 세션 데이터가 있다면 게시글 소유주 유무를 체크합니다
+      const IS_OWNER: boolean = !userData?.id ? false : await this.postsService.isOwner({ usersId: userData.id, id: String(postID) });
 
       // 게시글 디테일 정보
       let POST_DATA: GetPostDetailResponseDto;
@@ -241,7 +244,8 @@ export class PostsController {
       return ResponseUtility.create(false, 'ok', POST_DATA);
     } catch (error) {
       // 사전 정의된 에러인 경우
-      if ('codeNumber' in error || 'codeText' in error || 'message' in error) {
+      // Error interface Type Guard
+      if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
         // 사전 정의되지 않은 에러인 경우
@@ -293,11 +297,10 @@ export class PostsController {
     } catch (error) {
       console.log(error);
       // 사전 정의된 에러인 경우
-      if ('codeNumber' in error || 'codeText' in error) {
-        console.log('??');
+      // Error interface Type Guard
+      if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
-        console.log('!!');
         // 사전 정의되지 않은 에러인 경우
         const errorResponse = new ErrorHandlerNotFound(`posts.controller.getAllFindByUserID.${!!error.message ? error.message : 'Unknown_Error'}`);
         throw new HttpException(errorResponse, errorResponse.codeNumber);
@@ -333,7 +336,8 @@ export class PostsController {
       return ResponseUtility.create(false, 'ok', setLikeResult.likes);
     } catch (error) {
       // 사전 정의된 에러인 경우
-      if ('codeNumber' in error || 'codeText' in error || 'message' in error) {
+      // Error interface Type Guard
+      if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
         // 사전 정의되지 않은 에러인 경우
@@ -372,7 +376,8 @@ export class PostsController {
       return ResponseUtility.create(false, 'ok', setDislikeResult.likes);
     } catch (error) {
       // 사전 정의된 에러인 경우
-      if ('codeNumber' in error || 'codeText' in error || 'message' in error) {
+      // Error interface Type Guard
+      if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
         // 사전 정의되지 않은 에러인 경우
