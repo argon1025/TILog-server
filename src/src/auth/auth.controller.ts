@@ -3,7 +3,7 @@ import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RedirectClient } from './decorators/redirect.decorator';
 import { Session } from './decorators/session.decorator';
-import { UserStats } from './decorators/userStats.decorator';
+import { UserInfo } from './decorators/UserInfo.decorator';
 import { SessionInfo } from './dto/session-info.dto';
 import { AuthenticatedGuard } from './guard/auth.guard';
 import { GithubGuard } from './guard/github.guard';
@@ -28,14 +28,11 @@ export class AuthController {
 
   // 로그인한 유저 정보를 반환합니다.
   @Version('1')
-  @Get('status')
+  @Get('userinfo')
   @ApiOperation({ summary: '유저 정보를 반환합니다.' })
-  @ApiBody({
-    type: SessionInfo,
-  })
   @UseGuards(AuthenticatedGuard)
-  status(@UserStats() userStats: SessionInfo) {
-    return userStats;
+  status(@UserInfo() userInfo: SessionInfo) {
+    return userInfo;
   }
 
   // 로그인한 유저의 세션을 파기시킵니다.
