@@ -209,8 +209,8 @@ export class PostsController {
       // 비밀글 여부를 확인하고 저장합니다.
       const IS_PRIVATE: boolean = await this.postsService.isPrivate({ id: String(postID) });
 
-      // 게시글 소유주 여부를 확인하고 저장합니다.
-      const IS_OWNER: boolean = await this.postsService.isOwner({ usersId: userData.id, id: String(postID) });
+      // 유저 세션 데이터가 있다면 게시글 소유주 유무를 체크합니다
+      const IS_OWNER: boolean = !userData?.id ? false : await this.postsService.isOwner({ usersId: userData.id, id: String(postID) });
 
       // 게시글 디테일 정보
       let POST_DATA: GetPostDetailResponseDto;
