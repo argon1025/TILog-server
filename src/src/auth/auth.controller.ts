@@ -28,11 +28,8 @@ export class AuthController {
 
   // 로그인한 유저 정보를 반환합니다.
   @Version('1')
-  @Get('status')
+  @Get('userinfo')
   @ApiOperation({ summary: '유저 정보를 반환합니다.' })
-  @ApiBody({
-    type: SessionInfo,
-  })
   @UseGuards(AuthenticatedGuard)
   status(@UserStats() userStats: SessionInfo) {
     return userStats;
