@@ -40,13 +40,13 @@ export class AuthController {
   @Get('logout')
   @ApiOperation({ summary: '유저가 로그아웃을 합니다.' })
   @UseGuards(AuthenticatedGuard)
-  logout(@Session() session, @RedirectClient() redirect) {
+  logout(@Session() session) {
     // 세션을 제거합니다.
     session.destroy((error) => {
       if (error) {
         return console.log(error);
       }
-      return redirect;
+      return;
     });
   }
 }
