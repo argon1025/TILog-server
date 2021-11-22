@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, UseGuards, Version, Put, Query, ParseIntPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { UserStats } from 'src/auth/decorators/userstats.decorator';
+import { UserInfo } from 'src/auth/decorators/userInfo.decorator';
 import { SessionInfo } from 'src/auth/dto/session-info.dto';
 import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
 import { ErrorHandlerNotFound } from 'src/ExceptionFilters/Errors/ErrorHandlerNotFound.error';
@@ -35,7 +35,7 @@ export class PostsController {
   @ApiBody({
     type: CreateDto,
   })
-  async create(@Body() requestData: CreateDto, @UserStats() userData: SessionInfo) {
+  async create(@Body() requestData: CreateDto, @UserInfo() userData: SessionInfo) {
     try {
       // 포스트 생성에 필요한 DTO
       let createPostRequestDto = new CreatePostDto();
@@ -88,7 +88,7 @@ export class PostsController {
     required: true,
     description: '포스트 아이디',
   })
-  async update(@Body() requestData: UpdateDto, @UserStats() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
+  async update(@Body() requestData: UpdateDto, @UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
     try {
       // 게시물의 소유주와 요청한 유저의 아이디가 동일한지 검증합니다
       if (!(await this.postsService.isOwner({ usersId: userData.id, id: String(postID) }))) {
@@ -147,7 +147,7 @@ export class PostsController {
     required: true,
     description: '포스트 아이디',
   })
-  async delete(@UserStats() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
+  async delete(@UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
     try {
       // 게시물의 소유주와 요청한 유저의 아이디가 동일한지 검증합니다
       if (!(await this.postsService.isOwner({ usersId: userData.id, id: String(postID) }))) {
@@ -201,7 +201,7 @@ export class PostsController {
     required: true,
     description: '포스트 아이디',
   })
-  async getDetailFindByPostID(@UserStats() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
+  async getDetailFindByPostID(@UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
     try {
       // 삭제된 게시글 여부를 확인하고 저장합니다.
       const IS_DELETE: boolean = await this.postsService.isDeleted({ id: String(postID) });
@@ -278,7 +278,7 @@ export class PostsController {
     description: '포스트 커서 아이디',
   })
   async getAllFindByUserID(
-    @UserStats() userData: SessionInfo,
+    @UserInfo() userData: SessionInfo,
     @Param('userID', ParseIntPipe) userID: number,
     @Query('cursor', ParseIntPipe) cursor: number = 0,
   ) {
@@ -328,7 +328,7 @@ export class PostsController {
     required: true,
     description: '포스트 아이디',
   })
-  async setLike(@UserStats() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: number) {
+  async setLike(@UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: number) {
     try {
       let setLikeRequestDto = new SetPostToLikeDto();
       setLikeRequestDto.postsId = String(postID);
@@ -368,7 +368,7 @@ export class PostsController {
     required: true,
     description: '포스트 아이디',
   })
-  async setDislike(@UserStats() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: number) {
+  async setDislike(@UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: number) {
     try {
       let setDislikeRequestDto = new SetPostToDislikeDto();
       setDislikeRequestDto.postsId = String(postID);

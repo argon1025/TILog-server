@@ -1,7 +1,7 @@
 import { Controller, Post, UseInterceptors, UploadedFile, HttpException, UseGuards, Version } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UserStats } from 'src/auth/decorators/userstats.decorator';
+import { UserInfo } from 'src/auth/decorators/userInfo.decorator';
 import { SessionInfo } from 'src/auth/dto/session-info.dto';
 import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
 import { ErrorHandlerNotFound } from 'src/ExceptionFilters/Errors/ErrorHandlerNotFound.error';
@@ -41,7 +41,7 @@ export class FileUploadsController {
       },
     },
   })
-  async uploadImage(@UserStats() userData: SessionInfo, @UploadedFile() file: Express.Multer.File) {
+  async uploadImage(@UserInfo() userData: SessionInfo, @UploadedFile() file: Express.Multer.File) {
     try {
       // 최대 파일사이즈 환경설정 로드
       const MAXIMUM_IMAGE_FILE_SIZE = this.configService.get<number>('MAXIMUM_IMAGE_FILE_SIZE_BYTES', 5120);
