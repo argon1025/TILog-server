@@ -115,7 +115,7 @@ export class Users {
   accessToken: string;
 
   @Column('datetime', { name: 'createdAt', comment: '유저 가입일' })
-  createdAt: Date;
+  createdAt: String;
 
   @Column('datetime', { name: 'updatedAt', nullable: true, comment: '유저 갱신일' })
   updatedAt: Date | null;
