@@ -134,7 +134,7 @@ export class PostsService {
   async isDeleted(requestData: { id: string }): Promise<boolean> {
     const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
 
-    if (getPostWriterIdResult.deletedAt === null) {
+    if (!getPostWriterIdResult.deletedAt) {
       // 삭제된 기록이 없을 경우
       return false;
     } else {
