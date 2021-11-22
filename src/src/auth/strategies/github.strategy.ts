@@ -21,7 +21,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     const userinfo: UserInfo = {
       oAuthServiceId: nodeId,
       userName: username,
-      proFileImageUrl: photos.value[0],
+      proFileImageUrl: photos[0].value,
       oAuthType: provider,
       accessToken: accessToken,
       createdAt: Time.nowDate(),
