@@ -29,6 +29,10 @@ import { GetPostsDto, GetPostsResponseDto } from './dto/Services/GetPosts.DTO';
 import { GetPostDetailDto, GetPostDetailResponseDto } from './dto/Services/GetPostDetail.DTO';
 import { SetPostToLikeDto, SetPostToLikeResponseDto } from './dto/Services/SetPostToLike.DTO';
 import { SetPostToDislikeDto, SetPostToDislikeResponseDto } from './dto/Services/SetPostToDislike.DTO';
+import { Tags } from 'src/entities/Tags';
+import { PostsTags } from 'src/entities/PostsTags';
+import { UserblogCustomization } from 'src/entities/UserblogCustomization';
+import { Category } from 'src/entities/Category';
 
 @Injectable()
 export class PostsService {
@@ -585,7 +589,8 @@ export class PostsService {
     await queryRunner.startTransaction();
 
     try {
-      const query = queryRunner.manager
+      // 포스트, 유저 데이터 조인
+      const postAndUserDataQuery = queryRunner.manager
         .createQueryBuilder()
         .select([
           'post.id',
@@ -604,9 +609,16 @@ export class PostsService {
           'user.proFileImageUrl',
           'user.mailAddress',
           'user.admin',
+          'UserblogCustomization.blogTitle',
+          'UserblogCustomization.statusMessage',
+          'UserblogCustomization.selfIntroduction',
+          'Category.categoryName',
+          'Category.iconUrl',
         ])
         .from(Posts, 'post')
         .innerJoin(Users, 'user', 'user.id = post.usersId')
+        .leftJoin(UserblogCustomization, 'UserblogCustomization', 'UserblogCustomization.usersId = post.usersId')
+        .leftJoin(Category, 'Category', 'Category.id = post.categoryId')
         .where('post.id = :postID', { postID: postData.id })
         .maxExecutionTime(1000);
 
@@ -628,14 +640,53 @@ export class PostsService {
        *   user_proFileImageURL: 'url',
        *   user_mailAddress: 'address',
        *   user_admin: 0
+       *   UserblogCustomization_blogTitle: null,
+       *   UserblogCustomization_statusMessage: null,
+       *   UserblogCustomization_selfIntroduction: null
+       *   Category_categoryName: 'test',
+       *   Category_iconURL: null
        * }
        * | undefined
        */
-      const queryResult = await query.getRawOne();
+      let postAndUserDataQueryResult = await postAndUserDataQuery.getRawOne();
+      // console.log(postAndUserDataQueryResult);
       // 포스트를 찾지 못했을 경우
-      if (!queryResult) {
+      if (!postAndUserDataQueryResult) {
         throw new Error('POST_NOT_FOUND');
       }
+
+      // 태그 데이터 질의
+      const tagDataQuery = queryRunner.manager
+        .createQueryBuilder()
+        .select(['postTags.id', 'postTags.tagsId', 'postTags.createdAt', 'tags.tagsName'])
+        .from(PostsTags, 'postTags')
+        .innerJoin(Tags, 'tags', 'postTags.tagsId = tags.id')
+        .where('postTags.postsId = :postID', { postID: postData.id })
+        .maxExecutionTime(1000);
+
+      /**
+       * @Returns [
+       *   TextRow {
+       *     postTags_id: '1',
+       *     postTags_tagsID: '1',
+       *     postTags_createdAt: 2021-11-03T02:25:44.000Z,
+       *     tags_tagsName: 'test'
+       *   },
+       *   TextRow {
+       *     postTags_id: '2',
+       *     postTags_tagsID: '2',
+       *     postTags_createdAt: 2021-11-03T02:25:44.000Z,
+       *     tags_tagsName: 'test2'
+       *   }
+       * ]
+       * | []
+       */
+      const tagDataQueryResult = await tagDataQuery.getRawMany();
+      // console.log(tagDataQueryResult);
+
+      // Result
+      let queryResult = postAndUserDataQueryResult;
+      queryResult.TagData = tagDataQueryResult.length === 0 ? null : tagDataQueryResult;
 
       //DTO Mapping
       let response = new GetPostDetailResponseDto();
@@ -656,6 +707,13 @@ export class PostsService {
       response.mailAddress = queryResult.user_mailAddress;
       response.admin = queryResult.user_admin;
 
+      response.categoryName = queryResult.Category_categoryName;
+      response.iconUrl = queryResult.Category_iconURL;
+      response.blogTitle = queryResult.UserblogCustomization_blogTitle;
+      response.selfIntroduction = queryResult.UserblogCustomization_selfIntroduction;
+      response.statusMessage = queryResult.UserblogCustomization_statusMessage;
+
+      response.TagData = queryResult.TagData;
       // 변경 사항을 커밋합니다.
       await queryRunner.commitTransaction();
 

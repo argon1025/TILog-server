@@ -1,26 +1,39 @@
 import { IntersectionType } from '@nestjs/mapped-types';
 import { PickType } from '@nestjs/swagger';
+import { Category } from 'src/entities/Category';
+import { PostsTags } from 'src/entities/PostsTags';
+import { Tags } from 'src/entities/Tags';
+import { UserblogCustomization } from 'src/entities/UserblogCustomization';
 import { Users } from 'src/entities/Users';
 import { Posts } from '../../../entities/Posts';
 
 export class GetPostDetailDto extends PickType(Posts, ['id']) {}
 
-// 유저, 포스트 테이블에 필요한 데이터 타입을 명시합니다.
-class GetPostDetailNeedToUsersEntity extends PickType(Users, ['userName', 'proFileImageUrl', 'mailAddress', 'admin']) {}
-class GetPostDetailNeedToPostsEntity extends PickType(Posts, [
-  'id',
-  'usersId',
-  'categoryId',
-  'title',
-  'thumbNailUrl',
-  'viewCounts',
-  'likes',
-  'markDownContent',
-  'private',
-  'createdAt',
-  'updatedAt',
-  'deletedAt',
-]) {}
+class PostTagsDto extends IntersectionType(PickType(PostsTags, ['id', 'tagsId', 'createdAt'] as const), PickType(Tags, ['tagsName'] as const)) {}
 
-// 두 타입을 합쳐 export 합니다.
-export class GetPostDetailResponseDto extends IntersectionType(GetPostDetailNeedToUsersEntity, GetPostDetailNeedToPostsEntity) {}
+// 타입을 합쳐 export 합니다.
+export class GetPostDetailResponseDto extends IntersectionType(
+  IntersectionType(
+    PickType(Users, ['userName', 'proFileImageUrl', 'mailAddress', 'admin'] as const),
+    PickType(Posts, [
+      'id',
+      'usersId',
+      'categoryId',
+      'title',
+      'thumbNailUrl',
+      'viewCounts',
+      'likes',
+      'markDownContent',
+      'private',
+      'createdAt',
+      'updatedAt',
+      'deletedAt',
+    ] as const),
+  ),
+  IntersectionType(
+    PickType(Category, ['categoryName', 'iconUrl'] as const),
+    PickType(UserblogCustomization, ['blogTitle', 'selfIntroduction', 'statusMessage'] as const),
+  ),
+) {
+  TagData: Array<PostTagsDto> | null;
+}
