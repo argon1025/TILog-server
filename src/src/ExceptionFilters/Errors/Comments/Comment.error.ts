@@ -150,3 +150,19 @@ export class NotCommentOwner implements Error {
     kr: '코멘트의 작성자가 아닙니다.',
   };
 }
+// 댓글의 유저 정보 획득 실패
+export class GetCommentsUsersFailed implements Error {
+  // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
+  constructor(public readonly description?) {}
+
+  // 미리 정의된 에러코드
+  public readonly codeNumber = 400;
+
+  public readonly codeText = 'GetCommentsUsersFailed';
+
+  // 미리 정의된 메시지 객체
+  public readonly message = {
+    en: 'failed get comments users',
+    kr: ' 댓글의 유저 정보 획득 실패',
+  };
+}

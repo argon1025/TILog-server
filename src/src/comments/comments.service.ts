@@ -13,15 +13,22 @@ import {
   ViewOneCommentFaild,
   NotCommentOwner,
   UnDeleteCommentFaild,
+  GetCommentsUsersFailed,
 } from 'src/ExceptionFilters/Errors/Comments/Comment.error';
 import { WriteNewCommentOnPostDto } from './dto/service/writeNewCommentOnPost.dto';
 import { WriteNewCommentToCommentDto } from './dto/service/writeNewCommentToComment.dto';
 import { UpdateCommentDto } from './dto/service/updateComment.dto';
 import { DeleteCommentDto } from './dto/service/deleteComment.dto';
 import { UnDeleteCommentDto } from './dto/service/unDeleteComment.dto';
+import { Connection, In } from 'typeorm';
+import { Users } from 'src/entities/Users';
 @Injectable()
 export class CommentsService {
-  constructor(@InjectRepository(Comments) private commentsRepo: Repository<Comments>) {}
+  constructor(
+    private connection: Connection,
+    @InjectRepository(Comments) private commentsRepo: Repository<Comments>,
+    @InjectRepository(Users) private usersRepo: Repository<Users>,
+  ) {}
 
   /**
    * write New comment on post
@@ -75,11 +82,25 @@ export class CommentsService {
    * @param postID
    * @returns Array<Comments>
    */
-  async viewAllComments(postID: string): Promise<Array<Comments>> {
+  async viewAllComments(postID: string): Promise<any> {
     try {
-      return await this.commentsRepo.find({ where: { postsId: postID, replyLevel: 0 }, relations: ['childComment'] });
+      const comment = await this.commentsRepo.find({ where: { postsId: postID, replyLevel: 0 }, relations: ['childComment'] });
+
+      return comment;
     } catch (error) {
       throw new ViewAllCommentsFaild(`service.comment.viewpostcomments.${!!error.message ? error.message : 'Unknown_Error'}`);
+    }
+  }
+
+  async getCommentsWriteUsers(postID: string): Promise<any> {
+    try {
+      const user = await this.usersRepo
+        .createQueryBuilder()
+        .where(`users.id IN (select distinct usersId from comments where comments.postsId = ${postID})`)
+        .getMany();
+      return user;
+    } catch (error) {
+      throw new GetCommentsUsersFailed(`service.comment.getCommentsWriteUsers.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
   /**
