@@ -78,7 +78,23 @@ export class CommentsController {
   @ApiOperation({ summary: '포스트의 모든 코멘트를 가져옵니다.' })
   async viewAllComments(@Param('postid') postID: string) {
     try {
-      return await this.commentsService.viewAllComments(postID);
+      const result = await this.commentsService.viewAllComments(postID);
+      return result;
+    } catch (error) {
+      throw new HttpException(error, error.codeNumber);
+    }
+  }
+  /**
+   * 코멘트의 작성자 리스트
+   * *인증된 유저만 코멘트를 작성할 수 있습니다.
+   */
+  @Version('1')
+  @Get('writeusers/post/:postid')
+  @ApiOperation({ summary: '포스트의 모든 코멘트를 가져옵니다.' })
+  async getCommentsWriteUsers(@Param('postid') postID: string) {
+    try {
+      const result = await this.commentsService.getCommentsWriteUsers(postID);
+      return result;
     } catch (error) {
       throw new HttpException(error, error.codeNumber);
     }
@@ -123,19 +139,19 @@ export class CommentsController {
   /**
    * 삭제한 댓글을 복구합니다.
    */
-  @Version('1')
-  @Patch(':commentid')
-  @ApiOperation({ summary: '삭제한 댓글을 복구합니다.' })
-  async unDeleteComment(@UserInfo('id') userID: number, @Param('commentid') commentID: string) {
-    const unDeleteCommentDto = new UnDeleteCommentDto();
-    unDeleteCommentDto.id = commentID;
-    unDeleteCommentDto.usersId = userID;
-    try {
-      return await this.commentsService.unDeleteComment(unDeleteCommentDto);
-    } catch (error) {
-      throw new HttpException(error, error.codeNumber);
-    }
-  }
+  // @Version('1')
+  // @Patch(':commentid')
+  // @ApiOperation({ summary: '삭제한 댓글을 복구합니다.' })
+  // async unDeleteComment(@UserInfo('id') userID: number, @Param('commentid') commentID: string) {
+  //   const unDeleteCommentDto = new UnDeleteCommentDto();
+  //   unDeleteCommentDto.id = commentID;
+  //   unDeleteCommentDto.usersId = userID;
+  //   try {
+  //     return await this.commentsService.unDeleteComment(unDeleteCommentDto);
+  //   } catch (error) {
+  //     throw new HttpException(error, error.codeNumber);
+  //   }
+  // }
   /**
    * 댓글을 삭제합니다.
    */
