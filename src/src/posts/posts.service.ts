@@ -686,7 +686,7 @@ export class PostsService {
 
       // Result
       let queryResult = postAndUserDataQueryResult;
-      queryResult.TagData = tagDataQueryResult.length === 0 ? null : tagDataQueryResult;
+      queryResult.TagData = tagDataQueryResult.length === 0 ? [] : tagDataQueryResult;
 
       //DTO Mapping
       let response = new GetPostDetailResponseDto();

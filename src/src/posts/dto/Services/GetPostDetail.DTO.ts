@@ -35,5 +35,5 @@ export class GetPostDetailResponseDto extends IntersectionType(
     PickType(UserblogCustomization, ['blogTitle', 'selfIntroduction', 'statusMessage'] as const),
   ),
 ) {
-  TagData: Array<PostTagsDto> | null;
+  TagData: Array<PostTagsDto>;
 }
