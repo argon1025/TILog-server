@@ -494,8 +494,12 @@ export class PostsService {
           'posts.private',
           'posts.createdAt',
           'posts.updatedAt',
+          'category.id',
+          'category.categoryName',
+          'category.iconUrl',
         ])
         .from(Posts, 'posts')
+        .innerJoin(Category, 'category', 'posts.categoryId = category.id')
         // 커서 다음에 있는 게시글이고
         .where('posts.id > :cursorNumber', { cursorNumber: getPostData.cursorNumber })
         // 해당 유저가 작성한
@@ -515,34 +519,41 @@ export class PostsService {
       }
 
       /**
+       *
        * @returns [
-       *  Posts {
-       *    id: '5',
-       *    usersId: 1,
-       *    categoryId: 1,
-       *    title: 'test',
-       *    thumbNailUrl: 'test',
-       *    viewCounts: 0,
-       *    likes: 0,
-       *    private: 0,
-       *    createdAt: 2021-11-03T02:04:50.000Z,
-       *    updatedAt: 2021-11-03T02:25:44.000Z
-       *  },
-       *  Posts {
-       *    id: '6',
-       *    usersId: 1,
-       *    categoryId: 1,
-       *    title: 'test',
-       *    thumbNailUrl: 'test',
-       *    viewCounts: 1,
-       *    likes: 0,
-       *    private: 0,
-       *    createdAt: 2021-11-03T02:07:56.000Z,
-       *    updatedAt: 2021-11-03T02:25:44.000Z
-       *  }
-       *]
+       *   TextRow {
+       *     posts_id: '6',
+       *     posts_usersID: 1,
+       *     posts_categoryID: 1,
+       *     posts_title: 'test',
+       *     posts_thumbNailURL: 'test',
+       *     posts_viewCounts: 1,
+       *     posts_likes: 0,
+       *     posts_private: 0,
+       *     posts_createdAt: 2021-11-03T02:07:56.000Z,
+       *     posts_updatedAt: 2021-11-03T02:25:44.000Z,
+       *     category_id: 1,
+       *     category_categoryName: 'ㅅㄷㄴㅅ',
+       *     category_iconURL: null
+       *   },
+       *   TextRow {
+       *     posts_id: '7',
+       *     posts_usersID: 1,
+       *     posts_categoryID: 1,
+       *     posts_title: 'Title example',
+       *     posts_thumbNailURL: 'thumbNailUrl.com',
+       *     posts_viewCounts: 0,
+       *     posts_likes: 0,
+       *     posts_private: 0,
+       *     posts_createdAt: 2021-11-22T01:27:38.000Z,
+       *     posts_updatedAt: null,
+       *     category_id: 1,
+       *     category_categoryName: 'ㅅㄷㄴㅅ',
+       *     category_iconURL: null
+       *   }
+       * ]
        */
-      const queryResult = await query.getMany();
+      const queryResult = await query.getRawMany();
 
       // 찾은 포스트가 없다면 에러를 반환합니다.
       if (queryResult.length === 0) {
