@@ -33,7 +33,10 @@ export class TagsController {
     }
   }
 
+  @Version('1')
   @Get('search')
+  @ApiTags('Tags')
+  @ApiOperation({ summary: '태그를 검색합니다.' })
   async searchTags(@Query() { tagName }) {
     try {
       return await this.tagsService.getTags(tagName);
