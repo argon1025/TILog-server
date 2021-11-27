@@ -8,6 +8,7 @@ import Time from 'src/utilities/time.utility';
 
 // ERROR
 import {
+  GetMostLikedPostFail,
   PostCreateFail,
   PostDetailGetFail,
   PostGetFail,
@@ -33,6 +34,7 @@ import { Tags } from 'src/entities/Tags';
 import { PostsTags } from 'src/entities/PostsTags';
 import { UserblogCustomization } from 'src/entities/UserblogCustomization';
 import { Category } from 'src/entities/Category';
+import { MostLikedRequestDto, MostLikedResponseDto } from './dto/Services/MostLikedPost.DTO';
 
 @Injectable()
 export class PostsService {
@@ -996,6 +998,109 @@ export class PostsService {
       throw new SetPostToDislikeFail(`posts.service.setPostToLike ${!!error.message ? error.message : 'Unknown_Error'}`);
     } finally {
       // 커넥션 해제
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * 전체 멤버가 작성한 게시글 중 좋아요 수가 많은 게시글을 요청합니다
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  public async getMostLiked(requestData: MostLikedRequestDto) {
+    // 쿼리러너 객체 생성
+    const queryRunner = this.connection.createQueryRunner();
+
+    // 데이터 베이스 연결
+    await queryRunner.connect();
+
+    // 트랜잭션 시작
+    await queryRunner.startTransaction();
+
+    try {
+      let query = queryRunner.manager
+        .createQueryBuilder()
+        .select([
+          'posts.id',
+          'posts.usersId',
+          'posts.categoryId',
+          'posts.title',
+          'posts.thumbNailUrl',
+          'posts.viewCounts',
+          'posts.likes',
+          'posts.private',
+          'posts.createdAt',
+          'posts.updatedAt',
+          'category.id',
+          'category.categoryName',
+          'category.iconUrl',
+          'users.userName',
+          'users.proFileImageUrl',
+        ])
+        .from(Posts, 'posts')
+        .innerJoin(Category, 'category', 'posts.categoryId = category.id')
+        .innerJoin(Users, 'users', 'posts.usersId = users.id')
+        // 커서 다음에 있는 게시글이고
+        .where('posts.id > :cursorNumber', { cursorNumber: requestData.cursorNumber })
+        // 해당 날자 안에
+        .andWhere(`posts.createdAt BETWEEN DATE_ADD(NOW(), INTERVAL -1 ${requestData.date}) AND NOW()`)
+        // 삭제되지 않은 게시글만
+        .andWhere('posts.deletedAt is NULL')
+        // 비밀글이 아닌것만
+        .andWhere('posts.private = 0')
+        // 좋아요 높은 순으로 정렬
+        .orderBy('posts.likes', 'DESC')
+        // 최대 반환 게시글 수
+        .limit(requestData.contentLimit)
+        .maxExecutionTime(1000);
+
+      /**
+       *
+       * @returns [
+       *  TextRow {
+       *     posts_id: '7',
+       *     posts_usersID: 1,
+       *     posts_categoryID: 1,
+       *     posts_title: 'Title example',
+       *     posts_thumbNailURL: 'thumbNailUrl.com',
+       *     posts_viewCounts: 0,
+       *     posts_likes: 2,
+       *     posts_private: 0,
+       *     posts_createdAt: 2021-11-22T01:27:38.000Z,
+       *     posts_updatedAt: null,
+       *     category_id: 1,
+       *     category_categoryName: 'ㅅㄷㄴㅅ',
+       *     category_iconURL: null,
+       *     users_userName: 'ㅁㄴㅇ',
+       *     users_proFileImageURL: 'ㅁㄴㅇ'
+       *   }
+       * ]
+       */
+      const queryResult = await query.getRawMany();
+
+      // 찾은 포스트가 없다면 에러를 반환합니다.
+      if (queryResult.length === 0) {
+        throw new Error('POSTS_NOT_FOUND');
+      }
+
+      //DTO Mapping
+      let responseData = new MostLikedResponseDto();
+      // 포스트 리스트 데이터
+      responseData.postListData = queryResult;
+      // 포스트 마지막 데이터의 id를 커서 넘버로 저장
+      responseData.nextCursorNumber = queryResult.length === 0 ? 0 : Number(queryResult[queryResult.length - 1].posts_id);
+
+      // 변경 사항을 커밋합니다.
+      await queryRunner.commitTransaction();
+
+      // 결과를 리턴합니다
+      return responseData;
+    } catch (error) {
+      // 롤백을 실행합니다.
+      await queryRunner.rollbackTransaction();
+      throw new GetMostLikedPostFail(`posts.service.getMostLiked ${!!error.message ? error.message : 'Unknown_Error'}`);
+    } finally {
+      // 생성된 커넥션을 해제합니다.
       await queryRunner.release();
     }
   }

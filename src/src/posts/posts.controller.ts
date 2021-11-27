@@ -26,6 +26,7 @@ import { UpdateDto } from './dto/Controller/Update.Posts.controller.DTO copy';
 import { CreatePostDto } from './dto/Services/CreatePost.DTO';
 import { GetPostDetailDto, GetPostDetailResponseDto } from './dto/Services/GetPostDetail.DTO';
 import { GetPostsDto } from './dto/Services/GetPosts.DTO';
+import { MostLikedRequestDto, searchScope } from './dto/Services/MostLikedPost.DTO';
 import { SetPostToDislikeDto } from './dto/Services/SetPostToDislike.DTO';
 import { SetPostToLikeDto } from './dto/Services/SetPostToLike.DTO';
 import { SoftDeletePostDto } from './dto/Services/SoftDeletePost.DTO';
@@ -401,6 +402,53 @@ export class PostsController {
       } else {
         // 사전 정의되지 않은 에러인 경우
         const errorResponse = new ErrorHandlerNotFound(`posts.controller.setLike.${!!error.message ? error.message : 'Unknown_Error'}`);
+        throw new HttpException(errorResponse, errorResponse.codeNumber);
+      }
+    }
+  }
+
+  /**
+   * 전체 멤버가 작성한 게시글 중 좋아요 수가 많은 게시글을 요청합니다
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  @Version('1')
+  @Get('posts/trends/like')
+  @ApiTags('Posts')
+  @ApiOperation({ summary: '전체 멤버가 작성한 게시글 중 좋아요 수가 많은 게시글을 요청합니다.' })
+  @ApiQuery({ name: 'searchScope', enum: searchScope })
+  @ApiQuery({
+    name: 'cursor',
+    type: 'number',
+    required: true,
+    description: '포스트 커서 아이디',
+  })
+  async getMostLikedPosts(@Query('searchScope') searchScopeData: searchScope, @Query('cursor', ParseIntPipe) cursor: number = 0) {
+    try {
+      // 데이터 추가 유효성 확인
+      if (!(searchScopeData in searchScope)) throw new Error('SEARCH_SCOPE_DATA_NOT_VALID');
+
+      // Dto Mapping
+      let getPostsRequestDto = new MostLikedRequestDto();
+      // 최대 콘텐츠 조회 갯수
+      getPostsRequestDto.contentLimit = this.configService.get<number>('POSTS_GET_CONTENT_LIMIT', 10);
+      // 현재 커서 넘버
+      getPostsRequestDto.cursorNumber = cursor;
+      // 조회 기간
+      getPostsRequestDto.date = searchScopeData;
+
+      const getPostsResult = await this.postsService.getMostLiked(getPostsRequestDto);
+
+      // 응답 리턴
+      return ResponseUtility.create(false, 'ok', getPostsResult);
+    } catch (error) {
+      // 사전 정의된 에러인 경우
+      // Error interface Type Guard
+      if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
+        throw new HttpException(error, error.codeNumber);
+      } else {
+        // 사전 정의되지 않은 에러인 경우
+        const errorResponse = new ErrorHandlerNotFound(`posts.controller.getAllFindByUserID.${!!error.message ? error.message : 'Unknown_Error'}`);
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }
