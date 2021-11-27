@@ -18,7 +18,7 @@ export class TagSearchFail implements Error {
 
   public readonly codeNumber = 400;
 
-  public readonly codeText = 'TagCreateFail';
+  public readonly codeText = 'TagSearchFail';
 
   public readonly message = {
     en: 'fail to search tag',
