@@ -24,6 +24,7 @@ import ResponseUtility from 'src/utilities/Response.utility';
 import { CreateDto } from './dto/Controller/Create.Posts.controller.DTO';
 import { UpdateDto } from './dto/Controller/Update.Posts.controller.DTO copy';
 import { CreatePostDto } from './dto/Services/CreatePost.DTO';
+import { CreatePostTags } from './dto/Services/CreatePostTags.DTO';
 import { GetPostDetailDto, GetPostDetailResponseDto } from './dto/Services/GetPostDetail.DTO';
 import { GetPostsDto } from './dto/Services/GetPosts.DTO';
 import { MostLikedRequestDto, searchScope } from './dto/Services/MostLikedPost.DTO';
@@ -449,6 +450,25 @@ export class PostsController {
       } else {
         // 사전 정의되지 않은 에러인 경우
         const errorResponse = new ErrorHandlerNotFound(`posts.controller.getAllFindByUserID.${!!error.message ? error.message : 'Unknown_Error'}`);
+        throw new HttpException(errorResponse, errorResponse.codeNumber);
+      }
+    }
+  }
+
+  @Post('posts/:postsId/tags')
+  public async createPostTags(@Param() { postsId }: { postsId: number }, @Body() createPostTags: CreatePostTags[]) {
+    try {
+      return await this.postsService.createPostTags(postsId, createPostTags);
+    } catch (error) {
+      // 사전 정의된 에러인 경우
+      // Error interface Type Guard
+      if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
+        throw new HttpException(error, error.codeNumber);
+      } else {
+        // 사전 정의되지 않은 에러인 경우
+        const errorResponse = new ErrorHandlerNotFound(
+          `${PostsController.name}.${this.createPostTags.name}.${!!error.message ? error.message : 'Unknown_Error'}`,
+        );
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }

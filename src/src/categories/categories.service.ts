@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Category } from 'src/entities/Category';
 import { CategoryCreateFail, CategorySearchFail } from 'src/ExceptionFilters/Errors/Categories/Category.error';
 import { CategoryRepository } from 'src/repositories/categories.repository';
-import { chosungHangul, isChosung } from 'src/utilities/hungul';
+import { isChosung } from 'src/utilities/hungul';
 import { Like } from 'typeorm';
 import { CreateCategoryDto } from './dto/Categories.Create.DTO';
 
@@ -26,12 +26,10 @@ export class CategoriesService {
 
   public async getCategories(categoryName: string) {
     try {
-      /* 한글 자음 추출 */
-      const chosungStr = chosungHangul(categoryName);
       let categories: Category[];
 
       /* 한글 초성일 경우 */
-      if (isChosung(categoryName, chosungStr)) {
+      if (isChosung(categoryName)) {
         categories = await this.categoriesRepository
           .createQueryBuilder()
           .where(`fn_choSearch(categoryName) LIKE concat('%', '${categoryName.trim()}', '%')`)
