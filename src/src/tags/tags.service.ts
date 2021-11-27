@@ -28,16 +28,18 @@ export class TagsService {
     try {
       /* 한글 자음 추출 */
       const chosungStr = chosungHangul(tagsName);
+      let tags: Tags[];
 
       /* 한글 초성일 경우 */
       if (isChosung(tagsName, chosungStr)) {
-        return await this.tagsRepositories.createQueryBuilder().where(`fn_choSearch(tagsName) LIKE concat('%', '${tagsName.trim()}', '%')`).getMany();
+        tags = await this.tagsRepositories.createQueryBuilder().where(`fn_choSearch(tagsName) LIKE concat('%', '${tagsName.trim()}', '%')`).getMany();
       } else {
         /* 초성이 아닐 경우 */
-        return await this.tagsRepositories.find({
+        tags = await this.tagsRepositories.find({
           tagsName: Like(`%${tagsName}%`),
         });
       }
+      return tags.map((tag: Tags) => tag.tagsName);
     } catch (error) {
       throw new TagSearchFail(`${TagsService.name}.${this.getTags.name}: ${!!error.message ? error.message : 'Unknown_Error'}`);
     }
