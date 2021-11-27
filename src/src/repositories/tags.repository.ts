@@ -5,7 +5,7 @@ import { EntityManager, EntityRepository, getConnection, Repository } from 'type
 @EntityRepository(Tags)
 export class TagsRepository extends Repository<Tags> {
   public async createTag(createTag: CreateTagDto) {
-    await getConnection().transaction(async (entityManager: EntityManager) => {
+    return await getConnection().transaction(async (entityManager: EntityManager) => {
       const isTag = await entityManager.findOne(Tags, { where: { tagsName: createTag.tagsName } });
 
       if (isTag) {

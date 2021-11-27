@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Connection } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { Posts } from '../entities/Posts';
 import { PostView } from 'src/entities/PostView';
 import { Users } from 'src/entities/Users';
@@ -8,6 +8,7 @@ import Time from 'src/utilities/time.utility';
 
 // ERROR
 import {
+  CreatePostTagFail,
   GetMostLikedPostFail,
   PostCreateFail,
   PostDetailGetFail,
@@ -35,10 +36,24 @@ import { PostsTags } from 'src/entities/PostsTags';
 import { UserblogCustomization } from 'src/entities/UserblogCustomization';
 import { Category } from 'src/entities/Category';
 import { MostLikedRequestDto, MostLikedResponseDto } from './dto/Services/MostLikedPost.DTO';
+import { InjectRepository } from '@nestjs/typeorm';
+import { compareArray } from 'src/utilities/compare.array.utility';
+import { CreatePostTags } from './dto/Services/CreatePostTags.DTO';
 
 @Injectable()
 export class PostsService {
-  constructor(private connection: Connection) {}
+  constructor(
+    private connection: Connection,
+
+    @InjectRepository(Posts)
+    private readonly postsRepository: Repository<Posts>,
+
+    @InjectRepository(Tags)
+    private readonly tagsRepository: Repository<Tags>,
+
+    @InjectRepository(PostsTags)
+    private readonly postsTagsRepository: Repository<PostsTags>,
+  ) {}
 
   /**
    * 포스트 아이디로 작성자 아이디, 비밀글 유무, 삭제 유무를 반환합니다.
@@ -1102,6 +1117,48 @@ export class PostsService {
     } finally {
       // 생성된 커넥션을 해제합니다.
       await queryRunner.release();
+    }
+  }
+
+  public async createPostTags(postsId: number, createPostTags: CreatePostTags[]) {
+    try {
+      const post = await this.postsRepository.findOne({ where: { id: postsId }, relations: ['postsTags', 'postsTags.tags'] });
+
+      if (!post) {
+        throw new Error('존재하지 않는 포스트 입니다.');
+      }
+
+      const tagsName = createPostTags.map((tag: Tags) => tag.tagsName);
+      const registeredTagsName = post.postsTags.map((postTag: PostsTags) => postTag.tags.tagsName);
+
+      /* 등록되지 않은 태그 검색 */
+      const tagNameThatNeedsBeAdded = compareArray(tagsName, registeredTagsName);
+
+      /* tags 생성
+       * 있으면 그대로 리턴, 없으면 생성
+       */
+      const createdTags: Tags[] = await Promise.all(
+        tagNameThatNeedsBeAdded.map(async (tagName: string) => {
+          const tag = await this.tagsRepository.findOne({ tagsName: tagName });
+          if (tag) {
+            return tag;
+          }
+          return await this.tagsRepository.save({ tagsName: tagName });
+        }),
+      );
+
+      /**
+       * 포스트에 태그 연결
+       */
+      await Promise.all(
+        createdTags.map(async (tag: Tags) => {
+          await this.postsTagsRepository.save({ posts: post, tags: tag, createdAt: new Date() });
+        }),
+      );
+
+      return true;
+    } catch (error) {
+      throw new CreatePostTagFail(`${PostsService.name}.${this.createPostTags.name}: ${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }
 }
