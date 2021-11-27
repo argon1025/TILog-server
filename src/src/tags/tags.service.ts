@@ -39,7 +39,7 @@ export class TagsService {
           tagsName: Like(`%${tagsName}%`),
         });
       }
-      return tags.map((tag: Tags) => tag.tagsName);
+      return tags;
     } catch (error) {
       throw new TagSearchFail(`${TagsService.name}.${this.getTags.name}: ${!!error.message ? error.message : 'Unknown_Error'}`);
     }
