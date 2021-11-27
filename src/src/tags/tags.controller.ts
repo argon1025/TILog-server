@@ -1,4 +1,4 @@
-import { Body, Controller, HttpException, Post, Version } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, Post, Query, Version } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ErrorHandlerNotFound } from 'src/ExceptionFilters/Errors/ErrorHandlerNotFound.error';
 import ResponseUtility from 'src/utilities/Response.utility';
@@ -27,7 +27,23 @@ export class TagsController {
         throw new HttpException(error, error.codeNumber);
       } else {
         // 사전 정의되지 않은 에러인 경우
-        const errorResponse = new ErrorHandlerNotFound(`tags.controller.create.${!!error.message ? error.message : 'Unknown_Error'}`);
+        const errorResponse = new ErrorHandlerNotFound(`tags.controller.${this.createTag.name}.${!!error.message ? error.message : 'Unknown_Error'}`);
+        throw new HttpException(errorResponse, errorResponse.codeNumber);
+      }
+    }
+  }
+
+  @Get('search')
+  async searchTags(@Query() { tagName }) {
+    try {
+      return await this.tagsService.getTags(tagName);
+    } catch (error) {
+      // 사전 정의된 에러인 경우
+      if ('codeNumber' in error || 'codeText' in error || 'message' in error) {
+        throw new HttpException(error, error.codeNumber);
+      } else {
+        // 사전 정의되지 않은 에러인 경우
+        const errorResponse = new ErrorHandlerNotFound(`tags.controller.${this.createTag.name}.${!!error.message ? error.message : 'Unknown_Error'}`);
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }

@@ -4,7 +4,7 @@ import { SessionInfo } from 'src/auth/dto/session-info.dto';
 import { UserInfo } from 'src/auth/dto/userinfo.dto';
 import { Users } from 'src/entities/Users';
 import { UserCreateFailed } from 'src/ExceptionFilters/Errors/Users/User.error';
-import Time from 'src/utilities/Time.utility';
+import Time from 'src/utilities/time.utility';
 import { Repository } from 'typeorm';
 
 @Injectable()
