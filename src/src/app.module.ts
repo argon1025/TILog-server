@@ -26,6 +26,7 @@ import { FileUploadsModule } from './file-uploads/file-uploads.module';
 import { UserBlogCustomizationModule } from './user-blog-customization/user-blog-customization.module';
 import { TagsModule } from './tags/tags.module';
 import { CategoriesModule } from './categories/categories.module';
+import { PinnedRepositoriesModule } from './pinned-repositories/pinned-repositories.module';
 
 // Load ENV
 const ENV = process.env;
@@ -70,6 +71,7 @@ const ENV = process.env;
     UserBlogCustomizationModule,
     TagsModule,
     CategoriesModule,
+    PinnedRepositoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
