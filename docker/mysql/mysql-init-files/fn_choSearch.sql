@@ -31,7 +31,7 @@ declare returnStr varchar(100);
                  when tmpStr rlike '^ㅋ' OR ( tmpStr >= '카' AND tmpStr < '타' ) then 'ㅋ' 
                  when tmpStr rlike '^ㅌ' OR ( tmpStr >= '타' AND tmpStr < '파' ) then 'ㅌ' 
                  when tmpStr rlike '^ㅍ' OR ( tmpStr >= '파' AND tmpStr < '하' ) then 'ㅍ' 
-            else 'ㅎ' end); 
+                 when tmpStr rlike '^ㅎ' OR ( tmpStr >= '하') then 'ㅎ' end); 
            set i=i+1; 
      end while; 
 RETURN returnStr;
