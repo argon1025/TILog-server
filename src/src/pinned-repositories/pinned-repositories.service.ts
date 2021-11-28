@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from 'src/entities/Category';
 import { PinnedRepositories } from 'src/entities/PinnedRepositories';
 import { PinnedRepositoryCategories } from 'src/entities/PinnedRepositoryCategories';
-import { CreatePinnedRepositoriesFail } from 'src/ExceptionFilters/Errors/PinnedRepositories/PinnedRepositories.error';
+import { CreatePinnedRepositoriesFail, GetPinnedRepository } from 'src/ExceptionFilters/Errors/PinnedRepositories/PinnedRepositories.error';
 import { In, Repository } from 'typeorm';
 import { CreatePinnedRepositoriesDto, CreatePinnedRepositoryCategories } from './dto/CreatePinnedRepositories.DTO';
 
@@ -71,6 +71,23 @@ export class PinnedRepositoriesService {
     } catch (error) {
       throw new CreatePinnedRepositoriesFail(
         `${PinnedRepositoriesService.name}.${this.createPinnedRepositoryCategories.name}: ${!!error.message ? error.message : 'Unknown_Error'}`,
+      );
+    }
+  }
+
+  public async getPinnedRepository(pinnedRepositoriesId: number): Promise<PinnedRepositories> {
+    try {
+      const pinnedRepository = await this.pinnedRepositories.findOne({ id: pinnedRepositoriesId });
+
+      /* pinned repository가 존재하지 않을 때 */
+      if (!pinnedRepository) {
+        throw new Error('존재하지 않는 pinned repository 입니다.');
+      }
+
+      return pinnedRepository;
+    } catch (error) {
+      throw new GetPinnedRepository(
+        `${PinnedRepositoriesService.name}.${this.getPinnedRepository.name}: ${!!error.message ? error.message : 'Unknown_Error'}`,
       );
     }
   }
