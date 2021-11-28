@@ -1138,21 +1138,26 @@ export class PostsService {
        * 있으면 그대로 리턴, 없으면 생성
        */
       const createdTags: Tags[] = await Promise.all(
-        tagNameThatNeedsBeAdded.map(async (tagName: string) => {
-          const tag = await this.tagsRepository.findOne({ tagsName: tagName });
-          if (tag) {
-            return tag;
+        createPostTags.map(async (tag: Tags) => {
+          const isTag = await this.tagsRepository.findOne({ id: tag.id });
+          if (isTag) {
+            return isTag;
           }
-          return await this.tagsRepository.save({ tagsName: tagName });
+          return await this.tagsRepository.save({ tagsName: tag.tagsName });
         }),
       );
 
       /**
        * 포스트에 태그 연결
+       * 이미 연결되어 있는 태그는 연결하지 않음
        */
       await Promise.all(
         createdTags.map(async (tag: Tags) => {
-          await this.postsTagsRepository.save({ posts: post, tags: tag, createdAt: new Date() });
+          const postsTags = await this.postsTagsRepository.findOne({ where: { posts: post, tags: tag } });
+
+          if (!postsTags) {
+            await this.postsTagsRepository.save({ posts: post, tags: tag, createdAt: new Date() });
+          }
         }),
       );
 
