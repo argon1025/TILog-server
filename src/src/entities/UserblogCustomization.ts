@@ -1,9 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber, IsString, MaxLength, MinLength } from 'class-validator';
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { Users } from './Users';
 
 @Entity('userblogCustomization', { schema: 'tilog' })
 export class UserblogCustomization {
+  @IsNumber()
+  @IsNotEmpty()
   @Column('int', {
     primary: true,
     name: 'usersID',
@@ -18,6 +21,9 @@ export class UserblogCustomization {
   })
   usersId: number;
 
+  @IsString()
+  @MinLength(1)
+  @MaxLength(20)
   @Column('varchar', {
     name: 'blogTitle',
     nullable: true,
@@ -31,6 +37,9 @@ export class UserblogCustomization {
   })
   blogTitle: string | null;
 
+  @IsString()
+  @MinLength(1)
+  @MaxLength(30)
   @Column('varchar', {
     name: 'statusMessage',
     nullable: true,
@@ -44,6 +53,9 @@ export class UserblogCustomization {
   })
   statusMessage: string | null;
 
+  @IsString()
+  @MinLength(1)
+  @MaxLength(300)
   @Column('varchar', {
     name: 'selfIntroduction',
     nullable: true,
