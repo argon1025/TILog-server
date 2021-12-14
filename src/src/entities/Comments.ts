@@ -6,8 +6,6 @@ import {
   Entity,
   Index,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -15,6 +13,7 @@ import {
 } from 'typeorm';
 import { Posts } from './Posts';
 import { Users } from './Users';
+import { IsInt, IsNotEmpty, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 @Index('FK_comments_usersID_users_id', ['usersId'], {})
 @Index('FK_comments_postsID_posts_id', ['postsId'], {})
@@ -32,7 +31,8 @@ export class Comments {
     required: true,
   })
   id: string;
-
+  @IsInt()
+  @IsNotEmpty()
   @Column('int', { name: 'usersID', comment: '유저 아이디', unsigned: true })
   @ApiProperty({
     example: '1',
@@ -42,6 +42,8 @@ export class Comments {
   })
   usersId: number;
 
+  @IsString()
+  @IsNotEmpty()
   @Column('bigint', { name: 'postsID', comment: '포스트 아이디' })
   @ApiProperty({
     example: '1',
@@ -51,6 +53,10 @@ export class Comments {
   })
   postsId: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(1)
+  @MaxLength(300)
   @Column('varchar', { name: 'htmlContent', comment: '코멘트', length: 300 })
   @ApiProperty({
     example: '코멘트',
@@ -72,6 +78,10 @@ export class Comments {
   })
   replyTo: string | null;
 
+  @IsInt()
+  @IsNotEmpty()
+  @Min(0)
+  @Max(1)
   @Column('tinyint', {
     name: 'replyLevel',
     comment: '루트 코멘트 판별 0,1',
@@ -85,6 +95,7 @@ export class Comments {
   })
   replyLevel: number;
 
+  @IsNotEmpty()
   @CreateDateColumn()
   @ApiProperty({
     example: '2022-11-01 17:10:54',
