@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpException, Post, Query, Version } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ErrorHandlerNotFound } from 'src/ExceptionFilters/Errors/ErrorHandlerNotFound.error';
 import ResponseUtility from 'src/utilities/Response.utility';
 import { CategoriesService } from './categories.service';
@@ -39,6 +40,7 @@ export class CategoriesController {
   @Get('search')
   @ApiTags('Categories')
   @ApiOperation({ summary: '카테고리를 검색합니다.' })
+  @SkipThrottle(true) // 카테고리 검색은 요청 제한을 적용하지 않습니다.
   async searchTags(@Query() { categoryName }) {
     try {
       return await this.categoriesService.getCategories(categoryName);
