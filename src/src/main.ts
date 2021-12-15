@@ -1,4 +1,4 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -8,6 +8,7 @@ import * as redis from 'redis';
 import * as connectRedis from 'connect-redis';
 import { HttpExceptionFilter } from './ExceptionFilters/HttpException.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationFailed } from './ExceptionFilters/Errors/Validation/Validation.error';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,7 +25,7 @@ async function bootstrap() {
   // Redis config
   const REDIS_HOST = configService.get<string>('REDIS_HOST', null);
   const REDIS_PORT = configService.get<string>('REDIS_PORT', null);
-  //Ssession config
+  //Session config
   const SESSION_COOKIE_MAXAGE = configService.get<string>('SESSION_COOKIE_MAXAGE', null);
   const SESSION_SECRET = configService.get<string>('SESSION_SECRET', null);
   const SESSION_RESAVE = configService.get<boolean>('SESSION_RESAVE', null);
@@ -75,7 +76,14 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   // ValidationPipe
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      exceptionFactory: (errors) => {
+        return new BadRequestException(new ValidationFailed('test'));
+      },
+    }),
+  );
 
   if (!SERVER_PORT || !SERVER_HOST) {
     Logger.error('Unable to load environment variables!');
