@@ -19,9 +19,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     // Error Mapping
     const status = exception.getStatus();
     const requestLocation = request.url;
-    const errorObjectCode = !errorData.codeText ? errorData.error : errorData.codeText;
-    const devDescription = !errorData.description ? 'not found error description' : errorData.description;
-    const message = errorData.message;
+    const errorObjectCode = !errorData?.codeText ? errorData.error : errorData.codeText;
+    const devDescription = !errorData?.description ? 'not found error description' : errorData.description;
+    const message = !errorData?.message ? errorData : errorData.message;
 
     // Logging
     Logger.error(`

@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -27,6 +27,9 @@ import { UserBlogCustomizationModule } from './user-blog-customization/user-blog
 import { TagsModule } from './tags/tags.module';
 import { CategoriesModule } from './categories/categories.module';
 import { PinnedRepositoriesModule } from './pinned-repositories/pinned-repositories.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerStorageRedisService } from 'nestjs-throttler-storage-redis';
 
 // Load ENV
 const ENV = process.env;
@@ -63,6 +66,15 @@ const ENV = process.env;
       keepConnectionAlive: true,
       autoLoadEntities: true,
     }),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const ttl = configService.get<number>('THROTTLE_TTL', 60);
+        const limit = configService.get<number>('THROTTLE_LIMIT', 10);
+        return { ttl: ttl, limit: limit, storage: new ThrottlerStorageRedisService() };
+      },
+    }),
     PostsModule,
     AuthModule,
     UsersModule,
@@ -74,7 +86,13 @@ const ENV = process.env;
     PinnedRepositoriesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    AppService,
+  ],
 })
 // Add Middleware
 export class AppModule implements NestModule {
