@@ -6,6 +6,7 @@
 
   <p align="center">
     blog platform for developers, TILog.<br />
+    Frontend project is at another<a href="https://github.com/argon1025/Tilog-client"> Repo</a> <br />
     개발자를 위한 블로그 플랫폼 TILog 입니다.
     <br />
     <br />
