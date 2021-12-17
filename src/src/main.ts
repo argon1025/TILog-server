@@ -34,9 +34,9 @@ async function bootstrap() {
 
   //CORS Setting
   app.enableCors({
-    origin: CORS_ORIGIN,
+    origin: CORS_ORIGIN === ' true' ? true : false,
     methods: CORS_METHOD,
-    credentials: CORS_CREDENTIALS,
+    credentials: CORS_CREDENTIALS === ' true' ? true : false,
   });
 
   // Connect Local Redis
