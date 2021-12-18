@@ -1,15 +1,21 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, HttpException, Version } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+// Custom Decorator
 import { UserInfo } from 'src/auth/decorators/userInfo.decorator';
+// Guard
 import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
+// Service
 import { CommentsService } from './comments.service';
-// dto
-import { WriteNewCommentToCommentDto } from './dto/controller/writeNewCommentToComment.dto';
-import { WriteNewCommentOnPostDto } from './dto/controller/writeNewCommentOnPost.dto';
-import { writeAndUpdateDto } from './dto/writeAndUpdate.dto';
-import { UnDeleteCommentDto } from './dto/controller/unDeleteComment.dto';
-import { UpdateCommentDto } from './dto/controller/updateComment.dto';
-import { DeleteCommentDto } from './dto/controller/deleteComment.dto';
+// DTO
+import { RestoreDeletedCommentDto } from './dto/RestoreDeletedComment.dto';
+import { CommentContentDto } from './dto/controller/commentContent.dto';
+import { UpdateCommentDto } from './dto/updateComment.dto';
+import { CreateCommentDto } from './dto/createComment.dto';
+import { DeleteCommentDto } from './dto/deleteComment.dto';
+import { CreateReplyDto } from './dto/createReply.dto';
+// utilities
+import ResponseUtility from 'src/utilities/Response.utility';
+import Time from '../utilities/time.utility';
 
 @ApiTags('Comments')
 @Controller('comments')
@@ -17,154 +23,181 @@ export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   /**
-   * 새로운 댓글을 생성
-   * *인증된 유저만 코멘트를 작성할 수 있습니다.
+   * create comment to post
+   * 포스트에 코멘트를 생성합니다.
+   * @guards 유저 인증
+   * @author minjecho <minje9801@gmail.com>
+   * @version 1.0.0
    */
   @Version('1')
   @Post('post/:postid')
-  @ApiOperation({ summary: '포스터에 새로운 댓글을 생성합니다.' })
+  @ApiOperation({ summary: '포스트에 코멘트를 생성합니다.' })
   @ApiBody({
-    type: writeAndUpdateDto,
+    type: CommentContentDto,
   })
   @UseGuards(AuthenticatedGuard)
-  async writeNewCommentOnPost(@UserInfo('id') userID: number, @Param('postid') postID: string, @Body('htmlContent') htmlContent: string) {
-    const writeNewCommentOnPostDto = new WriteNewCommentOnPostDto();
-    writeNewCommentOnPostDto.usersId = userID;
-    writeNewCommentOnPostDto.postsId = postID;
-    writeNewCommentOnPostDto.htmlContent = htmlContent;
+  async createComment(@UserInfo('id') userId: number, @Param('postid') postId: string, @Body('htmlContent') htmlContent: string) {
+    // comment data 설정
+    const commentData = new CreateCommentDto();
+    commentData.usersId = userId;
+    commentData.postsId = postId;
+    commentData.htmlContent = htmlContent;
+    commentData.createdAt = Time.nowDate();
     try {
-      return await this.commentsService.writeNewCommentOnPost(writeNewCommentOnPostDto);
+      // 새로운 코멘트 생성을 요청합니다.
+      await this.commentsService.createComment(commentData);
+      // 응답 리턴
+      return ResponseUtility.create(false, 'ok');
     } catch (error) {
       throw new HttpException(error, error.codeNumber);
     }
   }
   /**
-   * 대댓글을 생성
-   * *인증된 유저만 코멘트를 작성할 수 있습니다.
+   *  create reply
+   *  답글 작성를 작성합니다.
+   * @guards 유저 인증
+   * @author minjecho <minje9801@gmail.com>
+   * @version 1.0.0
    */
   @Version('1')
   @Post(':commentid/post/:postid')
-  @ApiOperation({ summary: '댓글에 답글을 작성합니다.' })
+  @ApiOperation({ summary: '답글을 생성합니다.' })
   @ApiBody({
-    type: WriteNewCommentToCommentDto,
+    type: CreateReplyDto,
   })
   @UseGuards(AuthenticatedGuard)
-  async writeNewCommentToComment(
-    @UserInfo('id') userID: number,
-    @Param('postid') postID: string,
-    @Param('commentid') commentid: string,
+  async createReply(
+    @UserInfo('id') userId: number,
+    @Param('postid') postId: string,
+    @Param('commentid') commentId: string,
     @Body('htmlContent') htmlContent: string,
   ) {
-    const writeNewCommentToCommentDto = new WriteNewCommentToCommentDto();
-    writeNewCommentToCommentDto.usersId = userID;
-    writeNewCommentToCommentDto.postsId = postID;
-    writeNewCommentToCommentDto.replyTo = commentid;
-    writeNewCommentToCommentDto.htmlContent = htmlContent;
-    writeNewCommentToCommentDto.replyLevel = 1;
-
+    const replyData = new CreateReplyDto();
+    replyData.usersId = userId;
+    replyData.postsId = postId;
+    replyData.replyTo = commentId;
+    replyData.htmlContent = htmlContent;
+    replyData.replyLevel = 1;
+    replyData.createdAt = Time.nowDate();
     try {
-      return await this.commentsService.writeNewCommentToComment(writeNewCommentToCommentDto);
+      // 새로운 답글을 요청합니다.
+      await this.commentsService.createReply(replyData);
+      // 응답 리턴
+      return ResponseUtility.create(false, 'ok');
     } catch (error) {
       throw new HttpException(error, error.codeNumber);
     }
   }
 
   /**
-   * 모든 코멘트 보기
-   * *인증된 유저만 코멘트를 작성할 수 있습니다.
+   * Returns the comment on the post.
+   * 포스트의 코멘트를 반환합니다.
+   * @author minjecho <minje9801@gmail.com>
+   * @version 1.0.0
    */
   @Version('1')
   @Get('post/:postid')
   @ApiOperation({ summary: '포스트의 모든 코멘트를 가져옵니다.' })
-  async viewAllComments(@Param('postid') postID: string) {
+  async getComments(@Param('postid') postId: string) {
     try {
-      const result = await this.commentsService.viewAllComments(postID);
-      return result;
+      // 코멘트를 요청합니다.
+      const commentRes = await this.commentsService.getComments(postId);
+      return commentRes;
     } catch (error) {
       throw new HttpException(error, error.codeNumber);
     }
   }
+
   /**
-   * 코멘트의 작성자 리스트
-   * *인증된 유저만 코멘트를 작성할 수 있습니다.
+   * Returns the reply on the post.
+   * 코멘트의 모든 답글을 반환합니다.
+   * @author minjecho <minje9801@gmail.com>
+   * @version 1.0.0
    */
   @Version('1')
-  @Get('writeusers/post/:postid')
-  @ApiOperation({ summary: '포스트의 모든 코멘트를 가져옵니다.' })
-  async getCommentsWriteUsers(@Param('postid') postID: string) {
+  @Get(':commentsid')
+  @ApiOperation({ summary: '코멘트의 모든 답글을 가져옵니다.' })
+  async getReplies(@Param('commentsid') commentId: string) {
     try {
-      const result = await this.commentsService.getCommentsWriteUsers(postID);
-      return result;
+      // 답글을 요청합니다.
+      const childCommentRes = await this.commentsService.getReplies(commentId);
+      return childCommentRes;
     } catch (error) {
       throw new HttpException(error, error.codeNumber);
     }
   }
+
   /**
-   * 특정 코멘트 보기
-   * *인증된 유저만 코멘트를 작성할 수 있습니다.
-   */
-  @Version('1')
-  @Get(':commentid')
-  @ApiOperation({ summary: '특정 코멘트를 가져옵니다.' })
-  async viewOneComments(@Param('commentid') commentID: string) {
-    try {
-      return await this.commentsService.viewOneComments(commentID);
-    } catch (error) {
-      throw new HttpException(error, error.codeNumber);
-    }
-  }
-  /**
-   * 코멘트 수정
-   * *인증된 유저만 코멘트를 작성할 수 있습니다.
+   * update comment
+   * 코멘트를 업데이트합니다.
+   * @guards 유저 인증
+   * @author minjecho <minje9801@gmail.com>
+   * @version 1.0.0
    */
   @Version('1')
   @Patch(':commentid')
-  @ApiOperation({ summary: '포스트의 모든 코멘트를 수정합니다.' })
+  @ApiOperation({ summary: '코멘트를 업데이트합니다.' })
   @ApiBody({
-    type: writeAndUpdateDto,
+    type: CommentContentDto,
   })
-  // @UseGuards(AuthenticatedGuard)
-  async updateComment(@UserInfo('id') userID: number, @Param('commentid') commentID: string, @Body('htmlContent') htmlContent: string) {
-    const updateCommentDto = new UpdateCommentDto();
-    updateCommentDto.id = commentID;
-    updateCommentDto.usersId = userID;
-    updateCommentDto.htmlContent = htmlContent;
+  @UseGuards(AuthenticatedGuard)
+  async updateComment(@UserInfo('id') userId: number, @Param('commentid') commentId: string, @Body('htmlContent') htmlContent: string) {
+    const commentData = new UpdateCommentDto();
+    commentData.id = commentId;
+    commentData.usersId = userId;
+    commentData.htmlContent = htmlContent;
+    commentData.updatedAt = Time.nowDate();
     try {
-      return await this.commentsService.updateComment(updateCommentDto);
+      // 코멘트의 정보수정을 요청합니다.
+      await this.commentsService.updateComment(commentData);
+      // 응답 리턴
+      return ResponseUtility.create(false, 'ok');
     } catch (error) {
       console.log(error);
+      throw new HttpException(error, error.codeNumber);
+    }
+  }
+
+  /**
+   * soft delete comment
+   * 코멘트를 소프트 딜리트합니다.
+   * @guards 유저 인증
+   * @author minjecho <minje9801@gmail.com>
+   * @version 1.0.0
+   */
+  @Version('1')
+  @Delete(':commentid')
+  @ApiOperation({ summary: '코멘트를 삭제합니다.' })
+  @UseGuards(AuthenticatedGuard)
+  async deleteComment(@UserInfo('id') userId: number, @Param('commentid') commentId: string) {
+    const commentData = new DeleteCommentDto();
+    commentData.id = commentId;
+    commentData.usersId = userId;
+    commentData.deletedAt = Time.nowDate();
+    try {
+      // 코멘트를 삭제 요청합니다.
+      await this.commentsService.deleteComment(commentData);
+      // 응답 리턴
+      return ResponseUtility.create(false, 'ok');
+    } catch (error) {
       throw new HttpException(error, error.codeNumber);
     }
   }
   /**
    * 삭제한 댓글을 복구합니다.
    */
-  // @Version('1')
-  // @Patch(':commentid')
-  // @ApiOperation({ summary: '삭제한 댓글을 복구합니다.' })
-  // async unDeleteComment(@UserInfo('id') userID: number, @Param('commentid') commentID: string) {
-  //   const unDeleteCommentDto = new UnDeleteCommentDto();
-  //   unDeleteCommentDto.id = commentID;
-  //   unDeleteCommentDto.usersId = userID;
-  //   try {
-  //     return await this.commentsService.unDeleteComment(unDeleteCommentDto);
-  //   } catch (error) {
-  //     throw new HttpException(error, error.codeNumber);
-  //   }
-  // }
-  /**
-   * 댓글을 삭제합니다.
-   */
   @Version('1')
-  @Delete(':commentid')
-  @ApiOperation({ summary: '포스트의 모든 코멘트를 삭제합니다.' })
-  // @UseGuards(AuthenticatedGuard)
-  async deleteComment(@UserInfo('id') userID: number, @Param('commentid') commentID: string) {
-    const deleteCommentDto = new DeleteCommentDto();
-    deleteCommentDto.id = commentID;
-    deleteCommentDto.usersId = userID;
+  @Patch('/restore/:commentid')
+  @ApiOperation({ summary: '삭제한 댓글을 복구합니다.' })
+  async unDeleteComment(@UserInfo('id') userId: number, @Param('commentid') commentID: string) {
+    const commentData = new RestoreDeletedCommentDto();
+    commentData.id = commentID;
+    commentData.usersId = userId;
     try {
-      return await this.commentsService.deleteComment(deleteCommentDto);
+      // 삭제한 댓글을 복구 요청합니다.
+      await this.commentsService.restoreDeletedComment(commentData);
+      // 응답 리턴
+      return ResponseUtility.create(false, 'ok');
     } catch (error) {
       throw new HttpException(error, error.codeNumber);
     }

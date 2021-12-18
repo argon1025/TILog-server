@@ -9,6 +9,9 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  Tree,
+  TreeChildren,
+  TreeParent,
   UpdateDateColumn,
 } from 'typeorm';
 import { Posts } from './Posts';
@@ -18,6 +21,7 @@ import { IsInt, IsNotEmpty, IsString, Max, MaxLength, Min, MinLength } from 'cla
 @Index('FK_comments_usersID_users_id', ['usersId'], {})
 @Index('FK_comments_postsID_posts_id', ['postsId'], {})
 @Entity('comments', { schema: 'tilog' })
+// @Tree('closure-table')
 export class Comments {
   @PrimaryGeneratedColumn({
     type: 'bigint',
@@ -103,7 +107,7 @@ export class Comments {
     type: String,
     required: true,
   })
-  createdAt: Date;
+  createdAt: String;
 
   @UpdateDateColumn()
   @ApiProperty({
@@ -111,7 +115,7 @@ export class Comments {
     description: '코멘트 수정일',
     type: String,
   })
-  updatedAt: Date | null;
+  updatedAt: String | null;
 
   @DeleteDateColumn()
   @ApiProperty({
@@ -119,7 +123,7 @@ export class Comments {
     description: '코멘트 삭제일',
     type: String,
   })
-  deletedAt: Date | null;
+  deletedAt: String | null;
 
   @ManyToOne(() => Posts, (posts) => posts.comments, {
     onDelete: 'CASCADE',
@@ -135,16 +139,21 @@ export class Comments {
   @JoinColumn([{ name: 'usersID', referencedColumnName: 'id' }])
   users: Users;
 
-  @ManyToOne(() => Comments, (comments) => comments.parentComment, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
-  @JoinColumn([{ name: 'replyTo', referencedColumnName: 'id' }])
-  parentComment: Comments;
+  // @TreeParent()
+  // parent: Comments;
 
-  @OneToMany(() => Comments, (comments) => comments.parentComment, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
-  childComment: Comments[];
+  // @TreeChildren()
+  // children: Comments[];
+  // @ManyToOne(() => Comments, (comments) => comments.parentComment, {
+  //   onDelete: 'CASCADE',
+  //   onUpdate: 'CASCADE',
+  // })
+  // @JoinColumn([{ name: 'replyTo', referencedColumnName: 'id' }])
+  // parentComment: Comments;
+
+  // @OneToMany(() => Comments, (comments) => comments.parentComment, {
+  //   onDelete: 'CASCADE',
+  //   onUpdate: 'CASCADE',
+  // })
+  // childComment: Comments[];
 }
