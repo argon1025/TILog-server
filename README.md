@@ -27,7 +27,11 @@
 - [Image to S3 업로드](https://github.com/argon1025/TILog-server/blob/main/src/src/file-uploads/file-uploads.service.ts)
 
 ![image](https://user-images.githubusercontent.com/55491354/146319449-2636ea9e-4166-454d-8d71-60f8d90b9895.png)
-- 작성필요
+- [Comments 서비스](https://github.com/argon1025/TILog-server/tree/main/src/src/comments)
+- [Users 서비스](https://github.com/argon1025/TILog-server/tree/main/src/src/users)
+- [Passport를 사용한 인증](https://github.com/argon1025/TILog-server/tree/main/src/src/auth)
+- [UserBlogCustomization 서비스](https://github.com/argon1025/TILog-server/tree/main/src/src/user-blog-customization)
+
 
 ![image](https://user-images.githubusercontent.com/55491354/146319456-6dd8503d-9167-484f-ae1c-56ce4feee377.png)
 - 작성필요
@@ -90,9 +94,8 @@ GITHUB_CALLBACK_URL=
 SESSION_SECRET=
 SESSION_RESAVE=
 SESSION_SAVEUNINITIALIZED=
-SESSION_COOKIE_MAXAGE=24000000
+SESSION_COOKIE_MAXAGE=24 * 60 * 60 * 1000 // 24 hours
 REDIRECT_FRONT=http://localhost:8080/
-REDIRECT_URL=http://localhost:8080
 
 # S3 fileUpload settings
 AWS_S3_BUCKET=
