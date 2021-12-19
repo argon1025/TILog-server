@@ -23,14 +23,8 @@ export class UserBlogCustomizationService {
    * @returns Promise<UserblogCustomization>
    */
   async createUserBlogCustomization(createUserBlogCustomizationDto: CreateUserBlogCustomizationDto): Promise<UserblogCustomization> {
-    const { usersId, blogTitle, statusMessage, selfIntroduction } = createUserBlogCustomizationDto;
     try {
-      return await this.userblogCustomizationRepo.save({
-        usersId: usersId,
-        blogTitle: blogTitle,
-        statusMessage: statusMessage,
-        selfIntroduction: selfIntroduction,
-      });
+      return await this.userblogCustomizationRepo.save(createUserBlogCustomizationDto);
     } catch (error) {
       throw new CreateUserBlogCustomizationFailed(
         `service.userblogcustomization.createuserblogcustomization.${!!error.message ? error.message : 'Unknown_Error'}`,
@@ -40,12 +34,12 @@ export class UserBlogCustomizationService {
   /**
    * get UserBlogCustomization
    * 유저의 개인 블로그 설정 보기
-   * @param userID
+   * @param userId
    * @returns Promise<UserblogCustomization>
    */
-  async getUserBlogCustomization(userID: number): Promise<UserblogCustomization> {
+  async getUserBlogCustomization(userId: number): Promise<UserblogCustomization> {
     try {
-      return await this.userblogCustomizationRepo.findOne({ usersId: userID });
+      return await this.userblogCustomizationRepo.findOne({ usersId: userId });
     } catch (error) {
       throw new GetUserBlogCustomizationFailed(
         `service.userblogcustomization.getserblogcustomization.${!!error.message ? error.message : 'Unknown_Error'}`,
@@ -60,14 +54,8 @@ export class UserBlogCustomizationService {
    * @returns
    */
   async updateUserBlogCustomization(updateUserBlogCustomizationDto: UpdateUserBlogCustomizationDto): Promise<UserblogCustomization> {
-    const { usersId, blogTitle, statusMessage, selfIntroduction } = updateUserBlogCustomizationDto;
     try {
-      return await this.userblogCustomizationRepo.save({
-        usersId: usersId,
-        blogTitle: blogTitle,
-        statusMessage: statusMessage,
-        selfIntroduction: selfIntroduction,
-      });
+      return await this.userblogCustomizationRepo.save(updateUserBlogCustomizationDto);
     } catch (error) {
       throw new UpdateUserBlogCustomizationFailed(
         `service.userblogcustomization.updateuserblogcustomization.${!!error.message ? error.message : 'Unknown_Error'}`,
@@ -78,13 +66,13 @@ export class UserBlogCustomizationService {
    * delete UserBlogCustomization
    * 유저의개인 블로그 설정 삭제
    *
-   * @param userID
+   * @param userId
    * @returns Promise<UserblogCustomization>
    */
-  async deleteUserBlogCustomization(userID: number): Promise<UserblogCustomization> {
+  async deleteUserBlogCustomization(userId: number): Promise<UserblogCustomization> {
     try {
       return await this.userblogCustomizationRepo.save({
-        usersId: userID,
+        usersId: userId,
         blogTitle: null,
         statusMessage: null,
         selfIntroduction: null,
