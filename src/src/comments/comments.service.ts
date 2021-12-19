@@ -22,12 +22,12 @@ import { RestoreDeletedCommentDto } from './dto/RestoreDeletedComment.dto';
 import { UpdateCommentDto } from './dto/updateComment.dto';
 import { CreateCommentDto } from './dto/createComment.dto';
 import { DeleteCommentDto } from './dto/deleteComment.dto';
-import { GetCommentDto } from './dto/getComment.dto';
+import { GetCommentsDto } from './dto/getComments.dto';
 import { CreateReplyDto } from './dto/createReply.dto';
 // Entities
 import { Comments } from 'src/entities/Comments';
 import { Users } from 'src/entities/Users';
-import { GetReplyDto } from './dto/getReply.dto';
+import { GetRepliesDto } from './dto/getReplies.dto';
 
 @Injectable()
 export class CommentsService {
@@ -84,8 +84,9 @@ export class CommentsService {
    * @returns Promise<GetCommentDto[]>
    * @todo class validator
    */
-  async getComments(postId: string): Promise<GetCommentDto[]> {
+  async getComments(postId: string): Promise<GetCommentsDto[]> {
     try {
+      console.log(postId);
       // postid에 해당하는 부모 코멘트를 요청
       const comments = await this.commentsRepo
         .createQueryBuilder('comments')
@@ -119,7 +120,7 @@ export class CommentsService {
    * @returns Promise<GetReplyDto[]>
    * @todo class validator
    */
-  async getReplies(commentId: string): Promise<GetReplyDto[]> {
+  async getReplies(commentId: string): Promise<GetRepliesDto[]> {
     try {
       // 코멘트 레벨 검증
       await this.validateCommentLevel(commentId);

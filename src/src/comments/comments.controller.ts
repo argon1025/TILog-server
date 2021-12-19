@@ -8,7 +8,6 @@ import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
 import { CommentsService } from './comments.service';
 // DTO
 import { RestoreDeletedCommentDto } from './dto/RestoreDeletedComment.dto';
-import { CommentContentDto } from './dto/controller/commentContent.dto';
 import { UpdateCommentDto } from './dto/updateComment.dto';
 import { CreateCommentDto } from './dto/createComment.dto';
 import { DeleteCommentDto } from './dto/deleteComment.dto';
@@ -16,9 +15,13 @@ import { CreateReplyDto } from './dto/createReply.dto';
 // utilities
 import ResponseUtility from 'src/utilities/Response.utility';
 import Time from '../utilities/time.utility';
+import { SessionInfo } from 'src/auth/dto/session-info.dto';
+import { CreateCommentBodyDto } from './dto/controller/createCommentBody.dto';
+import { CreateReplyBodyDto } from './dto/controller/createReplyBody.dto';
+import { UpdateCommentBodyDto } from './dto/controller/updateCommentBody.dto';
 
 @ApiTags('Comments')
-@Controller('comments')
+@Controller('')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
@@ -30,18 +33,18 @@ export class CommentsController {
    * @version 1.0.0
    */
   @Version('1')
-  @Post('post/:postid')
+  @Post('comments')
   @ApiOperation({ summary: '포스트에 코멘트를 생성합니다.' })
   @ApiBody({
-    type: CommentContentDto,
+    type: CreateCommentBodyDto,
   })
   @UseGuards(AuthenticatedGuard)
-  async createComment(@UserInfo('id') userId: number, @Param('postid') postId: string, @Body('htmlContent') htmlContent: string) {
-    // comment data 설정
+  async createComment(@UserInfo() userInfo: SessionInfo, @Body() createCommenBodyDto: CreateCommentBodyDto) {
+    // comment data
     const commentData = new CreateCommentDto();
-    commentData.usersId = userId;
-    commentData.postsId = postId;
-    commentData.htmlContent = htmlContent;
+    commentData.usersId = userInfo.id;
+    commentData.postsId = createCommenBodyDto.postsId;
+    commentData.htmlContent = createCommenBodyDto.htmlContent;
     commentData.createdAt = Time.nowDate();
     try {
       // 새로운 코멘트 생성을 요청합니다.
@@ -60,23 +63,18 @@ export class CommentsController {
    * @version 1.0.0
    */
   @Version('1')
-  @Post(':commentid/post/:postid')
+  @Post('replies')
   @ApiOperation({ summary: '답글을 생성합니다.' })
   @ApiBody({
-    type: CreateReplyDto,
+    type: CreateReplyBodyDto,
   })
   @UseGuards(AuthenticatedGuard)
-  async createReply(
-    @UserInfo('id') userId: number,
-    @Param('postid') postId: string,
-    @Param('commentid') commentId: string,
-    @Body('htmlContent') htmlContent: string,
-  ) {
+  async createReply(@UserInfo('id') userId: number, @Body() createReplyBodyDto: CreateReplyBodyDto) {
     const replyData = new CreateReplyDto();
     replyData.usersId = userId;
-    replyData.postsId = postId;
-    replyData.replyTo = commentId;
-    replyData.htmlContent = htmlContent;
+    replyData.postsId = createReplyBodyDto.postsId;
+    replyData.replyTo = createReplyBodyDto.id;
+    replyData.htmlContent = createReplyBodyDto.htmlContent;
     replyData.replyLevel = 1;
     replyData.createdAt = Time.nowDate();
     try {
@@ -96,13 +94,13 @@ export class CommentsController {
    * @version 1.0.0
    */
   @Version('1')
-  @Get('post/:postid')
+  @Get('posts/comments/:postsid')
   @ApiOperation({ summary: '포스트의 모든 코멘트를 가져옵니다.' })
-  async getComments(@Param('postid') postId: string) {
+  async getComments(@Param('postsid') postsid: string) {
     try {
       // 코멘트를 요청합니다.
-      const commentRes = await this.commentsService.getComments(postId);
-      return commentRes;
+      const commentsRes = await this.commentsService.getComments(postsid);
+      return commentsRes;
     } catch (error) {
       throw new HttpException(error, error.codeNumber);
     }
@@ -115,13 +113,13 @@ export class CommentsController {
    * @version 1.0.0
    */
   @Version('1')
-  @Get(':commentsid')
+  @Get('/comments/replies/:commentsid')
   @ApiOperation({ summary: '코멘트의 모든 답글을 가져옵니다.' })
   async getReplies(@Param('commentsid') commentId: string) {
     try {
       // 답글을 요청합니다.
-      const childCommentRes = await this.commentsService.getReplies(commentId);
-      return childCommentRes;
+      const repliesData = await this.commentsService.getReplies(commentId);
+      return repliesData;
     } catch (error) {
       throw new HttpException(error, error.codeNumber);
     }
@@ -135,17 +133,17 @@ export class CommentsController {
    * @version 1.0.0
    */
   @Version('1')
-  @Patch(':commentid')
+  @Patch('comments/:commentid')
   @ApiOperation({ summary: '코멘트를 업데이트합니다.' })
   @ApiBody({
-    type: CommentContentDto,
+    type: UpdateCommentBodyDto,
   })
   @UseGuards(AuthenticatedGuard)
-  async updateComment(@UserInfo('id') userId: number, @Param('commentid') commentId: string, @Body('htmlContent') htmlContent: string) {
+  async updateComment(@UserInfo('id') userId: number, @Body() updateCommentBodyDto: UpdateCommentBodyDto) {
     const commentData = new UpdateCommentDto();
-    commentData.id = commentId;
+    commentData.id = updateCommentBodyDto.id;
+    commentData.htmlContent = updateCommentBodyDto.htmlContent;
     commentData.usersId = userId;
-    commentData.htmlContent = htmlContent;
     commentData.updatedAt = Time.nowDate();
     try {
       // 코멘트의 정보수정을 요청합니다.
@@ -166,7 +164,7 @@ export class CommentsController {
    * @version 1.0.0
    */
   @Version('1')
-  @Delete(':commentid')
+  @Delete('comments/:commentid')
   @ApiOperation({ summary: '코멘트를 삭제합니다.' })
   @UseGuards(AuthenticatedGuard)
   async deleteComment(@UserInfo('id') userId: number, @Param('commentid') commentId: string) {
@@ -187,11 +185,11 @@ export class CommentsController {
    * 삭제한 댓글을 복구합니다.
    */
   @Version('1')
-  @Patch('/restore/:commentid')
+  @Patch('/comments/restore/:commentid')
   @ApiOperation({ summary: '삭제한 댓글을 복구합니다.' })
-  async unDeleteComment(@UserInfo('id') userId: number, @Param('commentid') commentID: string) {
+  async unDeleteComment(@UserInfo('id') userId: number, @Param('commentid') commentId: string) {
     const commentData = new RestoreDeletedCommentDto();
-    commentData.id = commentID;
+    commentData.id = commentId;
     commentData.usersId = userId;
     try {
       // 삭제한 댓글을 복구 요청합니다.
