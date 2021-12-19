@@ -18,7 +18,7 @@ export class UserBlogCustomizationController {
   @ApiBody({
     type: CreateUserBlogCustomizationDto,
   })
-  // @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard)
   async createUserBlogCustomization(@UserInfo('id') userID: number, @Body() createUserBlogCustomizationDto: CreateUserBlogCustomizationDto) {
     const userBlogCustomizationDetailDto = new UserBlogCustomizationDetailDto();
     userBlogCustomizationDetailDto.usersId = userID;
@@ -35,7 +35,7 @@ export class UserBlogCustomizationController {
   @Version('1')
   @Get(':userid')
   @ApiOperation({ summary: '유저 블로그 커스텀 데이터를 가져옵니다.' })
-  // @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard)
   async getUserBlogCustomization(@Param('userid') userID: number) {
     try {
       return await this.userBlogCustomizationService.getUserBlogCustomization(userID);
@@ -50,7 +50,7 @@ export class UserBlogCustomizationController {
   @ApiBody({
     type: UpdateUserBlogCustomizationDto,
   })
-  // @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard)
   async updateUserBlogCustomization(@UserInfo('id') userID: number, @Body() updateUserBlogCustomizationDto: UpdateUserBlogCustomizationDto) {
     const userBlogCustomizationDetailDto = new UserBlogCustomizationDetailDto();
     userBlogCustomizationDetailDto.usersId = userID;
@@ -67,7 +67,7 @@ export class UserBlogCustomizationController {
   @Version('1')
   @Delete()
   @ApiOperation({ summary: '유저 블로그 커스텀 데이터를 삭제합니다.' })
-  // @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard)
   deleteUserBlogCustomization(@UserInfo('id') userID: number) {
     return this.userBlogCustomizationService.deleteUserBlogCustomization(userID);
   }
