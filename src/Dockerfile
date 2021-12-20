@@ -14,6 +14,8 @@ WORKDIR /usr/src/app
 COPY ./ ./
 RUN npm install
 
+RUN npm run build
+
 # 포트 오픈
 EXPOSE 80
-CMD [ "npm", "run", "start" ]
+CMD [ "node", "dist/main.js"]
