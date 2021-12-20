@@ -1,19 +1,9 @@
 version: "3"
 
 services:
-  app_1:
-    build:
-      context: ./src
-    container_name: app_1
-    links:
-      - "Database_MySQL:database"
-      - "Redis:redis"
-    ports:
-      - "80:80"
-      - "3000:3000"
-  Database_MySQL:
+  Database_Mysql:
     image: mysql:5.7
-    container_name: Database_MySQL
+    container_name: Database_Mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=TILog
