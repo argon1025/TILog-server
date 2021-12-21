@@ -73,13 +73,8 @@ const ENV = process.env;
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        // Redis config
-        const REDIS_HOST = configService.get<string>('REDIS_HOST', null);
-        const REDIS_PORT = configService.get<string>('REDIS_PORT', null);
         const ttl = configService.get<number>('THROTTLE_TTL', 60);
         const limit = configService.get<number>('THROTTLE_LIMIT', 10);
-        // Connect Local Redis
-        const client = redis.createClient({ url: `${REDIS_HOST}:${REDIS_PORT}` });
         return { ttl: ttl, limit: limit };
       },
     }),
