@@ -59,7 +59,7 @@ workflows:
       - BuildTest:
           filters:
             branches:
-              only: /TIL\/.*/
+              only: /^TIL-.*/
   # 이미지 푸시
   ECR-push-ECS-deploy:
     jobs:
