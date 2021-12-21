@@ -75,7 +75,7 @@ workflows:
       # Dockerfile을 빌드하고 ECR에 푸시하는 작업
       # 작업 조건 : 상위 createEnv 작업 종료, release 브랜치 커밋
       - aws-ecr/build-and-push-image:
-          attach-workspace: true
+          checkout: false
           account-url: AWS_ECR_ACCOUNT_URL
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
