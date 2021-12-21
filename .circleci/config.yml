@@ -49,7 +49,10 @@ jobs:
             ./.circleci/scripts/generate-env-files.sh
             ls -al src
             cat src/.env
-
+      - persist_to_workspace:
+        root: .
+        paths:
+          - .
 # 워크플로우를 정의합니다
 workflows:
   # 빌드 테스트
@@ -75,8 +78,8 @@ workflows:
       # Dockerfile을 빌드하고 ECR에 푸시하는 작업
       # 작업 조건 : 상위 createEnv 작업 종료, release 브랜치 커밋
       - aws-ecr/build-and-push-image:
-          checkout: false
           attach-workspace: true
+          checkout: false
           account-url: AWS_ECR_ACCOUNT_URL
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
