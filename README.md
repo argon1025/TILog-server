@@ -18,6 +18,9 @@
   </p>
 </div>
 
+# Project Status
+Last Release Build : [![CircleCI](https://circleci.com/gh/argon1025/TILog-server/tree/release.svg?style=svg)](https://circleci.com/gh/argon1025/TILog-server/tree/release)
+
 # Team
 ![image](https://user-images.githubusercontent.com/55491354/146319436-555170dd-5e59-4484-a049-6e80dc8f2713.png)
 - 프로젝트 셋팅 및 [Dockerize](https://github.com/argon1025/TILog-server/blob/main/docker-compose.yml)
