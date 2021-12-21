@@ -45,4 +45,4 @@ workflows:
       - BuildTest:
           filters:
             branches:
-              only: /circleci-project-setup\/.*/
+              only: /circleci\/.*/
