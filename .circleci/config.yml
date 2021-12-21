@@ -69,3 +69,5 @@ workflows:
           repo: "${AWS_ECR_NAME}"
           tag: "$CIRCLE_SHA1"
           path: ./src
+          requires:
+            - createEnv
