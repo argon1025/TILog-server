@@ -16,6 +16,10 @@ RUN npm install
 
 RUN npm run build
 
+RUN ls -al
+
+RUN cat .env
+
 # 포트 오픈
 EXPOSE 80
 CMD [ "node", "dist/main.js"]
