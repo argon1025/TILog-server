@@ -1,32 +1,43 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+# 오브를 호출합니다
+# 오브엔 실행환경, 환경변수 작업, 명령이 미리 구성되어 있습니다
+orbs:
+  aws-ecr: circleci/aws-ecr@6.2.0
+  aws-ecs: circleci/aws-ecs@0.0.11
+
+# 작업을 정의한다
+# https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+  viewCode:
+    # 실행환경을 지정한다, CircleCI, DockerHub에서 이미지를 지정할 수 있습니다
+    # https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
       - image: cimg/base:stable
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
-      - run:
-          name: "1 ls -al"
-          command: "ls -al"
       - checkout
       - run:
-          name: "2 ls -al"
+          name: "Code tree"
           command: "ls -al"
-
+  buildImage:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+      - run:
+        name: "move project folder"
+        command: "cd src"
+      - run:
+        name: "install npm module"
+        command: "npm i"
+      - run:
+        name: "build project"
+        command: "npm run build"
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   test:
     jobs:
-      - say-hello
-  build:
-    jobs:
-      - say-hello
+      - buildImage
