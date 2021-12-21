@@ -21,7 +21,7 @@ jobs:
       - run:
           name: "Code tree"
           command: "ls -al"
-  buildImage:
+  BuildTest:
     docker:
       - image: cimg/node:lts-browsers
     steps:
@@ -39,6 +39,10 @@ jobs:
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  test:
+  # 빌드 테스트 워크플로우
+  Build-Test:
     jobs:
-      - buildImage
+      - BuildTest
+    filters:
+      branches:
+        only: /circleci-project-setup\/.*/
