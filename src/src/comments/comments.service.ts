@@ -18,7 +18,7 @@ import {
   NotFoundComment,
 } from 'src/ExceptionFilters/Errors/Comments/Comment.error';
 // DTO
-import { RestoreDeletedCommentDto } from './dto/RestoreDeletedComment.dto';
+import { RestoreDeletedCommentDto } from './dto/restoreDeletedComment.dto';
 import { UpdateCommentDto } from './dto/updateComment.dto';
 import { CreateCommentDto } from './dto/createComment.dto';
 import { DeleteCommentDto } from './dto/deleteComment.dto';

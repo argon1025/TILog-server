@@ -36,8 +36,8 @@ jobs:
           command: |
             cd src
             npm run build
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+
+# 워크플로우를 정의합니다
 workflows:
   # 빌드 테스트 워크플로우
   Build-Test:
@@ -45,4 +45,16 @@ workflows:
       - BuildTest:
           filters:
             branches:
-              only: /circleci\/.*/
+              only: /TIL\/.*/
+  # 이미지 푸시
+  build_and_push_image:
+    jobs:
+      - aws-ecr/build-and-push-image:
+          account-url: AWS_ECR_ACCOUNT_URL
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          create-repo: true
+          dockerfile: Dockerfile
+          region: AWS_DEFAULT_REGION
+          repo: "${AWS_ECR_NAME}"
+          tag: "$CIRCLE_SHA1"
