@@ -31,10 +31,14 @@ jobs:
           command: "cd src"
       - run:
           name: "install npm module"
-          command: "npm i"
+          command: |
+            "ls -al" 
+            "npm i"
       - run:
           name: "build project"
-          command: "npm run build"
+          command: |
+            "ls -al"
+            "npm run build"
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
