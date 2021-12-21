@@ -27,14 +27,14 @@ jobs:
     steps:
       - checkout
       - run:
-        name: "move project folder"
-        command: "cd src"
+          name: "move project folder"
+          command: "cd src"
       - run:
-        name: "install npm module"
-        command: "npm i"
+          name: "install npm module"
+          command: "npm i"
       - run:
-        name: "build project"
-        command: "npm run build"
+          name: "build project"
+          command: "npm run build"
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
