@@ -75,8 +75,13 @@ workflows:
           requires:
             - createEnv
       - aws-ecs/deploy-service-update:
+          # ECS cluster
           cluster-name: "Tilog-ECS-Cluster"
+          # container:tag
           container-image-name-updates: "container=${AWS_ECR_NAME},tag=${CIRCLE_SHA1}"
+          # task definition
           family: "Tilog-blog-app"
+          # service name
+          service-name: "Service-Tilog-blog-app"
           requires:
             - aws-ecr/build-and-push-image
