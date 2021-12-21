@@ -32,6 +32,8 @@ async function bootstrap() {
   const SESSION_RESAVE = configService.get<boolean>('SESSION_RESAVE', null);
   const SESSION_SAVEUNINITIALIZED = configService.get<boolean>('SESSION_SAVEUNINITIALIZED', null);
 
+  console.log(`test -> ${SERVER_PORT} ${REDIS_HOST} ${REDIS_PORT} ${SESSION_COOKIE_MAXAGE}`);
+
   //CORS Setting
   app.enableCors({
     origin: CORS_ORIGIN === ' true' ? true : false,
