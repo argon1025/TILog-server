@@ -43,7 +43,8 @@ jobs:
       - run:
           name: "Create .env file"
           command: |
-            ./.circleci/scripts/generate-env-files.sh
+            cd src
+            ../.circleci/scripts/generate-env-files.sh
             ls -al
 
 # 워크플로우를 정의합니다
