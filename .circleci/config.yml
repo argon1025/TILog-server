@@ -24,18 +24,17 @@ jobs:
   buildImage:
     docker:
       - image: cimg/node:lts-browsers
-    working_directory: ~/src
     steps:
       - checkout
       - run:
           name: "install npm module"
           command: |
-            ls -al
+            cd src
             npm i
       - run:
           name: "build project"
           command: |
-            ls -al
+            cd src
             npm run build
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
