@@ -42,7 +42,7 @@ workflows:
   # 빌드 테스트 워크플로우
   Build-Test:
     jobs:
-      - BuildTest
-        filters:
-          branches:
-            only: /circleci-project-setup\/.*/
+      - BuildTest:
+          filters:
+            branches:
+              only: /circleci-project-setup\/.*/
