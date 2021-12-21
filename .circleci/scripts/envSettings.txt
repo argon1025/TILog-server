@@ -1,1 +1,1 @@
-.env=TILOG_BACKEND_PROD_
+src/.env=TILOG_BACKEND_PROD_
