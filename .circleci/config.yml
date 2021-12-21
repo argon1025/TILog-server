@@ -58,6 +58,6 @@ workflows:
   # 이미지 푸시
   build_and_push_image:
     jobs:
-      - createEnv
+      - createEnv:
           context:
             - TILOG_BACKEND_PROD
