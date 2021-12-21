@@ -36,6 +36,15 @@ jobs:
           command: |
             cd src
             npm run build
+  createEnv:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: "Create .env file"
+          command: |
+            ./.circleci/scripts/generate-env-files.sh
+            cat .env
 
 # 워크플로우를 정의합니다
 workflows:
@@ -49,6 +58,7 @@ workflows:
   # 이미지 푸시
   build_and_push_image:
     jobs:
+      - createEnv
       - aws-ecr/build-and-push-image:
           account-url: AWS_ECR_ACCOUNT_URL
           aws-access-key-id: AWS_ACCESS_KEY_ID
