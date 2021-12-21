@@ -2,10 +2,11 @@
 # env file 생성
 
 SCRIPTS_PATH="$( cd "$( dirname "$0" )" && pwd -P )"
+echo "${SCRIPTS_PATH}"
 mappings=()
 while IFS= read -r line; do
  mappings+=("$line")
-done < "$SCRIPTS_PATH/env_ettings.txt"
+done < "$SCRIPTS_PATH/envSettings.txt"
 
 for value in "${mappings[@]}" ; do
  prefix=${value#*=};
