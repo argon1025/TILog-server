@@ -1,1 +1,109 @@
-src/.env=TILOG_BACKEND_PROD_
+version: 2.1
+
+# 오브를 호출합니다
+# 오브엔 실행환경, 환경변수 작업, 명령이 미리 구성되어 있습니다
+orbs:
+  aws-ecr: circleci/aws-ecr@7.3.0
+  aws-ecs: circleci/aws-ecs@2.2.1
+
+# 워크플로우에서 사용할 작업을 정의합니다
+# https://circleci.com/docs/2.0/configuration-reference/#jobs
+jobs:
+  # 코드를 복사하고 폴더 리스트를 조회하는 작업입니다, 테스트용입니다
+  viewCode:
+    # 실행환경을 지정합니다, CircleCI, DockerHub에 존재하는 이미지를 지정할 수 있습니다
+    # https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+    docker:
+      - image: cimg/base:stable
+    # 해당 작업에서 진행할 스텝을 정의합니다
+    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+    steps:
+      - checkout
+      - run:
+          name: "Code tree"
+          command: "ls -al"
+  # nestJS 빌드를 진행하는 작업입니다
+  BuildTest:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+      - run:
+          name: "install npm module"
+          command: |
+            cd src
+            npm i
+      - run:
+          name: "build project"
+          command: |
+            cd src
+            npm run build
+  # CircleCI 컨텍스트를 활용해 .ENV 파일을 프로젝트 폴더에 생성해주는 작업입니다
+  createEnv:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: "Create .env file"
+          command: |
+            ./.circleci/scripts/generate-env-files.sh
+            ls -al src
+            cat src/.env
+
+# 워크플로우를 정의합니다
+workflows:
+  # 빌드 테스트
+  # 작업 조건 : TIL 로 시작하는 브랜치
+  Test-build:
+    jobs:
+      - BuildTest:
+          filters:
+            branches:
+              only: /TIL\/.*/
+  # 이미지 푸시
+  ECR-push-ECS-deploy:
+    jobs:
+      # CircleCI 컨텍스트를 활용해 .ENV 파일을 프로젝트 폴더에 생성해주는 작업
+      # 작업 조건 : release 브랜치 커밋
+      - createEnv:
+          context:
+            - TILOG_BACKEND_PROD
+          filters:
+            branches:
+              only:
+                - release
+      # Dockerfile을 빌드하고 ECR에 푸시하는 작업
+      # 작업 조건 : 상위 createEnv 작업 종료, release 브랜치 커밋
+      - aws-ecr/build-and-push-image:
+          account-url: AWS_ECR_ACCOUNT_URL
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          create-repo: true
+          dockerfile: Dockerfile
+          region: AWS_DEFAULT_REGION
+          repo: "${AWS_ECR_NAME}"
+          tag: "$CIRCLE_SHA1"
+          path: ./src
+          requires:
+            - createEnv
+          filters:
+            branches:
+              only:
+                - release
+      # ECR에 푸시된 컨테이너 이미지를 사용해 ECS 태스크 서비스를 업데이트 하는 작업
+      # 작업 조건 : 상위 aws-ecr/build-and-push-image 작업 종료, release 브랜치 커밋
+      - aws-ecs/deploy-service-update:
+          # container:tag
+          container-image-name-updates: "container=${AWS_ECR_NAME},tag=${CIRCLE_SHA1}"
+          # ECS cluster
+          cluster-name: "Tilog-ECS-Cluster"
+          # service name
+          service-name: "${AWS_ECR_NAME}-service"
+          # task definition
+          family: "${AWS_ECR_NAME}"
+          requires:
+            - aws-ecr/build-and-push-image
+          filters:
+            branches:
+              only:
+                - release
