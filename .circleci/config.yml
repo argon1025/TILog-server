@@ -50,9 +50,9 @@ jobs:
             ls -al src
             cat src/.env
       - persist_to_workspace:
-        root: .
-        paths:
-          - .
+          root: .
+          paths:
+            - .
 # 워크플로우를 정의합니다
 workflows:
   # 빌드 테스트
