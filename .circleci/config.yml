@@ -48,6 +48,9 @@ jobs:
 
 # 워크플로우를 정의합니다
 workflows:
+  - add_ssh_keys:
+      fingerprints:
+        - "99:1c:79:29:ee:35:19:93:62:82:2e:47:6b:5c:67:9a"
   # 빌드 테스트 워크플로우
   Build-Test:
     jobs:
