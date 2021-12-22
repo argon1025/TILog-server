@@ -26,8 +26,8 @@ CREATE TABLE users
     `accessToken`         VARCHAR(255)   NOT  NULL        COMMENT '서비스 엑세스 토큰', 
     `refreshToken`         VARCHAR(255)   NULL        COMMENT '서비스 리프레시 토큰', 
     `createdAt`        DATETIME        NOT NULL    COMMENT '유저 가입일', 
-    `updatedAt`        DATETIME        NOT NULL    COMMENT '유저 갱신일', 
-    `deletedAt`        DATETIME        NOT NULL    COMMENT '유저 삭제일', 
+    `updatedAt`        DATETIME        NULL    COMMENT '유저 갱신일', 
+    `deletedAt`        DATETIME        NULL    COMMENT '유저 삭제일', 
     `admin`            TINYINT         NOT NULL    DEFAULT 0 COMMENT '관리자 유무', 
     CONSTRAINT PK_users PRIMARY KEY (id)
 );
