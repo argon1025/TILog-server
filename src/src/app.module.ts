@@ -87,6 +87,7 @@ const ENV = process.env;
     TagsModule,
     CategoriesModule,
     PinnedRepositoriesModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [

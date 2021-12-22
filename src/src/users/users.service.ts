@@ -25,8 +25,16 @@ export class UsersService {
   // 특정 유저를 검색합니다.
   async findUser(oAuthServiceId: string): Promise<Users | undefined> {
     return await this.userRepo.findOne({
-      select: ['id', 'oAuthType', 'oAuthServiceId', 'userName', 'mailAddress', 'createdAt', 'updatedAt', 'admin'],
+      select: ['id', 'oAuthType', 'oAuthServiceId', 'proFileImageUrl', 'userName', 'mailAddress', 'createdAt', 'updatedAt', 'admin'],
       where: { oAuthServiceId },
+    });
+  }
+
+  // 가입된 유저를 이름으로 검색합니다.
+  async findUserToUserName(userName: string): Promise<Users | undefined> {
+    return await this.userRepo.findOne({
+      select: ['id'],
+      where: { userName: userName },
     });
   }
 
