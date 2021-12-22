@@ -139,9 +139,9 @@ export class CommentsController {
     type: UpdateCommentBodyDto,
   })
   @UseGuards(AuthenticatedGuard)
-  async updateComment(@UserInfo('id') userId: number, @Body() updateCommentBodyDto: UpdateCommentBodyDto) {
+  async updateComment(@UserInfo('id') userId: number, @Param('commentid') commentId: string, @Body() updateCommentBodyDto: UpdateCommentBodyDto) {
     const commentData = new UpdateCommentDto();
-    commentData.id = updateCommentBodyDto.id;
+    commentData.id = commentId;
     commentData.htmlContent = updateCommentBodyDto.htmlContent;
     commentData.usersId = userId;
     commentData.updatedAt = Time.nowDate();
