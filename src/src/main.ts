@@ -21,8 +21,8 @@ async function bootstrap() {
   const SERVER_HOST = configService.get<string>('SERVER_HOST', null);
   // CORS config
   const CORS_METHOD = configService.get<boolean>('CORS_METHOD', null);
-  const CORS_ORIGIN = configService.get<boolean>('CORS_ORIGIN', null);
-  const CORS_CREDENTIALS = configService.get<boolean>('CORS_CREDENTIALS', null);
+  // const CORS_ORIGIN = configService.get<boolean>('CORS_ORIGIN', null);
+  // const CORS_CREDENTIALS = configService.get<boolean>('CORS_CREDENTIALS', null);
   // Redis config
   const REDIS_HOST = configService.get<string>('REDIS_HOST', null);
   const REDIS_PORT = configService.get<string>('REDIS_PORT', null);
@@ -34,9 +34,9 @@ async function bootstrap() {
 
   //CORS Setting
   app.enableCors({
-    origin: CORS_ORIGIN === ' true' ? true : false,
+    origin: true,
     methods: CORS_METHOD,
-    credentials: CORS_CREDENTIALS === ' true' ? true : false,
+    credentials: true,
   });
 
   // Connect Local Redis
