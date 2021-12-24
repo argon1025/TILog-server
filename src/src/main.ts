@@ -34,7 +34,7 @@ async function bootstrap() {
 
   //CORS Setting
   app.enableCors({
-    origin: '*',
+    origin: ['http://localhost:8080', 'http://tilog-alb-2130273190.ap-northeast-2.elb.amazonaws.com/'],
     methods: CORS_METHOD,
     credentials: true,
   });
