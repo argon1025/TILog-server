@@ -63,7 +63,7 @@ export class FileUploadsController {
       const fileUploadResult = await this.fileUploadsService.imageFileUpload(imageFileUploadRequestDto);
 
       // 응답
-      return ResponseUtility.create(false, 'ok', fileUploadResult.pathUrl);
+      return ResponseUtility.create(false, 'ok', { data: fileUploadResult.pathUrl });
     } catch (error) {
       // 사전 정의된 에러인 경우
       // Error interface Type Guard
