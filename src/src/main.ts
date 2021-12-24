@@ -40,7 +40,7 @@ async function bootstrap() {
   });
 
   // Connect Local Redis
-  const client = redis.createClient({ url: `redis://${REDIS_HOST}:${REDIS_PORT}` });
+  const client = redis.createClient({ url: `redis://${REDIS_HOST}:${REDIS_PORT}`, retryDelay: 1000 });
   // Redis Store Use Session
   const redisStore = connectRedis(session);
   // Redis Log
