@@ -56,6 +56,7 @@ async function bootstrap() {
       },
       secret: SESSION_SECRET,
       resave: SESSION_RESAVE,
+      sameSite: 'none',
       saveUninitialized: SESSION_SAVEUNINITIALIZED,
       // 세션 스토어를 레지스로 설정합니다.
       store: new redisStore({ client }),
