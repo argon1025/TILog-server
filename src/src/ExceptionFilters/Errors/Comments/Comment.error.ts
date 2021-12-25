@@ -187,7 +187,7 @@ export class NotCommentAuthor implements Error {
   };
 }
 
-// 복구 실패
+// 복원된 댓글
 export class AlreadyRestored implements Error {
   // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
   constructor(public readonly description?) {}
@@ -201,5 +201,22 @@ export class AlreadyRestored implements Error {
   public readonly message = {
     en: `It's already been restored.`,
     kr: '이미 복원된 댓글입니다.',
+  };
+}
+
+// 복구 실패
+export class AlreadyDeleted implements Error {
+  // 개발자 코멘트를 생성자 매개변수로 할당할 수 있다.
+  constructor(public readonly description?) {}
+
+  // 미리 정의된 에러코드
+  public readonly codeNumber = 400;
+
+  public readonly codeText = 'AlreadyDeleted';
+
+  // 미리 정의된 메시지 객체
+  public readonly message = {
+    en: `It's already been restored.`,
+    kr: '이미 삭제된 댓글입니다.',
   };
 }
