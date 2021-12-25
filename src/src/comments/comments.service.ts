@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { Connection } from 'typeorm';
 // Error
 import {
+  AlreadyDeleted,
   AlreadyRestored,
   FaildCreateComment,
   FaildCreateReply,
@@ -70,7 +71,7 @@ export class CommentsService {
       await this.commentsRepo.save(createReplyDto);
       return true;
     } catch (error) {
-      // is not parent comment
+      // is not comment
       if (error instanceof MaxLevelReached) throw error;
       // 에러 생성
       throw new FaildCreateReply(`service.comment.createreply.${!!error.message ? error.message : 'Unknown_Error'}`);
@@ -86,7 +87,6 @@ export class CommentsService {
    */
   async getComments(postId: string): Promise<GetCommentsDto[]> {
     try {
-      console.log(postId);
       // postid에 해당하는 부모 코멘트를 요청
       const comments = await this.commentsRepo
         .createQueryBuilder('comments')
@@ -122,8 +122,10 @@ export class CommentsService {
    */
   async getReplies(commentId: string): Promise<GetRepliesDto[]> {
     try {
+      console.log('comemtnasd', commentId);
       // 코멘트 레벨 검증
       await this.validateCommentLevel(commentId);
+      console.log('comemtnasd', commentId);
       // postid에 해당하는 부모 코멘트를 요청
       const replies = await this.commentsRepo
         .createQueryBuilder('comments')
@@ -145,6 +147,7 @@ export class CommentsService {
         .getRawMany();
       return replies;
     } catch (error) {
+      // is not comment
       if (error instanceof MaxLevelReached) throw error;
       throw new FaildGetReplies(`service.comment.getcomments.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
@@ -233,7 +236,7 @@ export class CommentsService {
   async restoreDeletedComment(restoreDeletedCommentDto: RestoreDeletedCommentDto): Promise<boolean> {
     try {
       // 상태 확인
-      await this.isDeleted(restoreDeletedCommentDto.id);
+      await this.isRestored(restoreDeletedCommentDto.id);
       // 요청한 유저의 코멘트인지 확인
       await this.isCommentAuthor(restoreDeletedCommentDto.usersId, restoreDeletedCommentDto.id);
       // 댓글 복구
@@ -258,9 +261,7 @@ export class CommentsService {
    */
   async validateCommentLevel(commentId: string): Promise<void> {
     // 응답받은 comomentid의 replylevel 요청
-    const { replyLevel } = await this.commentsRepo.findOne({
-      id: commentId,
-    });
+    const { replyLevel } = await this.commentsRepo.createQueryBuilder('comments').where(`comments.id =  ${commentId}`).withDeleted().getOne();
     if (replyLevel) throw new MaxLevelReached(`service.comment.validateCommentLevel.this comment is child`);
   }
 
@@ -281,6 +282,18 @@ export class CommentsService {
       throw new NotCommentAuthor(`service.comment.iscommentowner.you are not owner`);
     }
   }
+
+  /**
+   * is comment restored
+   * 코멘트가 복구된 상태인지 확인합니다.
+   * @param commentId
+   */
+  async isRestored(commentId: string): Promise<void> {
+    // 응답받은 commentid이 usersid 요청
+    const { deletedAt } = await this.getComment(commentId);
+    if (!deletedAt) throw new AlreadyRestored(`service.comment.iscommentowner.It's already been restored.`);
+  }
+
   /**
    * is comment deleted
    * 코멘트가 삭제된 상태인지 확인합니다.
@@ -289,6 +302,6 @@ export class CommentsService {
   async isDeleted(commentId: string): Promise<void> {
     // 응답받은 commentid이 usersid 요청
     const { deletedAt } = await this.getComment(commentId);
-    if (!deletedAt) throw new AlreadyRestored(`service.comment.iscommentowner.I can't restore the comments. (It's already been restored.)`);
+    if (!deletedAt) throw new AlreadyDeleted(`service.comment.iscommentowner.It's already been deleted`);
   }
 }
