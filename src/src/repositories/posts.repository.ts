@@ -1,3 +1,8 @@
+import { Category } from 'src/entities/Category';
+import { PostsTags } from 'src/entities/PostsTags';
+import { Tags } from 'src/entities/Tags';
+import { UserblogCustomization } from 'src/entities/UserblogCustomization';
+import { Users } from 'src/entities/Users';
 import { EntityRepository, AbstractRepository, InsertResult, UpdateResult } from 'typeorm';
 import { Posts } from '../entities/Posts';
 
@@ -67,7 +72,7 @@ export class PostRepository extends AbstractRepository<Posts> {
    * @param content
    * @param isPrivate
    * @param updatedAt
-   * @Returns UpdateResult { generatedMaps: [], raw: [], affected: 3 } || UpdateResult { generatedMaps: [], raw: [], affected: 0 }
+   * @Returns { generatedMaps: [], raw: [], affected: 1, } || UpdateResult { generatedMaps: [], raw: [], affected: 0 }
    */
   public modifyById(
     postId: string,
@@ -79,7 +84,7 @@ export class PostRepository extends AbstractRepository<Posts> {
     updatedAt: string,
   ): Promise<UpdateResult> {
     return this.repository
-      .createQueryBuilder('Post')
+      .createQueryBuilder()
       .update()
       .set({
         categoryId: categoryId,
@@ -89,7 +94,7 @@ export class PostRepository extends AbstractRepository<Posts> {
         private: isPrivate,
         updatedAt: updatedAt,
       })
-      .where('Post.id = :postId', { postId: postId })
+      .where('id = :postId', { postId: postId })
       .updateEntity(false)
       .execute();
   }
@@ -102,7 +107,7 @@ export class PostRepository extends AbstractRepository<Posts> {
    */
   public softDeleteById(postId: string, deletedAt: string): Promise<UpdateResult> {
     return this.repository
-      .createQueryBuilder('Post')
+      .createQueryBuilder()
       .update()
       .set({
         deletedAt: deletedAt,
@@ -139,7 +144,7 @@ export class PostRepository extends AbstractRepository<Posts> {
    * @param rowLimit
    * @param onlyPublicPost
    * @param orderBy
-   * @returns
+   * @returns Posts[{ id: "16", usersId: 1, categoryId: 1,title: "Title example",thumbNailUrl: "thumbNailUrl.com",viewCounts: 0,private: 0,createdAt: {},updatedAt: {},}]
    */
   public findManyByUserId(userId: number, cursor: number, rowLimit: number, onlyPublicPost: boolean, orderBy: 'ASC' | 'DESC'): Promise<Posts[]> {
     let queryBuilder = this.repository
@@ -160,7 +165,7 @@ export class PostRepository extends AbstractRepository<Posts> {
         'Category.categoryName',
         'Category.iconUrl',
       ])
-      .innerJoin('Post.categoryId', 'Category', 'Post.categoryId = Category.id')
+      .innerJoin(Category, 'Category', 'Post.categoryId = Category.id')
       // 커서 다음에 있는 게시글
       .where('Post.id > :cursorNumber', { cursorNumber: cursor })
       // 해당 유저가 작성한
@@ -185,42 +190,122 @@ export class PostRepository extends AbstractRepository<Posts> {
   /**
    * 특정 포스트 아이디로 포스트정보, 블로그 정보, 카테고리 정보, 태그정보를 조회합니다
    * @param postId
-   * @returns
+   * @returns 
+{
+  id: "16",
+  usersId: 1,
+  title: "Title example",
+  thumbNailUrl: "thumbNailUrl.com",
+  viewCounts: 0,
+  likes: 0,
+  markDownContent: "markDownContent Example",
+  private: 0,
+  createdAt: {
+  },
+  updatedAt: {
+  },
+  deletedAt: null,
+  users: {
+    id: 1,
+    oAuthType: "github",
+    oAuthServiceId: "s",
+    userName: "test",
+    proFileImageUrl: "url.com",
+    mailAddress: null,
+    password: null,
+    accessToken: "token",
+    createdAt: "date",
+    updatedAt: null,
+    deletedAt: null,
+    admin: 0,
+    userblogCustomization: null|{...userblogCustomization}},
+  },
+  category: {
+    id: 1,
+    categoryName: "미지정",
+    iconUrl: null,
+  },
+  postsTags: [
+    {
+      id: "1",
+      postsId: "16",
+      tagsId: "1",
+      createdAt: {
+      },
+      tags: {
+        id: "1",
+        tagsName: "1태그",
+        createdAt: {
+        },
+      },
+    },
+    {
+      id: "2",
+      postsId: "16",
+      tagsId: "2",
+      createdAt: {
+      },
+      tags: {
+        id: "2",
+        tagsName: "2태그",
+        createdAt: {
+        },
+      },
+    },
+    {
+      id: "3",
+      postsId: "16",
+      tagsId: "3",
+      createdAt: {
+      },
+      tags: {
+        id: "3",
+        tagsName: "3태그",
+        createdAt: {
+        },
+      },
+    },
+  ],
+}
    */
   public findOneById(postId: string): Promise<Posts> {
-    return this.repository
-      .createQueryBuilder('Post')
-      .select([
-        'Post.id',
-        'Post.usersId',
-        'Post.categoryId',
-        'Post.title',
-        'Post.thumbNailUrl',
-        'Post.viewCounts',
-        'Post.likes',
-        'Post.markDownContent',
-        'Post.private',
-        'Post.createdAt',
-        'Post.updatedAt',
-        'Post.deletedAt',
-        'user.userName',
-        'user.proFileImageUrl',
-        'user.mailAddress',
-        'user.admin',
-        'UserblogCustomization.blogTitle',
-        'UserblogCustomization.statusMessage',
-        'UserblogCustomization.selfIntroduction',
-        'Category.categoryName',
-        'Category.iconUrl',
-      ])
-      .innerJoin('Post.usersId', 'Users', 'Post.usersId = Users.id')
-      .innerJoin('Post.usersId', 'UserblogCustomization', 'Post.usersId = UserblogCustomization.usersId')
-      .innerJoin('Post.categoryId', 'Category', 'Post.categoryId = Category.id')
-      .innerJoin('Post.id', 'PostTags', 'Post.id = PostTags.postsId')
-      .innerJoin('PostTags.tagsId', 'Tags', 'PostTags.tagsId = Tags.id')
-      .where('post.id = :postId', { postId: postId })
-      .maxExecutionTime(1000)
-      .getOne();
+    return (
+      this.repository
+        .createQueryBuilder('Post')
+        .select([
+          'Post.id',
+          'Post.usersId',
+          'Post.title',
+          'Post.thumbNailUrl',
+          'Post.viewCounts',
+          'Post.likes',
+          'Post.markDownContent',
+          'Post.private',
+          'Post.createdAt',
+          'Post.updatedAt',
+          'Post.deletedAt',
+          'User.userName',
+          'User.proFileImageUrl',
+          'User.mailAddress',
+          'User.admin',
+          'UserblogCustomization.blogTitle',
+          'UserblogCustomization.statusMessage',
+          'UserblogCustomization.selfIntroduction',
+          'category.id',
+          'category.categoryName',
+          'category.iconUrl',
+        ])
+
+        //.innerJoin('Post.users', 'User')
+        .innerJoinAndSelect('Post.users', 'User')
+        .leftJoinAndSelect('User.userblogCustomization', 'userblogCustomization')
+        .innerJoin('Post.category', 'category')
+        .leftJoinAndSelect('Post.postsTags', 'postsTags')
+        .leftJoinAndSelect('postsTags.tags', 'tag')
+        .where('Post.id = :postId', { postId: postId })
+        .maxExecutionTime(1000)
+        .getOne()
+    );
   }
 
   /**

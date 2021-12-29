@@ -7,9 +7,9 @@ export class PostViewsRepository extends AbstractRepository<PostView> {
    * 특정 IP가 특정 PostId를 열람한 기록이 있는지 조회합니다
    * @param postId
    * @param userIp
-   * @Returns
+   * @Returns TextRow { postView_id: '1' } | undefined
    */
-  findOneByPostIdAndUserIp(postId: string, userIp: number): Promise<PostView> {
+  findOneByPostIdAndUserIp(postId: string, userIp: string): Promise<PostView> {
     return this.repository
       .createQueryBuilder('PostView')
       .select(['postView.id', 'postView.viewedAt'])
