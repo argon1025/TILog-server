@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Version } from '@nestjs/common';
+import { Controller, Get, HttpException, Param, Version } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 
@@ -13,6 +13,8 @@ export class UsersController {
   async userInfo(@Param('username') username: string) {
     try {
       return await this.usersService.findUserToUserName(username);
-    } catch (error) {}
+    } catch (error) {
+      throw new HttpException(error, error.codeNumber);
+    }
   }
 }
