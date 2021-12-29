@@ -179,10 +179,10 @@ export class PostRepository extends AbstractRepository<Posts> {
         'Category.iconUrl',
       ])
       .innerJoin('Post.category', 'Category')
-      // 커서 다음에 있는 게시글
-      .where('Post.id > :cursorNumber', { cursorNumber: cursor })
       // 해당 유저가 작성한
-      .andWhere('Post.usersId = :userId', { userId: userId })
+      .where('Post.usersId = :userId', { userId: userId })
+      // 커서 다음에 있는 게시글
+      .andWhere(orderBy === 'ASC' ? 'Post.id > :cursorNumber' : 'Post.id < :cursorNumber', { cursorNumber: cursor })
       // 삭제되지 않은 게시글
       .andWhere('Post.deletedAt is NULL')
       // IndexID 정렬
