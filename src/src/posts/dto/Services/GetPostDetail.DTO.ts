@@ -9,7 +9,7 @@ import { Posts } from '../../../entities/Posts';
 
 export class GetPostDetailDto extends PickType(Posts, ['id']) {}
 
-class PostTagsDto extends IntersectionType(PickType(PostsTags, ['id', 'tagsId', 'createdAt'] as const), PickType(Tags, ['tagsName'] as const)) {}
+class PostTagsDto extends PickType(Tags, ['id', 'createdAt', 'tagsName'] as const) {}
 
 // 타입을 합쳐 export 합니다.
 export class GetPostDetailResponseDto extends IntersectionType(

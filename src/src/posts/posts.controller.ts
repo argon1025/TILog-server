@@ -1,19 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  HttpException,
-  UseGuards,
-  Version,
-  Put,
-  Query,
-  ParseIntPipe,
-  ConsoleLogger,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, UseGuards, Version, Put, Query, ParseIntPipe, ConsoleLogger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UserInfo } from 'src/auth/decorators/userInfo.decorator';
@@ -64,10 +49,10 @@ export class PostsController {
       createPostRequestDto.private = requestData.private;
 
       // 포스트 생성요청
-      await this.postsService.createPost(createPostRequestDto);
+      const postId = await this.postsService.createPost(createPostRequestDto);
 
       // 응답
-      return ResponseUtility.create(false, 'ok');
+      return ResponseUtility.create(false, 'ok', { data: postId });
     } catch (error) {
       // 사전 정의된 에러인 경우
       // Error interface Type Guard
@@ -129,7 +114,7 @@ export class PostsController {
       await this.postsService.updatePost(UpdatePostRequestDto);
 
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok');
+      return ResponseUtility.create(false, 'ok', { data: postID });
     } catch (error) {
       // 사전 정의된 에러인 경우
       // Error interface Type Guard
@@ -258,7 +243,7 @@ export class PostsController {
       }
 
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok', POST_DATA);
+      return ResponseUtility.create(false, 'ok', { data: POST_DATA });
     } catch (error) {
       // 사전 정의된 에러인 경우
       // Error interface Type Guard
@@ -294,11 +279,7 @@ export class PostsController {
     required: true,
     description: '포스트 커서 아이디',
   })
-  async getAllFindByUserID(
-    @UserInfo() userData: SessionInfo,
-    @Param('userID', ParseIntPipe) userID: number,
-    @Query('cursor', ParseIntPipe) cursor: number = 0,
-  ) {
+  async getAllFindByUserID(@UserInfo() userData: SessionInfo, @Param('userID', ParseIntPipe) userID: number, @Query('cursor', ParseIntPipe) cursor: number = 0) {
     try {
       // Dto Mapping
       let getPostsRequestDto = new GetPostsDto();
@@ -314,7 +295,7 @@ export class PostsController {
       const getPostsResult = await this.postsService.getPostsFoundByMemberId(getPostsRequestDto);
 
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok', getPostsResult);
+      return ResponseUtility.create(false, 'ok', { data: getPostsResult });
     } catch (error) {
       console.log(error);
       // 사전 정의된 에러인 경우
@@ -354,7 +335,7 @@ export class PostsController {
       const setLikeResult = await this.postsService.setPostToLike(setLikeRequestDto);
 
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok', setLikeResult.likes);
+      return ResponseUtility.create(false, 'ok', { data: setLikeResult.likes });
     } catch (error) {
       // 사전 정의된 에러인 경우
       // Error interface Type Guard
@@ -375,7 +356,7 @@ export class PostsController {
    * @version 1.0.0
    */
   @Version('1')
-  @Delete('posts/:postsID/like')
+  @Delete('posts/:postID/like')
   @UseGuards(AuthenticatedGuard)
   @ApiTags('Posts')
   @ApiOperation({ summary: '포스트에 설정된 좋아요를 해제합니다.' })
@@ -394,7 +375,7 @@ export class PostsController {
       const setDislikeResult = await this.postsService.setPostToDislike(setDislikeRequestDto);
 
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok', setDislikeResult.likes);
+      return ResponseUtility.create(false, 'ok', { data: setDislikeResult.likes });
     } catch (error) {
       // 사전 정의된 에러인 경우
       // Error interface Type Guard
@@ -466,9 +447,7 @@ export class PostsController {
         throw new HttpException(error, error.codeNumber);
       } else {
         // 사전 정의되지 않은 에러인 경우
-        const errorResponse = new ErrorHandlerNotFound(
-          `${PostsController.name}.${this.createPostTags.name}.${!!error.message ? error.message : 'Unknown_Error'}`,
-        );
+        const errorResponse = new ErrorHandlerNotFound(`${PostsController.name}.${this.createPostTags.name}.${!!error.message ? error.message : 'Unknown_Error'}`);
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }
