@@ -44,7 +44,15 @@ export class PostRepository extends AbstractRepository<Posts> {
    *  }
    * }
    */
-  public create(userId: number, categoryId: number, title: string, thumbNailURL: string, content: string, isPrivate: number, nowTime: string): Promise<InsertResult> {
+  public create(
+    userId: number,
+    categoryId: number,
+    title: string,
+    thumbNailURL: string,
+    content: string,
+    isPrivate: number,
+    nowTime: string,
+  ): Promise<InsertResult> {
     return this.repository
       .createQueryBuilder('Post')
       .insert()
@@ -134,7 +142,13 @@ export class PostRepository extends AbstractRepository<Posts> {
   }
 
   public modifyLikeCountById(postId: string, likeCount: number): Promise<UpdateResult> {
-    return this.repository.createQueryBuilder('Post').update().set({ likes: likeCount }).where('id = :postId', { postId: postId }).updateEntity(false).execute();
+    return this.repository
+      .createQueryBuilder('Post')
+      .update()
+      .set({ likes: likeCount })
+      .where('id = :postId', { postId: postId })
+      .updateEntity(false)
+      .execute();
   }
 
   /**
@@ -165,7 +179,7 @@ export class PostRepository extends AbstractRepository<Posts> {
         'Category.categoryName',
         'Category.iconUrl',
       ])
-      .innerJoin(Category, 'Category', 'Post.categoryId = Category.id')
+      .innerJoin('Post.category', 'Category')
       // 커서 다음에 있는 게시글
       .where('Post.id > :cursorNumber', { cursorNumber: cursor })
       // 해당 유저가 작성한
