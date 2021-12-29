@@ -182,7 +182,9 @@ export class PostRepository extends AbstractRepository<Posts> {
       // 해당 유저가 작성한
       .where('Post.usersId = :userId', { userId: userId })
       // 커서 다음에 있는 게시글
-      .andWhere(orderBy === 'ASC' ? 'Post.id > :cursorNumber' : 'Post.id < :cursorNumber', { cursorNumber: cursor })
+      .andWhere(orderBy === 'ASC' ? 'Post.id > :cursorNumber' : 'Post.id < :cursorNumber', {
+        cursorNumber: cursor === 0 && orderBy === 'DESC' ? 9999999999 : 0,
+      })
       // 삭제되지 않은 게시글
       .andWhere('Post.deletedAt is NULL')
       // IndexID 정렬
