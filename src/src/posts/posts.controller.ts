@@ -1,4 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, UseGuards, Version, Put, Query, ParseIntPipe, ConsoleLogger } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpException,
+  UseGuards,
+  Version,
+  Put,
+  Query,
+  ParseIntPipe,
+  ConsoleLogger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UserInfo } from 'src/auth/decorators/userInfo.decorator';
@@ -52,7 +67,7 @@ export class PostsController {
       const postId = await this.postsService.createPost(createPostRequestDto);
 
       // 응답
-      return ResponseUtility.create(false, 'ok', { data: postId });
+      return ResponseUtility.create(false, 'ok', { data: { postId: postId } });
     } catch (error) {
       // 사전 정의된 에러인 경우
       // Error interface Type Guard
@@ -114,7 +129,7 @@ export class PostsController {
       await this.postsService.updatePost(UpdatePostRequestDto);
 
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok', { data: postID });
+      return ResponseUtility.create(false, 'ok', { data: { postId: postID } });
     } catch (error) {
       // 사전 정의된 에러인 경우
       // Error interface Type Guard
@@ -279,7 +294,11 @@ export class PostsController {
     required: true,
     description: '포스트 커서 아이디',
   })
-  async getAllFindByUserID(@UserInfo() userData: SessionInfo, @Param('userID', ParseIntPipe) userID: number, @Query('cursor', ParseIntPipe) cursor: number = 0) {
+  async getAllFindByUserID(
+    @UserInfo() userData: SessionInfo,
+    @Param('userID', ParseIntPipe) userID: number,
+    @Query('cursor', ParseIntPipe) cursor: number = 0,
+  ) {
     try {
       // Dto Mapping
       let getPostsRequestDto = new GetPostsDto();
@@ -335,7 +354,7 @@ export class PostsController {
       const setLikeResult = await this.postsService.setPostToLike(setLikeRequestDto);
 
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok', { data: setLikeResult.likes });
+      return ResponseUtility.create(false, 'ok', { data: { likeCount: setLikeResult.likes } });
     } catch (error) {
       // 사전 정의된 에러인 경우
       // Error interface Type Guard
@@ -375,7 +394,7 @@ export class PostsController {
       const setDislikeResult = await this.postsService.setPostToDislike(setDislikeRequestDto);
 
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok', { data: setDislikeResult.likes });
+      return ResponseUtility.create(false, 'ok', { data: { likeCount: setDislikeResult.likes } });
     } catch (error) {
       // 사전 정의된 에러인 경우
       // Error interface Type Guard
@@ -447,7 +466,9 @@ export class PostsController {
         throw new HttpException(error, error.codeNumber);
       } else {
         // 사전 정의되지 않은 에러인 경우
-        const errorResponse = new ErrorHandlerNotFound(`${PostsController.name}.${this.createPostTags.name}.${!!error.message ? error.message : 'Unknown_Error'}`);
+        const errorResponse = new ErrorHandlerNotFound(
+          `${PostsController.name}.${this.createPostTags.name}.${!!error.message ? error.message : 'Unknown_Error'}`,
+        );
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }

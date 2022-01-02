@@ -160,7 +160,7 @@ export class PostRepository extends AbstractRepository<Posts> {
    * @param orderBy
    * @returns Posts[{ id: "16", usersId: 1, categoryId: 1,title: "Title example",thumbNailUrl: "thumbNailUrl.com",viewCounts: 0,private: 0,createdAt: {},updatedAt: {},}]
    */
-  public findManyByUserId(userId: number, cursor: number, rowLimit: number, onlyPublicPost: boolean, orderBy: 'ASC' | 'DESC'): Promise<Posts[]> {
+  public findManyByUserId(userId: number, cursor: number = 0, rowLimit: number, onlyPublicPost: boolean, orderBy: 'ASC' | 'DESC'): Promise<Posts[]> {
     let queryBuilder = this.repository
       .createQueryBuilder('Post')
       .select([
@@ -181,10 +181,6 @@ export class PostRepository extends AbstractRepository<Posts> {
       .innerJoin('Post.category', 'Category')
       // 해당 유저가 작성한
       .where('Post.usersId = :userId', { userId: userId })
-      // 커서 다음에 있는 게시글
-      .andWhere(orderBy === 'ASC' ? 'Post.id > :cursorNumber' : 'Post.id < :cursorNumber', {
-        cursorNumber: cursor === 0 && orderBy === 'DESC' ? 9999999999 : cursor,
-      })
       // 삭제되지 않은 게시글
       .andWhere('Post.deletedAt is NULL')
       // IndexID 정렬
@@ -193,6 +189,15 @@ export class PostRepository extends AbstractRepository<Posts> {
       .limit(rowLimit)
       // 요청 대기 시간
       .maxExecutionTime(1000);
+
+    // 커서가 기본값으로 요청되지 않았을 경우 조건절이 추가됩니다
+    if (cursor != 0) {
+      // 내림차순(DESC)로 정렬 시 cursor 값 보다 작은 인덱스 ID를 가지는 포스트만 조회합니다
+      // 오름차순(ASC)로 정렬 시 cursor값 보다 큰 인덱스 ID를 가지는 포스트만 조회합니다
+      queryBuilder.andWhere(orderBy === 'ASC' ? 'Post.id > :cursorNumber' : 'Post.id < :cursorNumber', {
+        cursorNumber: cursor,
+      });
+    }
 
     // 퍼블릭 포스트만 조회할 경우
     if (onlyPublicPost) {
