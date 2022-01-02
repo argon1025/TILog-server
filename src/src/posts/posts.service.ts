@@ -10,7 +10,6 @@ import {
   GetMostLikedPostFail,
   PostCreateFail,
   PostDetailGetFail,
-  PostGetFail,
   PostNotFound,
   PostSoftDeleteFail,
   PostUpdateFail,
@@ -58,6 +57,8 @@ export class PostsService {
   ) {}
 
   /**
+   * 게시글 소유, 삭제, 업데이트 정보를 반환합니다
+   * @todo 매개변수 DTO를 작성해야합니다
    * @version 1.0.0
    */
   public async getPostWriterId(postWriterData: GetPostWriterDto): Promise<GetPostWriterResponseDto> {
@@ -97,7 +98,7 @@ export class PostsService {
   }
 
   /**
-   * 게시글의 소유주가 맞는지 확인합니다 소유주가 아닌경우 에러를 throw합니다
+   * 게시글의 소유주가 맞는지 확인합니다
    * @todo 매개변수 DTO를 작성해야합니다
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
@@ -122,8 +123,6 @@ export class PostsService {
   /**
    * 게시글이 비밀글인지 확인합니다
    * @todo 매개변수 DTO를 작성해야합니다
-   * @todo 오류처리 구문을 추가해야합니다
-   * @todo getPostWriterId DTO를 생성후 요청해야합니다
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -211,8 +210,10 @@ export class PostsService {
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.createPost.${!!error.message ? error.message : JSON.stringify(error)}`;
       // 에러
-      throw new PostCreateFail(`${this.createPost.name}.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new PostCreateFail(developerComment);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -221,7 +222,6 @@ export class PostsService {
 
   /**
    * 포스트를 수정 합니다.
-   * - 서비스 로직 요청전 비밀글, 삭제글 여부 확인이 필요합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -270,8 +270,10 @@ export class PostsService {
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.updatePost.${!!error.message ? error.message : JSON.stringify(error)}`;
       // 에러
-      throw new PostUpdateFail(`service.post.updatePost.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new PostUpdateFail(developerComment);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -280,7 +282,6 @@ export class PostsService {
 
   /**
    * 포스트를 삭제 합니다.
-   * - 서비스 로직 요청전 유저인가 확인이 필요합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -317,8 +318,10 @@ export class PostsService {
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.softDeletePost.${!!error.message ? error.message : JSON.stringify(error)}`;
       // 에러
-      throw new PostSoftDeleteFail(`service.post.softDeletePost.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new PostSoftDeleteFail(developerComment);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -390,7 +393,9 @@ export class PostsService {
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
-      throw new PostViewCountAddFail(`posts.service.addPostViews.${!!error.message ? error.message : 'Unknown_Error'}`);
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.addPostViews.${!!error.message ? error.message : JSON.stringify(error)}`;
+      throw new PostViewCountAddFail(developerComment);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -444,10 +449,11 @@ export class PostsService {
       // 결과를 리턴합니다
       return response;
     } catch (error) {
-      console.log(error);
       // 롤백을 실행합니다.
       await queryRunner.rollbackTransaction();
-      throw new PostGetFail('posts.service.getPostsFoundByMemberId');
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.getPostsFoundByMemberId.${!!error.message ? error.message : JSON.stringify(error)}`;
+      throw new PostNotFound(developerComment);
     } finally {
       // 생성된 커넥션을 해제합니다.
       await queryRunner.release();
@@ -456,7 +462,6 @@ export class PostsService {
 
   /**
    * 게시글 디테일 정보를 요청합니다
-   * - 서비스 요청전 해당 포스트 비밀글, 삭제글 여부를 확인해야합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -475,7 +480,7 @@ export class PostsService {
       const postRepository = queryRunner.manager.getCustomRepository(PostRepository);
 
       let postAndUserDataQueryResult = await postRepository.findOneById(postData.id);
-      // console.log(postAndUserDataQueryResult);
+
       // 포스트를 찾지 못했을 경우
       if (!postAndUserDataQueryResult) {
         throw new Error('POST_NOT_FOUND');
@@ -521,11 +526,12 @@ export class PostsService {
       // 포스트 데이터를 리턴합니다.
       return response;
     } catch (error) {
-      console.log(error);
       // 롤백을 실행합니다.
       await queryRunner.rollbackTransaction();
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.getPostDetail.${!!error.message ? error.message : JSON.stringify(error)}`;
       // 에러를 반환합니다.
-      throw new PostDetailGetFail(`posts.service.getPostDetail.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new PostDetailGetFail(developerComment);
     } finally {
       // 생성된 커넥션을 해제합니다.
       await queryRunner.release();
@@ -577,7 +583,6 @@ export class PostsService {
       // Post 테이블의 Like 카운트를 업데이트 합니다.
       const PostUpdateResult = await postRepository.modifyLikeCountById(requestData.postsId, LIKE_COUNT);
 
-      console.log(PostUpdateResult);
       // 테이블 업데이트가 반영되었는지 확인합니다
       if (PostUpdateResult.affected === 0) {
         throw new Error('PostUpdateResult_AFFECTED_IS_0');
@@ -601,9 +606,10 @@ export class PostsService {
       return response;
     } catch (error) {
       // 롤백, 오류 리턴
-      console.log(error);
       await queryRunner.rollbackTransaction();
-      throw new SetPostToLikeFail(`posts.service.setPostToLike ${!!error.message ? error.message : 'Unknown_Error'}`);
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.setPostToLike.${!!error.message ? error.message : JSON.stringify(error)}`;
+      throw new SetPostToLikeFail(developerComment);
     } finally {
       // 커넥션 해제
       await queryRunner.release();
@@ -678,9 +684,10 @@ export class PostsService {
     } catch (error) {
       // 롤백, 오류 리턴
       await queryRunner.rollbackTransaction();
-
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.setPostToDislike.${!!error.message ? error.message : JSON.stringify(error)}`;
       // 에러 반환
-      throw new SetPostToDislikeFail(`posts.service.setPostToLike ${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new SetPostToDislikeFail(developerComment);
     } finally {
       // 커넥션 해제
       await queryRunner.release();
@@ -783,7 +790,9 @@ export class PostsService {
     } catch (error) {
       // 롤백을 실행합니다.
       await queryRunner.rollbackTransaction();
-      throw new GetMostLikedPostFail(`posts.service.getMostLiked ${!!error.message ? error.message : 'Unknown_Error'}`);
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.getMostLiked.${!!error.message ? error.message : JSON.stringify(error)}`;
+      throw new GetMostLikedPostFail(developerComment);
     } finally {
       // 생성된 커넥션을 해제합니다.
       await queryRunner.release();
@@ -833,7 +842,9 @@ export class PostsService {
 
       return true;
     } catch (error) {
-      throw new CreatePostTagFail(`${PostsService.name}.${this.createPostTags.name}: ${!!error.message ? error.message : 'Unknown_Error'}`);
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.createPostTags.${!!error.message ? error.message : JSON.stringify(error)}`;
+      throw new CreatePostTagFail(developerComment);
     }
   }
 }
