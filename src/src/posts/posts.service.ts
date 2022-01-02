@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Connection, Repository } from 'typeorm';
 import { Posts } from '../entities/Posts';
-import { PostView } from 'src/entities/PostView';
 import { Users } from 'src/entities/Users';
-import { PostLike } from 'src/entities/PostLike';
 import Time from 'src/utilities/time.utility';
 
 // ERROR
@@ -13,10 +11,10 @@ import {
   PostCreateFail,
   PostDetailGetFail,
   PostGetFail,
+  PostNotFound,
   PostSoftDeleteFail,
   PostUpdateFail,
   PostViewCountAddFail,
-  PostWriterNotFound,
   SetPostToDislikeFail,
   SetPostToLikeFail,
 } from '../ExceptionFilters/Errors/Posts/Post.error';
@@ -33,12 +31,13 @@ import { SetPostToLikeDto, SetPostToLikeResponseDto } from './dto/Services/SetPo
 import { SetPostToDislikeDto, SetPostToDislikeResponseDto } from './dto/Services/SetPostToDislike.DTO';
 import { Tags } from 'src/entities/Tags';
 import { PostsTags } from 'src/entities/PostsTags';
-import { UserblogCustomization } from 'src/entities/UserblogCustomization';
 import { Category } from 'src/entities/Category';
 import { MostLikedRequestDto, MostLikedResponseDto } from './dto/Services/MostLikedPost.DTO';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareArray } from 'src/utilities/compare.array.utility';
 import { CreatePostTags } from './dto/Services/CreatePostTags.DTO';
+
+// Custom Repository
 import { PostRepository } from 'src/repositories/posts.repository';
 import { PostViewsRepository } from 'src/repositories/postViews.repository';
 import { PostLikesRepository } from 'src/repositories/PostLikes.repository';
@@ -87,8 +86,10 @@ export class PostsService {
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
+      // 개발자 코멘트 생성
+      const developerComment = `${this.getPostWriterId.name}.${!!error.message ? error.message : JSON.stringify(error)}`;
       // 에러 생성
-      throw new PostWriterNotFound(`service.post.getPostWriter.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new PostNotFound(developerComment);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -96,24 +97,28 @@ export class PostsService {
   }
 
   /**
-   * 게시글의 소유주가 맞는지 확인합니다
+   * 게시글의 소유주가 맞는지 확인합니다 소유주가 아닌경우 에러를 throw합니다
    * @todo 매개변수 DTO를 작성해야합니다
-   * @todo 오류처리 구문을 추가해야합니다
-   * @todo getPostWriterId DTO를 생성후 요청해야합니다
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async isOwner(requestData: { usersId: number; id: string }): Promise<boolean> {
-    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
+  async isOwner(requestData: { userId: number; postId: string }): Promise<boolean> {
+    try {
+      const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.postId });
 
-    if (getPostWriterIdResult.usersId === requestData.usersId) {
-      // 유저 아이디가 맞을경우
-      return true;
-    } else {
-      // 유저 아이디가 다를경우
-      return false;
+      if (getPostWriterIdResult.usersId === requestData.userId) {
+        // 유저 아이디가 맞을경우
+        return true;
+      } else {
+        // 유저 아이디가 다를경우
+        return false;
+      }
+    } catch (error) {
+      // getPostWriterId 에서 발생한 에러를 그대로 전달합니다
+      throw error;
     }
   }
+
   /**
    * 게시글이 비밀글인지 확인합니다
    * @todo 매개변수 DTO를 작성해야합니다
@@ -122,15 +127,20 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async isPrivate(requestData: { id: string }): Promise<boolean> {
-    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
+  async isPrivate(requestData: { postId: string }): Promise<boolean> {
+    try {
+      const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.postId });
 
-    if (getPostWriterIdResult.private === 0) {
-      // 비밀글이 아닐경우
-      return false;
-    } else {
-      // 비밀글일 경우
-      return true;
+      if (getPostWriterIdResult.private === 0) {
+        // 비밀글이 아닐경우
+        return false;
+      } else {
+        // 비밀글일 경우
+        return true;
+      }
+    } catch (error) {
+      // getPostWriterId 에서 발생한 에러를 그대로 전달합니다
+      throw error;
     }
   }
   /**
@@ -141,15 +151,20 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async isDeleted(requestData: { id: string }): Promise<boolean> {
-    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
+  async isDeleted(requestData: { postId: string }): Promise<boolean> {
+    try {
+      const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.postId });
 
-    if (!getPostWriterIdResult.deletedAt) {
-      // 삭제된 기록이 없을 경우
-      return false;
-    } else {
-      // 삭제된 기록이 있을경우
-      return true;
+      if (!getPostWriterIdResult.deletedAt) {
+        // 삭제된 기록이 없을 경우
+        return false;
+      } else {
+        // 삭제된 기록이 있을경우
+        return true;
+      }
+    } catch (error) {
+      // getPostWriterId 에서 발생한 에러를 그대로 전달합니다
+      throw error;
     }
   }
 
@@ -197,7 +212,7 @@ export class PostsService {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
       // 에러
-      throw new PostCreateFail(`service.post.createPost.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new PostCreateFail(`${this.createPost.name}.${!!error.message ? error.message : 'Unknown_Error'}`);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
