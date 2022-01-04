@@ -60,7 +60,7 @@ export class FileUploadsService {
       return response;
     } catch (error) {
       // 에러 반환
-      throw new S3FileUploadFail(`fileUpload.service.s3FileUpload.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw error;
     }
   }
 
@@ -179,7 +179,7 @@ export class FileUploadsService {
       }
 
       // 최종 에러 생성
-      throw new ImageUploadFail(`service.file-uploads.imageFileUpload.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new ImageUploadFail(`service.file-uploads.imageFileUpload.${!!error.message ? JSON.stringify(error.message) : 'Unknown_Error'}`);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();

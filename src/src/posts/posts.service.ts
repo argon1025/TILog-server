@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Connection, Repository } from 'typeorm';
 import { Posts } from '../entities/Posts';
-import { PostView } from 'src/entities/PostView';
 import { Users } from 'src/entities/Users';
-import { PostLike } from 'src/entities/PostLike';
 import Time from 'src/utilities/time.utility';
 
 // ERROR
@@ -12,11 +10,10 @@ import {
   GetMostLikedPostFail,
   PostCreateFail,
   PostDetailGetFail,
-  PostGetFail,
+  PostNotFound,
   PostSoftDeleteFail,
   PostUpdateFail,
   PostViewCountAddFail,
-  PostWriterNotFound,
   SetPostToDislikeFail,
   SetPostToLikeFail,
 } from '../ExceptionFilters/Errors/Posts/Post.error';
@@ -33,12 +30,16 @@ import { SetPostToLikeDto, SetPostToLikeResponseDto } from './dto/Services/SetPo
 import { SetPostToDislikeDto, SetPostToDislikeResponseDto } from './dto/Services/SetPostToDislike.DTO';
 import { Tags } from 'src/entities/Tags';
 import { PostsTags } from 'src/entities/PostsTags';
-import { UserblogCustomization } from 'src/entities/UserblogCustomization';
 import { Category } from 'src/entities/Category';
 import { MostLikedRequestDto, MostLikedResponseDto } from './dto/Services/MostLikedPost.DTO';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareArray } from 'src/utilities/compare.array.utility';
 import { CreatePostTags } from './dto/Services/CreatePostTags.DTO';
+
+// Custom Repository
+import { PostRepository } from 'src/repositories/posts.repository';
+import { PostViewsRepository } from 'src/repositories/postViews.repository';
+import { PostLikesRepository } from 'src/repositories/PostLikes.repository';
 
 @Injectable()
 export class PostsService {
@@ -56,39 +57,27 @@ export class PostsService {
   ) {}
 
   /**
-   * 포스트 아이디로 작성자 아이디, 비밀글 유무, 삭제 유무를 반환합니다.
-   * @author seongrokLee <argon1025@gmail.com>
+   * 게시글 소유, 삭제, 업데이트 정보를 반환합니다
+   * @todo 매개변수 DTO를 작성해야합니다
    * @version 1.0.0
    */
   public async getPostWriterId(postWriterData: GetPostWriterDto): Promise<GetPostWriterResponseDto> {
-    // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
-    // 데이터 베이스 연결
     await queryRunner.connect();
 
-    // 트랜잭션 시작
     await queryRunner.startTransaction();
 
     try {
-      // 쿼리 작성
-      const query = queryRunner.manager
-        .createQueryBuilder()
-        .select(['postTable.usersId', 'postTable.private'])
-        .from(Posts, 'postTable')
-        .where('postTable.id = :postId', { postId: postWriterData.id })
-        .maxExecutionTime(1000);
-
-      /**
-       * @Returns Posts { usersId: 1 }
-       */
-      const queryResult = await query.getOneOrFail();
+      const queryResult = await queryRunner.manager.getCustomRepository(PostRepository).accessInfoFindOneOrFailByPostId(postWriterData.id);
 
       // DTO Mapping
       let responseData = new GetPostWriterResponseDto();
       responseData.usersId = queryResult.usersId;
       responseData.private = queryResult.private;
       responseData.deletedAt = queryResult.deletedAt;
+      responseData.createdAt = queryResult.createdAt;
+      responseData.updatedAt = queryResult.updatedAt;
 
       // 트랜잭션 커밋
       await queryRunner.commitTransaction();
@@ -98,8 +87,10 @@ export class PostsService {
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
+      // 개발자 코멘트 생성
+      const developerComment = `${this.getPostWriterId.name}.${!!error.message ? error.message : JSON.stringify(error)}`;
       // 에러 생성
-      throw new PostWriterNotFound(`service.post.getPostWriter.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new PostNotFound(developerComment);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -109,39 +100,46 @@ export class PostsService {
   /**
    * 게시글의 소유주가 맞는지 확인합니다
    * @todo 매개변수 DTO를 작성해야합니다
-   * @todo 오류처리 구문을 추가해야합니다
-   * @todo getPostWriterId DTO를 생성후 요청해야합니다
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async isOwner(requestData: { usersId: number; id: string }): Promise<boolean> {
-    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
+  async isOwner(requestData: { userId: number; postId: string }): Promise<boolean> {
+    try {
+      const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.postId });
 
-    if (getPostWriterIdResult.usersId === requestData.usersId) {
-      // 유저 아이디가 맞을경우
-      return true;
-    } else {
-      // 유저 아이디가 다를경우
-      return false;
+      if (getPostWriterIdResult.usersId === requestData.userId) {
+        // 유저 아이디가 맞을경우
+        return true;
+      } else {
+        // 유저 아이디가 다를경우
+        return false;
+      }
+    } catch (error) {
+      // getPostWriterId 에서 발생한 에러를 그대로 전달합니다
+      throw error;
     }
   }
+
   /**
    * 게시글이 비밀글인지 확인합니다
    * @todo 매개변수 DTO를 작성해야합니다
-   * @todo 오류처리 구문을 추가해야합니다
-   * @todo getPostWriterId DTO를 생성후 요청해야합니다
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async isPrivate(requestData: { id: string }): Promise<boolean> {
-    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
+  async isPrivate(requestData: { postId: string }): Promise<boolean> {
+    try {
+      const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.postId });
 
-    if (getPostWriterIdResult.private === 0) {
-      // 비밀글이 아닐경우
-      return false;
-    } else {
-      // 비밀글일 경우
-      return true;
+      if (getPostWriterIdResult.private === 0) {
+        // 비밀글이 아닐경우
+        return false;
+      } else {
+        // 비밀글일 경우
+        return true;
+      }
+    } catch (error) {
+      // getPostWriterId 에서 발생한 에러를 그대로 전달합니다
+      throw error;
     }
   }
   /**
@@ -152,15 +150,20 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  async isDeleted(requestData: { id: string }): Promise<boolean> {
-    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.id });
+  async isDeleted(requestData: { postId: string }): Promise<boolean> {
+    try {
+      const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.postId });
 
-    if (!getPostWriterIdResult.deletedAt) {
-      // 삭제된 기록이 없을 경우
-      return false;
-    } else {
-      // 삭제된 기록이 있을경우
-      return true;
+      if (!getPostWriterIdResult.deletedAt) {
+        // 삭제된 기록이 없을 경우
+        return false;
+      } else {
+        // 삭제된 기록이 있을경우
+        return true;
+      }
+    } catch (error) {
+      // getPostWriterId 에서 발생한 에러를 그대로 전달합니다
+      throw error;
     }
   }
 
@@ -180,39 +183,20 @@ export class PostsService {
     await queryRunner.startTransaction();
 
     try {
-      // 쿼리 작성
-      const query = queryRunner.manager
-        .createQueryBuilder()
-        .insert()
-        .into(Posts)
-        .values([
-          {
-            usersId: postData.usersId,
-            categoryId: postData.categoryId,
-            title: postData.title,
-            thumbNailUrl: postData.thumbNailUrl,
-            markDownContent: postData.markDownContent,
-            private: postData.private,
-            createdAt: Time.nowDate(),
-          },
-        ])
-        .updateEntity(false);
+      // Load DAO
+      const postRepository = await queryRunner.manager.getCustomRepository(PostRepository);
 
-      /**
-       * @Returns InsertResult {
-       * identifiers: [],
-       * generatedMaps: [],
-       * raw: ResultSetHeader {
-       *   fieldCount: 0,
-       *   affectedRows: 1,
-       *   insertId: 5,
-       *   info: '',
-       *   serverStatus: 3,
-       *   warningStatus: 0
-       *  }
-       * }
-       */
-      const queryResult = await query.execute();
+      // Create Post
+      const queryResult = await postRepository.create(
+        postData.usersId,
+        postData.categoryId,
+        postData.title,
+        postData.thumbNailUrl,
+        postData.markDownContent,
+        postData.private,
+        Time.nowDate(),
+      );
+
       // 테이블 업데이트가 반영되었는지 확인합니다.
       if (queryResult.raw.affectedRows === 0) {
         throw new Error('createPostQueryResult_AFFECTED_IS_0');
@@ -222,12 +206,14 @@ export class PostsService {
       await queryRunner.commitTransaction();
 
       // return
-      return true;
+      return queryResult.raw.insertId;
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.createPost.${!!error.message ? error.message : JSON.stringify(error)}`;
       // 에러
-      throw new PostCreateFail(`service.post.createPost.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new PostCreateFail(developerComment);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -236,7 +222,6 @@ export class PostsService {
 
   /**
    * 포스트를 수정 합니다.
-   * - 서비스 로직 요청전 비밀글, 삭제글 여부 확인이 필요합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -251,25 +236,26 @@ export class PostsService {
     await queryRunner.startTransaction();
 
     try {
-      // 쿼리 작성
-      const query = queryRunner.manager
-        .createQueryBuilder()
-        .update(Posts)
-        .set({
-          categoryId: postData.categoryId,
-          title: postData.title,
-          thumbNailUrl: postData.thumbNailUrl,
-          markDownContent: postData.markDownContent,
-          private: postData.private,
-          updatedAt: Time.nowDate(),
-        })
-        .where('id = :postID', { postID: postData.id })
-        .updateEntity(false);
+      // Now Time
+      const NOW_DATE = Time.nowDate();
+
+      // Load DAO
+      const postRepository = queryRunner.manager.getCustomRepository(PostRepository);
+
+      // modify Post
+      const queryResult = await postRepository.modifyById(
+        postData.id,
+        postData.categoryId,
+        postData.title,
+        postData.thumbNailUrl,
+        postData.markDownContent,
+        postData.private,
+        NOW_DATE,
+      );
 
       /**
        * @Returns UpdateResult { generatedMaps: [], raw: [], affected: 3 }, UpdateResult { generatedMaps: [], raw: [], affected: 0 }
        */
-      const queryResult = await query.execute();
 
       // 수정된 사항이 없을경우
       if (queryResult.affected === 0) {
@@ -284,8 +270,10 @@ export class PostsService {
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.updatePost.${!!error.message ? error.message : JSON.stringify(error)}`;
       // 에러
-      throw new PostUpdateFail(`service.post.updatePost.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new PostUpdateFail(developerComment);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -294,7 +282,6 @@ export class PostsService {
 
   /**
    * 포스트를 삭제 합니다.
-   * - 서비스 로직 요청전 유저인가 확인이 필요합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -309,21 +296,15 @@ export class PostsService {
     await queryRunner.startTransaction();
 
     try {
-      // 쿼리 작성
-      const query = queryRunner.manager
-        .createQueryBuilder()
-        .update(Posts)
-        .set({
-          deletedAt: Time.nowDate(),
-        })
-        .where('id = :postID', { postID: postData.id })
-        .andWhere('deletedAt IS NULL')
-        .updateEntity(false);
+      // Now Time
+      const NOW_DATE = Time.nowDate();
 
-      /**
-       * @Returns UpdateResult { generatedMaps: [], raw: [], affected: 3 }, UpdateResult { generatedMaps: [], raw: [], affected: 0 }
-       */
-      const queryResult = await query.execute();
+      // Load DAO
+      const postRepository = queryRunner.manager.getCustomRepository(PostRepository);
+
+      // softDelete Post
+      const queryResult = await postRepository.softDeleteById(postData.id, NOW_DATE);
+
       // 수정된 사항이 없을경우
       if (queryResult.affected === 0) {
         throw new Error('deletePostQuery_AFFECTED_IS_0');
@@ -337,8 +318,10 @@ export class PostsService {
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.softDeletePost.${!!error.message ? error.message : JSON.stringify(error)}`;
       // 에러
-      throw new PostSoftDeleteFail(`service.post.softDeletePost.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new PostSoftDeleteFail(developerComment);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -361,106 +344,42 @@ export class PostsService {
     await queryRunner.startTransaction();
 
     try {
-      /**
-       * 해당 아이피가 포스트를 조회한 적 있는지 확인합니다
-       */
-      const postViewQuery = queryRunner.manager
-        .createQueryBuilder()
-        .select('postView.id')
-        .from(PostView, 'postView')
-        .where('postView.postsId = :postID', { postID: viewData.id })
-        .andWhere('postView.userIp = :userIP', { userIP: viewData.userIp })
-        // getRawOne을 하더라도 실제 쿼리에는 Limit가 걸려있지 않기 때문에 설정합니다.
-        .limit(1)
-        .maxExecutionTime(1000);
+      // Now Time
+      const NOW_DATE = Time.nowDate();
 
-      /**
-       * @Returns TextRow { postView_id: '1' } | undefined
-       */
-      const postViewResult = await postViewQuery.getRawOne();
+      // Load DAO
+      const postViewRepository = queryRunner.manager.getCustomRepository(PostViewsRepository);
+      const postRepository = queryRunner.manager.getCustomRepository(PostRepository);
+
+      // 해당 아이피가 포스트를 조회한 적 있는지 확인합니다
+      const postViewResult = await postViewRepository.findOneByPostIdAndUserIp(viewData.id, viewData.userIp);
 
       // 조회 기록이 있을경우 추가작업을 하지 않습니다.
       if (!!postViewResult) {
         throw new Error('THIS_IP_ALREADY_SEEN_THE_POST');
       }
 
-      /**
-       * posts viewCount를 업데이트 하기위해 기존 정보를 조회하고 락을 설정합니다
-       */
-      const getPostViewCountQuery = queryRunner.manager
-        .createQueryBuilder()
-        .select('post.viewCounts')
-        .from(Posts, 'post')
-        .where('post.id = :postID', { postID: viewData.id })
-        // getRawOne을 하더라도 실제 쿼리에는 Limit가 걸려있지 않기 때문에 설정합니다.
-        .limit(1)
-        // LostUpdate 문제로 공유락 -> 쓰기락 변경
-        .setLock('pessimistic_write')
-        .maxExecutionTime(1000);
-
-      /**
-       * @Returns TextRow { post_viewCounts: 3 } | undefined
-       */
-      const getPostViewCountResult = await getPostViewCountQuery.getRawOne();
-      console.log(getPostViewCountResult);
+      // 포스트 조회수를 조회하고 락을 설정합니다
+      const getPostViewCountResult = await postRepository.getAndModifyViewCountById(viewData.id);
 
       //  해당하는 포스트를 찾을 수 없을때
       if (!getPostViewCountResult) {
         throw new Error('NOT_FOUND_POST');
       }
 
-      // 현재 조회수를 저장합니다.
-      const VIEW_COUNT = getPostViewCountResult.post_viewCounts + 1;
+      // 현재 조회수에서 더한 데이터를 저장합니다
+      const VIEW_COUNT = getPostViewCountResult.viewCounts + 1;
 
-      /**
-       * Post 테이블 속성 viewCounts를 업데이트 합니다.
-       */
-      const updatePostQuery = queryRunner.manager
-        .createQueryBuilder()
-        .useTransaction(true)
-        .update(Posts)
-        .set({ viewCounts: VIEW_COUNT })
-        .where('id = :postID', { postID: viewData.id })
-        .updateEntity(false);
-
-      /**
-       * @Returns UpdateResult { generatedMaps: [], raw: [], affected: 3 }, UpdateResult { generatedMaps: [], raw: [], affected: 0 }
-       */
-      const updatePostQueryResult = await updatePostQuery.execute();
+      // 포스트 뷰 카운트를 업데이트합니다
+      const updatePostQueryResult = await postRepository.modifyViewCountById(viewData.id, VIEW_COUNT);
 
       // 테이블 업데이트가 반영되었는지 확인합니다.
       if (updatePostQueryResult.affected === 0) {
         throw new Error('updatePostQueryResult_AFFECTED_IS_0');
       }
 
-      /**
-       * PostView 테이블에 방문 기록을 저장합니다
-       */
-      const updatePostViewQuery = queryRunner.manager
-        .createQueryBuilder()
-        .useTransaction(true)
-        .insert()
-        .into(PostView)
-        // postID -> typeORM에서 String->bingInt로 자동 매핑됩니다.
-        .values([{ userIp: viewData.userIp, postsId: String(viewData.id), viewedAt: Time.nowDate() }])
-        .updateEntity(false);
-
-      /**
-       *
-       * @Returns InsertResult {
-       *   identifiers: [],
-       *   generatedMaps: [],
-       *   raw: ResultSetHeader {
-       *     fieldCount: 0,
-       *     affectedRows: 1,
-       *     insertId: 2,
-       *     info: '',
-       *     serverStatus: 3,
-       *     warningStatus: 0
-       *   }
-       * }
-       */
-      const updatePostViewResult = await updatePostViewQuery.execute();
+      //PostView 테이블에 방문 기록을 저장합니다
+      const updatePostViewResult = await postViewRepository.create(viewData.userIp, viewData.id, NOW_DATE);
 
       // 테이블 업데이트가 반영되었는지 확인합니다.
       if (updatePostViewResult.raw.affectedRows === 0) {
@@ -474,7 +393,9 @@ export class PostsService {
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
-      throw new PostViewCountAddFail(`posts.service.addPostViews.${!!error.message ? error.message : 'Unknown_Error'}`);
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.addPostViews.${!!error.message ? error.message : JSON.stringify(error)}`;
+      throw new PostViewCountAddFail(developerComment);
     } finally {
       // 데이터베이스 커넥션 해제
       await queryRunner.release();
@@ -498,79 +419,17 @@ export class PostsService {
     await queryRunner.startTransaction();
 
     try {
-      let query = queryRunner.manager
-        .createQueryBuilder()
-        .select([
-          'posts.id',
-          'posts.usersId',
-          'posts.categoryId',
-          'posts.title',
-          'posts.thumbNailUrl',
-          'posts.viewCounts',
-          'posts.likes',
-          'posts.private',
-          'posts.createdAt',
-          'posts.updatedAt',
-          'category.id',
-          'category.categoryName',
-          'category.iconUrl',
-        ])
-        .from(Posts, 'posts')
-        .innerJoin(Category, 'category', 'posts.categoryId = category.id')
-        // 커서 다음에 있는 게시글이고
-        .where('posts.id > :cursorNumber', { cursorNumber: getPostData.cursorNumber })
-        // 해당 유저가 작성한
-        .andWhere('posts.usersId = :userID', { userID: getPostData.usersId })
-        // 삭제되지 않은 게시글만
-        .andWhere('posts.deletedAt is NULL')
-        // IndexID 오름차순으로 정렬
-        .orderBy('posts.id', 'ASC')
-        // 최대 반환 게시글 수
-        .limit(getPostData.contentLimit)
-        .maxExecutionTime(1000);
+      // load DAO
+      const postRepository = queryRunner.manager.getCustomRepository(PostRepository);
 
-      // 유저 본인의 요청이 아닌경우
-      if (!getPostData.personalRequest) {
-        // 비밀글이 아닌 게시글만 검색한다
-        query.andWhere('posts.private = 0');
-      }
-
-      /**
-       *
-       * @returns [
-       *   TextRow {
-       *     posts_id: '6',
-       *     posts_usersID: 1,
-       *     posts_categoryID: 1,
-       *     posts_title: 'test',
-       *     posts_thumbNailURL: 'test',
-       *     posts_viewCounts: 1,
-       *     posts_likes: 0,
-       *     posts_private: 0,
-       *     posts_createdAt: 2021-11-03T02:07:56.000Z,
-       *     posts_updatedAt: 2021-11-03T02:25:44.000Z,
-       *     category_id: 1,
-       *     category_categoryName: 'ㅅㄷㄴㅅ',
-       *     category_iconURL: null
-       *   },
-       *   TextRow {
-       *     posts_id: '7',
-       *     posts_usersID: 1,
-       *     posts_categoryID: 1,
-       *     posts_title: 'Title example',
-       *     posts_thumbNailURL: 'thumbNailUrl.com',
-       *     posts_viewCounts: 0,
-       *     posts_likes: 0,
-       *     posts_private: 0,
-       *     posts_createdAt: 2021-11-22T01:27:38.000Z,
-       *     posts_updatedAt: null,
-       *     category_id: 1,
-       *     category_categoryName: 'ㅅㄷㄴㅅ',
-       *     category_iconURL: null
-       *   }
-       * ]
-       */
-      const queryResult = await query.getRawMany();
+      // find Many Post By userId
+      const queryResult = await postRepository.findManyByUserId(
+        getPostData.usersId,
+        getPostData.cursorNumber,
+        getPostData.contentLimit,
+        getPostData.personalRequest,
+        'DESC',
+      );
 
       // 찾은 포스트가 없다면 에러를 반환합니다.
       if (queryResult.length === 0) {
@@ -590,10 +449,11 @@ export class PostsService {
       // 결과를 리턴합니다
       return response;
     } catch (error) {
-      console.log(error);
       // 롤백을 실행합니다.
       await queryRunner.rollbackTransaction();
-      throw new PostGetFail('posts.service.getPostsFoundByMemberId');
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.getPostsFoundByMemberId.${!!error.message ? error.message : JSON.stringify(error)}`;
+      throw new PostNotFound(developerComment);
     } finally {
       // 생성된 커넥션을 해제합니다.
       await queryRunner.release();
@@ -602,7 +462,6 @@ export class PostsService {
 
   /**
    * 게시글 디테일 정보를 요청합니다
-   * - 서비스 요청전 해당 포스트 비밀글, 삭제글 여부를 확인해야합니다.
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
@@ -617,142 +476,62 @@ export class PostsService {
     await queryRunner.startTransaction();
 
     try {
-      // 포스트, 유저 데이터 조인
-      const postAndUserDataQuery = queryRunner.manager
-        .createQueryBuilder()
-        .select([
-          'post.id',
-          'post.usersId',
-          'post.categoryId',
-          'post.title',
-          'post.thumbNailUrl',
-          'post.viewCounts',
-          'post.likes',
-          'post.markDownContent',
-          'post.private',
-          'post.createdAt',
-          'post.updatedAt',
-          'post.deletedAt',
-          'user.userName',
-          'user.proFileImageUrl',
-          'user.mailAddress',
-          'user.admin',
-          'UserblogCustomization.blogTitle',
-          'UserblogCustomization.statusMessage',
-          'UserblogCustomization.selfIntroduction',
-          'Category.categoryName',
-          'Category.iconUrl',
-        ])
-        .from(Posts, 'post')
-        .innerJoin(Users, 'user', 'user.id = post.usersId')
-        .leftJoin(UserblogCustomization, 'UserblogCustomization', 'UserblogCustomization.usersId = post.usersId')
-        .leftJoin(Category, 'Category', 'Category.id = post.categoryId')
-        .where('post.id = :postID', { postID: postData.id })
-        .maxExecutionTime(1000);
+      // Load DAO
+      const postRepository = queryRunner.manager.getCustomRepository(PostRepository);
 
-      /**
-       * @Returns TextRow {
-       *   post_id: '1',
-       *   post_usersID: 1,
-       *   post_categoryID: 1,
-       *   post_title: 'testTitle',
-       *   post_thumbNailURL: 'testurl',
-       *   post_viewCounts: 3,
-       *   post_likes: 0,
-       *   post_markDownContent: 'asd',
-       *   post_private: 0,
-       *   post_deletedAt 2021-05-05T15:00:00.000Z,
-       *   post_createdAt: 2021-05-05T15:00:00.000Z,
-       *   post_updatedAt: 2021-11-03T02:29:21.000Z,
-       *   user_userName: 'name',
-       *   user_proFileImageURL: 'url',
-       *   user_mailAddress: 'address',
-       *   user_admin: 0
-       *   UserblogCustomization_blogTitle: null,
-       *   UserblogCustomization_statusMessage: null,
-       *   UserblogCustomization_selfIntroduction: null
-       *   Category_categoryName: 'test',
-       *   Category_iconURL: null
-       * }
-       * | undefined
-       */
-      let postAndUserDataQueryResult = await postAndUserDataQuery.getRawOne();
-      // console.log(postAndUserDataQueryResult);
+      let postAndUserDataQueryResult = await postRepository.findOneById(postData.id);
+
       // 포스트를 찾지 못했을 경우
       if (!postAndUserDataQueryResult) {
         throw new Error('POST_NOT_FOUND');
       }
 
-      // 태그 데이터 질의
-      const tagDataQuery = queryRunner.manager
-        .createQueryBuilder()
-        .select(['postTags.id', 'postTags.tagsId', 'postTags.createdAt', 'tags.tagsName'])
-        .from(PostsTags, 'postTags')
-        .innerJoin(Tags, 'tags', 'postTags.tagsId = tags.id')
-        .where('postTags.postsId = :postID', { postID: postData.id })
-        .maxExecutionTime(1000);
-
-      /**
-       * @Returns [
-       *   TextRow {
-       *     postTags_id: '1',
-       *     postTags_tagsID: '1',
-       *     postTags_createdAt: 2021-11-03T02:25:44.000Z,
-       *     tags_tagsName: 'test'
-       *   },
-       *   TextRow {
-       *     postTags_id: '2',
-       *     postTags_tagsID: '2',
-       *     postTags_createdAt: 2021-11-03T02:25:44.000Z,
-       *     tags_tagsName: 'test2'
-       *   }
-       * ]
-       * | []
-       */
-      const tagDataQueryResult = await tagDataQuery.getRawMany();
-      // console.log(tagDataQueryResult);
-
       // Result
       let queryResult = postAndUserDataQueryResult;
-      queryResult.TagData = tagDataQueryResult.length === 0 ? [] : tagDataQueryResult;
 
       //DTO Mapping
       let response = new GetPostDetailResponseDto();
-      response.id = queryResult.post_id;
-      response.usersId = queryResult.post_usersID;
-      response.categoryId = queryResult.post_categoryID;
-      response.title = queryResult.post_title;
-      response.thumbNailUrl = queryResult.post_thumbNailURL;
-      response.viewCounts = queryResult.post_viewCounts;
-      response.likes = queryResult.post_likes;
-      response.markDownContent = queryResult.post_markDownContent;
-      response.private = queryResult.post_private;
-      response.createdAt = queryResult.post_createdAt;
-      response.updatedAt = queryResult.post_updatedAt;
-      response.deletedAt = queryResult.post_deletedAt;
-      response.userName = queryResult.user_userName;
-      response.proFileImageUrl = queryResult.user_proFileImageURL;
-      response.mailAddress = queryResult.user_mailAddress;
-      response.admin = queryResult.user_admin;
+      response.id = queryResult.id;
+      response.usersId = queryResult.usersId;
+      response.categoryId = queryResult.category.id;
+      response.title = queryResult.title;
+      response.thumbNailUrl = queryResult.thumbNailUrl;
+      response.viewCounts = queryResult.viewCounts;
+      response.likes = queryResult.likes;
+      response.markDownContent = queryResult.markDownContent;
+      response.private = queryResult.private;
+      response.createdAt = queryResult.createdAt;
+      response.updatedAt = queryResult.updatedAt;
+      response.deletedAt = queryResult.deletedAt;
+      response.userName = queryResult.users.userName;
+      response.proFileImageUrl = queryResult.users.proFileImageUrl;
+      response.mailAddress = queryResult.users.mailAddress;
+      response.admin = queryResult.users.admin;
+      response.categoryName = queryResult.category.categoryName;
+      response.iconUrl = queryResult.category.iconUrl;
+      response.blogTitle = queryResult.users.userblogCustomization?.blogTitle;
+      response.selfIntroduction = queryResult.users.userblogCustomization?.selfIntroduction;
+      response.statusMessage = queryResult.users.userblogCustomization?.statusMessage;
+      response.TagData = queryResult.postsTags?.map((tagValue) => {
+        return {
+          id: tagValue.tags.id,
+          tagsName: tagValue.tags.tagsName,
+          createdAt: tagValue.tags.createdAt,
+        };
+      });
 
-      response.categoryName = queryResult.Category_categoryName;
-      response.iconUrl = queryResult.Category_iconURL;
-      response.blogTitle = queryResult.UserblogCustomization_blogTitle;
-      response.selfIntroduction = queryResult.UserblogCustomization_selfIntroduction;
-      response.statusMessage = queryResult.UserblogCustomization_statusMessage;
-
-      response.TagData = queryResult.TagData;
       // 변경 사항을 커밋합니다.
       await queryRunner.commitTransaction();
 
       // 포스트 데이터를 리턴합니다.
       return response;
     } catch (error) {
-      console.log(error);
       // 롤백을 실행합니다.
       await queryRunner.rollbackTransaction();
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.getPostDetail.${!!error.message ? error.message : JSON.stringify(error)}`;
       // 에러를 반환합니다.
-      throw new PostDetailGetFail(`posts.service.getPostDetail.${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new PostDetailGetFail(developerComment);
     } finally {
       // 생성된 커넥션을 해제합니다.
       await queryRunner.release();
@@ -778,44 +557,20 @@ export class PostsService {
     await queryRunner.startTransaction();
 
     try {
-      // PostLike 테이블에 기록이 있는지 확인합니다.
-      const getPostLikeQuery = queryRunner.manager
-        .createQueryBuilder()
-        .select('*')
-        .from(PostLike, 'postLike')
-        .where('postLike.usersId = :userID', { userID: requestData.usersId })
-        .andWhere('postLike.postsId = :postID', { postID: requestData.postsId })
-        .limit(1)
-        .maxExecutionTime(1000);
+      // load DAO
+      const postRepository = queryRunner.manager.getCustomRepository(PostRepository);
+      const postLikeRepository = queryRunner.manager.getCustomRepository(PostLikesRepository);
 
-      /**
-       * @returns undefined | TextRow{}
-       */
-      const getPostLikeResult = await getPostLikeQuery.getRawOne();
+      // 유저가 해당 포스트에 좋아요를 눌렀는지 확인합니다
+      const getPostLikeResult = await postLikeRepository.findOneByPostIdAndUserId(requestData.postsId, requestData.usersId);
 
       // 유저가 해당 포스트에 '좋아요'를 설정한 기록이 있을경우 에러를 리턴합니다
       if (!!getPostLikeResult) {
         throw new Error('ALREADY_SET_LIKE');
       }
-      // Post 테이블의 현재 Like 카운트를 구하고 공유락을 설정합니다
-      const getPostQuery = queryRunner.manager
-        .createQueryBuilder()
-        .select('post.likes')
-        .from(Posts, 'post')
-        .where('post.id = :postID', { postID: requestData.postsId })
-        // 비밀 게시글인 경우 좋아요 기능을 비활성화 합니다.
-        .andWhere('post.private = 0')
-        // 삭제된 게시글인 경우 좋아요를 등록할 수 없습니다
-        .andWhere('post.deletedAt IS NULL')
-        .limit(1)
-        // LostUpdate 문제로 공유락 -> 쓰기락 변경
-        .setLock('pessimistic_write')
-        .maxExecutionTime(1000);
 
-      /**
-       * @returns TextRow { post_likes: 0 }
-       */
-      const getPostQueryResult = await getPostQuery.getRawOne();
+      // Post 테이블의 현재 Like 카운트를 구하고 공유락을 설정합니다
+      const getPostQueryResult = await postRepository.getAndModifyLikeCountById(requestData.postsId);
 
       // 만족하는 포스트를 찾을 수 없을 경우 에러를 리턴합니다
       if (!getPostQueryResult) {
@@ -823,48 +578,18 @@ export class PostsService {
       }
 
       // 갱신할 카운트를 설정합니다.
-      const LIKE_COUNT = getPostQueryResult.post_likes + 1;
+      const LIKE_COUNT = getPostQueryResult.likes + 1;
 
       // Post 테이블의 Like 카운트를 업데이트 합니다.
-      const setPostQuery = queryRunner.manager
-        .createQueryBuilder()
-        .update(Posts)
-        .set({ likes: LIKE_COUNT })
-        .where('id = :postID', { postID: requestData.postsId })
-        .updateEntity(false);
+      const PostUpdateResult = await postRepository.modifyLikeCountById(requestData.postsId, LIKE_COUNT);
 
-      /**
-       * @Returns UpdateResult { generatedMaps: [], raw: [], affected: 1 }
-       */
-      const PostUpdateResult = await setPostQuery.execute();
-      console.log(PostUpdateResult);
       // 테이블 업데이트가 반영되었는지 확인합니다
       if (PostUpdateResult.affected === 0) {
         throw new Error('PostUpdateResult_AFFECTED_IS_0');
       }
 
       // PostLike 테이블에 '좋아요' 기록을 저장합니다.
-      const setPostLikeQuery = queryRunner.manager
-        .createQueryBuilder()
-        .insert()
-        .into(PostLike)
-        .values({ usersId: requestData.usersId, postsId: requestData.postsId, likedAt: Time.nowDate() });
-
-      /**
-       * @Returns InsertResult {
-       *   identifiers: [ { id: '1' } ],
-       *   generatedMaps: [ { id: '1' } ],
-       *  raw: ResultSetHeader {
-       *     fieldCount: 0,
-       *     affectedRows: 1,
-       *     insertId: 1,
-       *     info: '',
-       *     serverStatus: 3,
-       *     warningStatus: 0
-       *   }
-       * }
-       */
-      const setPostLikeQueryResult = await setPostLikeQuery.execute();
+      const setPostLikeQueryResult = await postLikeRepository.create(requestData.postsId, requestData.usersId, Time.nowDate());
       // 테이블 업데이트가 반영되었는지 확인합니다
       if (setPostLikeQueryResult.raw.affectedRows === 0) {
         throw new Error('setPostLikeQuery_AFFECTED_IS_0');
@@ -881,9 +606,10 @@ export class PostsService {
       return response;
     } catch (error) {
       // 롤백, 오류 리턴
-      console.log(error);
       await queryRunner.rollbackTransaction();
-      throw new SetPostToLikeFail(`posts.service.setPostToLike ${!!error.message ? error.message : 'Unknown_Error'}`);
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.setPostToLike.${!!error.message ? error.message : JSON.stringify(error)}`;
+      throw new SetPostToLikeFail(developerComment);
     } finally {
       // 커넥션 해제
       await queryRunner.release();
@@ -908,25 +634,12 @@ export class PostsService {
     await queryRunner.startTransaction();
 
     try {
-      // PostLike 테이블에 '좋아요' 기록이 있는지 확인합니다.
-      const getPostLikeQuery = queryRunner.manager
-        .createQueryBuilder()
-        .select('*')
-        .from(PostLike, 'postLike')
-        .where('postLike.usersId = :userID', { userID: requestData.usersId })
-        .andWhere('postLike.postsId = :postID', { postID: requestData.postsId })
-        .limit(1)
-        .maxExecutionTime(1000);
+      // load DAO
+      const postRepository = queryRunner.manager.getCustomRepository(PostRepository);
+      const postLikeRepository = queryRunner.manager.getCustomRepository(PostLikesRepository);
 
-      /**
-       * @returns TextRow {
-       *   id: '1',
-       *   usersID: 1,
-       *   postsID: '6',
-       *   likedAt: 2021-11-04T08:33:52.000Z
-       * } | undefined
-       */
-      const getPostLikeQueryResult = await getPostLikeQuery.getRawOne();
+      // PostLike 테이블에 '좋아요' 기록이 있는지 확인합니다.
+      const getPostLikeQueryResult = await await postLikeRepository.findOneByPostIdAndUserId(requestData.postsId, requestData.usersId);
 
       // 유저가 '좋아요'를 설정한 기록이 없을경우 에러를 리턴합니다.
       if (!getPostLikeQueryResult) {
@@ -934,44 +647,17 @@ export class PostsService {
       }
 
       // Post 테이블의 현재 Like 카운트를 구하고 공유락을 설정합니다
-      const getPostQuery = queryRunner.manager
-        .createQueryBuilder()
-        .select('post.likes')
-        .from(Posts, 'post')
-        .where('post.id = :postID', { postID: requestData.postsId })
-        // 비밀 게시글인 경우 좋아요 기능을 비활성화 합니다.
-        .andWhere('post.private = 0')
-        // 삭제된 게시글인 경우 좋아요를 취소할 수 없습니다
-        .andWhere('post.deletedAt IS NULL')
-        .limit(1)
-        // LostUpdate 문제로 공유락 -> 쓰기락 변경
-        .setLock('pessimistic_write')
-        .maxExecutionTime(1000);
-
-      /**
-       * @returns TextRow { post_likes: 0 }
-       */
-      const getPostQueryResult = await getPostQuery.getRawOne();
+      const getPostQueryResult = await postRepository.getAndModifyLikeCountById(requestData.postsId);
 
       // 만족하는 포스트를 찾을 수 없을 경우 에러를 리턴합니다
       if (!getPostQueryResult) {
         throw new Error('POST_NOT_FOUND');
       }
       // 갱신할 카운트를 설정합니다.
-      const LIKE_COUNT = getPostQueryResult.post_likes - 1;
+      const LIKE_COUNT = getPostQueryResult.likes - 1;
 
       // Post 테이블의 Like 카운트를 업데이트 합니다.
-      const setPostQuery = queryRunner.manager
-        .createQueryBuilder()
-        .update(Posts)
-        .set({ likes: LIKE_COUNT })
-        .where('id = :postID', { postID: requestData.postsId })
-        .updateEntity(false);
-
-      /**
-       * @Returns UpdateResult { generatedMaps: [], raw: [], affected: 1 }
-       */
-      const PostUpdateResult = await setPostQuery.execute();
+      const PostUpdateResult = await postRepository.modifyLikeCountById(requestData.postsId, LIKE_COUNT);
 
       // 테이블 업데이트가 반영되었는지 확인합니다
       if (PostUpdateResult.affected === 0) {
@@ -979,17 +665,7 @@ export class PostsService {
       }
 
       // PostLike 테이블의 '좋아요' 기록을 삭제합니다.
-      const deletePostLikeQuery = queryRunner.manager
-        .createQueryBuilder()
-        .delete()
-        .from(PostLike)
-        .where('usersId = :userID', { userID: requestData.usersId })
-        .andWhere('postsId = :postID', { postID: requestData.postsId });
-
-      /**
-       * @returns DeleteResult { raw: [], affected: 1 }
-       */
-      const deletePostLikeQueryResult = await deletePostLikeQuery.execute();
+      const deletePostLikeQueryResult = await postLikeRepository.delete(requestData.postsId, requestData.usersId);
 
       // 테이블 업데이트가 반영되었는지 확인합니다.
       if (deletePostLikeQueryResult.affected === 0) {
@@ -1008,9 +684,10 @@ export class PostsService {
     } catch (error) {
       // 롤백, 오류 리턴
       await queryRunner.rollbackTransaction();
-
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.setPostToDislike.${!!error.message ? error.message : JSON.stringify(error)}`;
       // 에러 반환
-      throw new SetPostToDislikeFail(`posts.service.setPostToLike ${!!error.message ? error.message : 'Unknown_Error'}`);
+      throw new SetPostToDislikeFail(developerComment);
     } finally {
       // 커넥션 해제
       await queryRunner.release();
@@ -1113,7 +790,9 @@ export class PostsService {
     } catch (error) {
       // 롤백을 실행합니다.
       await queryRunner.rollbackTransaction();
-      throw new GetMostLikedPostFail(`posts.service.getMostLiked ${!!error.message ? error.message : 'Unknown_Error'}`);
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.getMostLiked.${!!error.message ? error.message : JSON.stringify(error)}`;
+      throw new GetMostLikedPostFail(developerComment);
     } finally {
       // 생성된 커넥션을 해제합니다.
       await queryRunner.release();
@@ -1163,7 +842,9 @@ export class PostsService {
 
       return true;
     } catch (error) {
-      throw new CreatePostTagFail(`${PostsService.name}.${this.createPostTags.name}: ${!!error.message ? error.message : 'Unknown_Error'}`);
+      // 개발자 코멘트 생성
+      const developerComment = `Post.service.createPostTags.${!!error.message ? error.message : JSON.stringify(error)}`;
+      throw new CreatePostTagFail(developerComment);
     }
   }
 }

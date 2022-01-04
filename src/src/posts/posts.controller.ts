@@ -19,7 +19,9 @@ import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swag
 import { UserInfo } from 'src/auth/decorators/userInfo.decorator';
 import { SessionInfo } from 'src/auth/dto/session-info.dto';
 import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
+import { PermissionDenied } from 'src/ExceptionFilters/Errors/Auth/Auth.error';
 import { ErrorHandlerNotFound } from 'src/ExceptionFilters/Errors/ErrorHandlerNotFound.error';
+import { PostNotFound } from 'src/ExceptionFilters/Errors/Posts/Post.error';
 import ResponseUtility from 'src/utilities/Response.utility';
 import { CreateDto } from './dto/Controller/Create.Posts.controller.DTO';
 import { UpdateDto } from './dto/Controller/Update.Posts.controller.DTO copy';
@@ -27,6 +29,7 @@ import { CreatePostDto } from './dto/Services/CreatePost.DTO';
 import { CreatePostTags } from './dto/Services/CreatePostTags.DTO';
 import { GetPostDetailDto, GetPostDetailResponseDto } from './dto/Services/GetPostDetail.DTO';
 import { GetPostsDto } from './dto/Services/GetPosts.DTO';
+import { GetPostWriterDto } from './dto/Services/GetPostWriter.DTO';
 import { MostLikedRequestDto, searchScope } from './dto/Services/MostLikedPost.DTO';
 import { SetPostToDislikeDto } from './dto/Services/SetPostToDislike.DTO';
 import { SetPostToLikeDto } from './dto/Services/SetPostToLike.DTO';
@@ -42,9 +45,8 @@ export class PostsController {
    * 포스트 생성요청을 처리합니다.
    * @guards 유저 인증
    * @author seongrokLee <argon1025@gmail.com>
-   * @version 1.0.0
    */
-  @Version('1')
+  @Version('2')
   @Post('posts')
   @UseGuards(AuthenticatedGuard)
   @ApiTags('Posts')
@@ -64,34 +66,34 @@ export class PostsController {
       createPostRequestDto.private = requestData.private;
 
       // 포스트 생성요청
-      await this.postsService.createPost(createPostRequestDto);
+      const postId = await this.postsService.createPost(createPostRequestDto);
 
       // 응답
-      return ResponseUtility.create(false, 'ok');
+      return ResponseUtility.create(false, 'ok', { data: { postId: postId } });
     } catch (error) {
       // 사전 정의된 에러인 경우
-      // Error interface Type Guard
       if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
+        // 익셉션 필터로 에러객체 전달
         throw new HttpException(error, error.codeNumber);
       } else {
-        // 사전 정의되지 않은 에러인 경우
-        const errorResponse = new ErrorHandlerNotFound(`posts.controller.create.${!!error.message ? error.message : 'Unknown_Error'}`);
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.create.${!!error.message ? error.message : JSON.stringify(error)}`;
+        // 에러 객체 정의
+        const errorResponse = new ErrorHandlerNotFound(developerComment);
+        // 익셉션 필터로 에러객체 전달
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }
   }
+
   /**
    * 포스트 수정요청을 처리합니다.
    * @guards 유저 인증
    * @guards 게시글 소유주 인가
-   * @guards 게시글 삭제여부 확인
-   * @todo isOwner, isDeleted 서비스의 String()함수 취약 여부 테스트 필요
-   * @todo isOwner, isDeleted 서비스의 오류 처리 로직 점검 필요
-   * @todo isOwner, isDeleted 서비스의 오류 헨들러 생성 필요
+   * @guards 게시글 삭제여부
    * @author seongrokLee <argon1025@gmail.com>
-   * @version 1.0.0
    */
-  @Version('1')
+  @Version('2')
   @Put('posts/:postID')
   @UseGuards(AuthenticatedGuard)
   @ApiTags('Posts')
@@ -106,19 +108,29 @@ export class PostsController {
     description: '포스트 아이디',
   })
   async update(@Body() requestData: UpdateDto, @UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
+    // PostID 상수 선언
+    const POST_ID: string = String(postID);
     try {
-      // 게시물의 소유주와 요청한 유저의 아이디가 동일한지 검증합니다
-      if (!(await this.postsService.isOwner({ usersId: userData.id, id: String(postID) }))) {
-        throw new Error('NOT_OWNER_POST');
+      const IS_OWNER: boolean = await this.postsService.isOwner({ userId: userData.id, postId: POST_ID });
+      const IS_DELETED: boolean = await this.postsService.isDeleted({ postId: POST_ID });
+
+      if (!IS_OWNER) {
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.update.NOT_OWNER`;
+        // 인가 오류 발생
+        throw new PermissionDenied(developerComment);
       }
-      // 삭제된 게시글인지 검증합니다
-      if (await this.postsService.isDeleted({ id: String(postID) })) {
-        throw new Error('POST_WAS_DELETED');
+
+      if (IS_DELETED) {
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.update.DELETED_POST`;
+        // 인가 오류 발생
+        throw new PostNotFound(developerComment);
       }
 
       // 포스트 수정에 필요한 DTO 작성
       let UpdatePostRequestDto = new UpdatePostDto();
-      UpdatePostRequestDto.id = String(postID);
+      UpdatePostRequestDto.id = POST_ID;
       UpdatePostRequestDto.categoryId = requestData.categoryId;
       UpdatePostRequestDto.thumbNailUrl = requestData.thumbNailUrl;
       UpdatePostRequestDto.title = requestData.title;
@@ -129,15 +141,17 @@ export class PostsController {
       await this.postsService.updatePost(UpdatePostRequestDto);
 
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok');
+      return ResponseUtility.create(false, 'ok', { data: { postId: postID } });
     } catch (error) {
       // 사전 정의된 에러인 경우
-      // Error interface Type Guard
       if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
-        // 사전 정의되지 않은 에러인 경우
-        const errorResponse = new ErrorHandlerNotFound(`posts.controller.update.${!!error.message ? error.message : 'Unknown_Error'}`);
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.update.${!!error.message ? error.message : JSON.stringify(error)}`;
+        // 에러 객체 정의
+        const errorResponse = new ErrorHandlerNotFound(developerComment);
+        // 익셉션 필터로 에러객체 전달
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }
@@ -147,13 +161,9 @@ export class PostsController {
    * @guards 유저 인증
    * @guards 게시글 소유주 인가
    * @guards 게시글 삭제여부 확인
-   * @todo isOwner, isDeleted 서비스의 String()함수 취약 여부 테스트 필요
-   * @todo isOwner, isDeleted 서비스의 오류 처리 로직 점검 필요
-   * @todo isOwner, isDeleted 서비스의 오류 헨들러 생성 필요
    * @author seongrokLee <argon1025@gmail.com>
-   * @version 1.0.0
    */
-  @Version('1')
+  @Version('2')
   @Delete('posts/:postID')
   @UseGuards(AuthenticatedGuard)
   @ApiTags('Posts')
@@ -165,19 +175,29 @@ export class PostsController {
     description: '포스트 아이디',
   })
   async delete(@UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
+    // PostID 상수 선언
+    const POST_ID: string = String(postID);
     try {
-      // 게시물의 소유주와 요청한 유저의 아이디가 동일한지 검증합니다
-      if (!(await this.postsService.isOwner({ usersId: userData.id, id: String(postID) }))) {
-        throw new Error('NOT_OWNER_POST');
+      const IS_OWNER: boolean = await this.postsService.isOwner({ userId: userData.id, postId: POST_ID });
+      const IS_DELETED: boolean = await this.postsService.isDeleted({ postId: POST_ID });
+
+      if (!IS_OWNER) {
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.delete.NOT_OWNER`;
+        // 인가 오류 발생
+        throw new PermissionDenied(developerComment);
       }
-      // 삭제된 게시글인지 검증합니다
-      if (await this.postsService.isDeleted({ id: String(postID) })) {
-        throw new Error('POST_WAS_DELETED');
+
+      if (IS_DELETED) {
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.delete.DELETED_POST`;
+        // 인가 오류 발생
+        throw new PostNotFound(developerComment);
       }
 
       // 포스트 삭제에 필요한 DTO 작성
       let SoftDeletePostRequestDto = new SoftDeletePostDto();
-      SoftDeletePostRequestDto.id = String(postID);
+      SoftDeletePostRequestDto.id = POST_ID;
 
       // 포스트 삭제를 요청합니다
       await this.postsService.softDeletePost(SoftDeletePostRequestDto);
@@ -186,12 +206,14 @@ export class PostsController {
       return ResponseUtility.create(false, 'ok');
     } catch (error) {
       // 사전 정의된 에러인 경우
-      // Error interface Type Guard
       if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
-        // 사전 정의되지 않은 에러인 경우
-        const errorResponse = new ErrorHandlerNotFound(`posts.controller.update.${!!error.message ? error.message : 'Unknown_Error'}`);
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.delete.${!!error.message ? error.message : JSON.stringify(error)}`;
+        // 에러 객체 정의
+        const errorResponse = new ErrorHandlerNotFound(developerComment);
+        // 익셉션 필터로 에러객체 전달
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }
@@ -202,13 +224,9 @@ export class PostsController {
    * @guards 게시글 소유주 인가
    * @guards 게시글 삭제여부 확인
    * @guards 게시글 비밀글 여부 확인
-   * @todo isOwner, isDeleted 서비스의 String()함수 취약 여부 테스트 필요
-   * @todo isOwner, isDeleted 서비스의 오류 처리 로직 점검 필요
-   * @todo isOwner, isDeleted 서비스의 오류 헨들러 생성 필요
    * @author seongrokLee <argon1025@gmail.com>
-   * @version 1.0.0
    */
-  @Version('1')
+  @Version('2')
   @Get('posts/:postID')
   @ApiTags('Posts')
   @ApiOperation({ summary: '포스트 디테일 정보를 요청합니다.' })
@@ -219,54 +237,57 @@ export class PostsController {
     description: '포스트 아이디',
   })
   async getDetailFindByPostID(@UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
+    // PostID 상수 선언
+    const POST_ID = String(postID);
     try {
-      // 삭제된 게시글 여부를 확인하고 저장합니다.
-      const IS_DELETE: boolean = await this.postsService.isDeleted({ id: String(postID) });
+      // 유저에게 세션데이터가 있다면 요청 포스트의 작성자인지 확인합니다, 세션이 없으면 false를 반환합니다.
+      const IS_OWNER: boolean = !userData?.id ? false : await this.postsService.isOwner({ userId: userData.id, postId: POST_ID });
 
-      // 비밀글 여부를 확인하고 저장합니다.
-      const IS_PRIVATE: boolean = await this.postsService.isPrivate({ id: String(postID) });
+      // 삭제된 포스트인지 확인합니다
+      const IS_DELETED: boolean = await this.postsService.isDeleted({ postId: POST_ID });
 
-      // 유저 세션 데이터가 있다면 게시글 소유주 유무를 체크합니다
-      const IS_OWNER: boolean = !userData?.id ? false : await this.postsService.isOwner({ usersId: userData.id, id: String(postID) });
+      // 비밀글인지 확인합니다
+      const IS_PRIVATE: boolean = await this.postsService.isPrivate({ postId: POST_ID });
 
       // 게시글 디테일 정보
       let POST_DATA: GetPostDetailResponseDto;
 
       // 삭제된 게시글인지 검증합니다
-      if (IS_DELETE) {
-        throw new Error('POST_WAS_DELETED');
+      if (IS_DELETED) {
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.getDetailFindByPostID.DELETED_POST`;
+        // 인가 오류 발생
+        throw new PostNotFound(developerComment);
       }
 
-      // 로그인 세션이 존재하지 않는 유저, 게시물의 소유주가 아닌 유저
-      if (userData === undefined || !IS_OWNER) {
+      // 작성자가 아닌 유저인 경우
+      if (!IS_OWNER) {
         // Private한 게시글인지 확인합니다
         if (IS_PRIVATE) {
-          // 에러를 반환합니다
-          throw new Error('POST_IS_PRIVATE');
-        } else {
-          // 게시물 정보를 조회하고 저장합니다
-          let GetPostDetailRequestDto = new GetPostDetailDto();
-          GetPostDetailRequestDto.id = String(postID);
-          POST_DATA = await this.postsService.getPostDetail(GetPostDetailRequestDto);
+          // 개발자 코멘트 작성
+          const developerComment = `PostsController.getDetailFindByPostID.IS_PRIVATE`;
+          // 인가 오류 발생
+          throw new PostNotFound(developerComment);
         }
-      } else {
-        // 게시물의 소유주인 경우
-        // 게시물 정보를 조회하고 저장합니다
-        let GetPostDetailRequestDto = new GetPostDetailDto();
-        GetPostDetailRequestDto.id = String(postID);
-        POST_DATA = await this.postsService.getPostDetail(GetPostDetailRequestDto);
       }
 
+      // 게시물 정보를 조회하고 저장합니다
+      let GetPostDetailRequestDto = new GetPostDetailDto();
+      GetPostDetailRequestDto.id = POST_ID;
+      POST_DATA = await this.postsService.getPostDetail(GetPostDetailRequestDto);
+
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok', POST_DATA);
+      return ResponseUtility.create(false, 'ok', { data: POST_DATA });
     } catch (error) {
       // 사전 정의된 에러인 경우
-      // Error interface Type Guard
       if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
-        // 사전 정의되지 않은 에러인 경우
-        const errorResponse = new ErrorHandlerNotFound(`posts.controller.update.${!!error.message ? error.message : 'Unknown_Error'}`);
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.getDetailFindByPostID.${!!error.message ? error.message : JSON.stringify(error)}`;
+        // 에러 객체 정의
+        const errorResponse = new ErrorHandlerNotFound(developerComment);
+        // 익셉션 필터로 에러객체 전달
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }
@@ -276,9 +297,8 @@ export class PostsController {
    * @guards 유저 인증
    * @guards 게시글 소유주 인가
    * @author seongrokLee <argon1025@gmail.com>
-   * @version 1.0.0
    */
-  @Version('1')
+  @Version('2')
   @Get('users/:userID/posts')
   @ApiTags('Posts')
   @ApiOperation({ summary: '특정 유저가 작성한 게시글 리스트를 요청합니다.' })
@@ -299,31 +319,35 @@ export class PostsController {
     @Param('userID', ParseIntPipe) userID: number,
     @Query('cursor', ParseIntPipe) cursor: number = 0,
   ) {
+    // 상수 선언
+    const CONTENT_LIMIT: number = this.configService.get<number>('POSTS_GET_CONTENT_LIMIT', 10);
+    const PERSONAL_REQUEST: boolean = userData?.id === userID ? true : false;
     try {
       // Dto Mapping
       let getPostsRequestDto = new GetPostsDto();
       // 최대 콘텐츠 조회 갯수
-      getPostsRequestDto.contentLimit = this.configService.get<number>('POSTS_GET_CONTENT_LIMIT', 10);
+      getPostsRequestDto.contentLimit = CONTENT_LIMIT;
       // 현재 커서 넘버
       getPostsRequestDto.cursorNumber = cursor;
       // 요청하기 원하는 유저 아이디
       getPostsRequestDto.usersId = userID;
       // 게시글 소유주의 요청인지 유무
-      getPostsRequestDto.personalRequest = userData?.id === userID ? true : false;
+      getPostsRequestDto.personalRequest = PERSONAL_REQUEST;
 
       const getPostsResult = await this.postsService.getPostsFoundByMemberId(getPostsRequestDto);
 
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok', getPostsResult);
+      return ResponseUtility.create(false, 'ok', { data: getPostsResult });
     } catch (error) {
-      console.log(error);
       // 사전 정의된 에러인 경우
-      // Error interface Type Guard
       if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
-        // 사전 정의되지 않은 에러인 경우
-        const errorResponse = new ErrorHandlerNotFound(`posts.controller.getAllFindByUserID.${!!error.message ? error.message : 'Unknown_Error'}`);
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.getAllFindByUserID.${!!error.message ? error.message : JSON.stringify(error)}`;
+        // 에러 객체 정의
+        const errorResponse = new ErrorHandlerNotFound(developerComment);
+        // 익셉션 필터로 에러객체 전달
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }
@@ -332,9 +356,8 @@ export class PostsController {
    * 게시글에 좋아요를 설정합니다.
    * @guards 유저 인증
    * @author seongrokLee <argon1025@gmail.com>
-   * @version 1.0.0
    */
-  @Version('1')
+  @Version('2')
   @Post('posts/:postID/like')
   @UseGuards(AuthenticatedGuard)
   @ApiTags('Posts')
@@ -346,23 +369,27 @@ export class PostsController {
     description: '포스트 아이디',
   })
   async setLike(@UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: number) {
+    // PostID 상수 선언
+    const POST_ID = String(postID);
     try {
       let setLikeRequestDto = new SetPostToLikeDto();
-      setLikeRequestDto.postsId = String(postID);
+      setLikeRequestDto.postsId = POST_ID;
       setLikeRequestDto.usersId = userData.id;
 
       const setLikeResult = await this.postsService.setPostToLike(setLikeRequestDto);
 
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok', setLikeResult.likes);
+      return ResponseUtility.create(false, 'ok', { data: { likeCount: setLikeResult.likes } });
     } catch (error) {
       // 사전 정의된 에러인 경우
-      // Error interface Type Guard
       if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
-        // 사전 정의되지 않은 에러인 경우
-        const errorResponse = new ErrorHandlerNotFound(`posts.controller.setLike.${!!error.message ? error.message : 'Unknown_Error'}`);
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.setLike.${!!error.message ? error.message : JSON.stringify(error)}`;
+        // 에러 객체 정의
+        const errorResponse = new ErrorHandlerNotFound(developerComment);
+        // 익셉션 필터로 에러객체 전달
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }
@@ -372,10 +399,9 @@ export class PostsController {
    * 게시글에 설정된 좋아요를 해제합니다.
    * @guards 유저 인증
    * @author seongrokLee <argon1025@gmail.com>
-   * @version 1.0.0
    */
-  @Version('1')
-  @Delete('posts/:postsID/like')
+  @Version('2')
+  @Delete('posts/:postID/like')
   @UseGuards(AuthenticatedGuard)
   @ApiTags('Posts')
   @ApiOperation({ summary: '포스트에 설정된 좋아요를 해제합니다.' })
@@ -386,23 +412,27 @@ export class PostsController {
     description: '포스트 아이디',
   })
   async setDislike(@UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: number) {
+    // PostID 상수 선언
+    const POST_ID = String(postID);
     try {
       let setDislikeRequestDto = new SetPostToDislikeDto();
-      setDislikeRequestDto.postsId = String(postID);
+      setDislikeRequestDto.postsId = POST_ID;
       setDislikeRequestDto.usersId = userData.id;
 
       const setDislikeResult = await this.postsService.setPostToDislike(setDislikeRequestDto);
 
       // 응답 리턴
-      return ResponseUtility.create(false, 'ok', setDislikeResult.likes);
+      return ResponseUtility.create(false, 'ok', { data: { likeCount: setDislikeResult.likes } });
     } catch (error) {
       // 사전 정의된 에러인 경우
-      // Error interface Type Guard
       if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
-        // 사전 정의되지 않은 에러인 경우
-        const errorResponse = new ErrorHandlerNotFound(`posts.controller.setLike.${!!error.message ? error.message : 'Unknown_Error'}`);
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.setDislike.${!!error.message ? error.message : JSON.stringify(error)}`;
+        // 에러 객체 정의
+        const errorResponse = new ErrorHandlerNotFound(developerComment);
+        // 익셉션 필터로 에러객체 전달
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }
@@ -410,8 +440,8 @@ export class PostsController {
 
   /**
    * 전체 멤버가 작성한 게시글 중 좋아요 수가 많은 게시글을 요청합니다
+   * @todo 데이터 베이스 캐싱 및 커스텀 레포지토리화 및 전체적인 리팩터링 필요
    * @author seongrokLee <argon1025@gmail.com>
-   * @version 1.0.0
    */
   @Version('1')
   @Get('posts/trends/like')
@@ -426,8 +456,12 @@ export class PostsController {
   })
   async getMostLikedPosts(@Query('searchScope') searchScopeData: searchScope, @Query('cursor', ParseIntPipe) cursor: number = 0) {
     try {
-      // 데이터 추가 유효성 확인
-      if (!(searchScopeData in searchScope)) throw new Error('SEARCH_SCOPE_DATA_NOT_VALID');
+      // searchScope 쿼리스트링이 유효한지 확인
+      if (!(searchScopeData in searchScope)) {
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.getMostLikedPosts.ANABEL_SCOPE_DATA`;
+        throw new PostNotFound(developerComment);
+      }
 
       // Dto Mapping
       let getPostsRequestDto = new MostLikedRequestDto();
@@ -444,12 +478,14 @@ export class PostsController {
       return ResponseUtility.create(false, 'ok', getPostsResult);
     } catch (error) {
       // 사전 정의된 에러인 경우
-      // Error interface Type Guard
       if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
-        // 사전 정의되지 않은 에러인 경우
-        const errorResponse = new ErrorHandlerNotFound(`posts.controller.getAllFindByUserID.${!!error.message ? error.message : 'Unknown_Error'}`);
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.getMostLikedPosts.${!!error.message ? error.message : JSON.stringify(error)}`;
+        // 에러 객체 정의
+        const errorResponse = new ErrorHandlerNotFound(developerComment);
+        // 익셉션 필터로 에러객체 전달
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }
@@ -465,10 +501,11 @@ export class PostsController {
       if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
         throw new HttpException(error, error.codeNumber);
       } else {
-        // 사전 정의되지 않은 에러인 경우
-        const errorResponse = new ErrorHandlerNotFound(
-          `${PostsController.name}.${this.createPostTags.name}.${!!error.message ? error.message : 'Unknown_Error'}`,
-        );
+        // 개발자 코멘트 작성
+        const developerComment = `PostsController.createPostTags.${!!error.message ? error.message : JSON.stringify(error)}`;
+        // 에러 객체 정의
+        const errorResponse = new ErrorHandlerNotFound(developerComment);
+        // 익셉션 필터로 에러객체 전달
         throw new HttpException(errorResponse, errorResponse.codeNumber);
       }
     }

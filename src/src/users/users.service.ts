@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SessionInfo } from 'src/auth/dto/session-info.dto';
 import { UserInfo } from 'src/auth/dto/userinfo.dto';
 import { Users } from 'src/entities/Users';
-import { UserCreateFailed } from 'src/ExceptionFilters/Errors/Users/User.error';
+import { FaildGetUser, NotFoundUser, UserCreateFailed } from 'src/ExceptionFilters/Errors/Users/User.error';
 import Time from 'src/utilities/time.utility';
 import { Repository } from 'typeorm';
 
@@ -32,10 +32,19 @@ export class UsersService {
 
   // 가입된 유저를 이름으로 검색합니다.
   async findUserToUserName(userName: string): Promise<Users | undefined> {
-    return await this.userRepo.findOne({
-      select: ['id'],
-      where: { userName: userName },
-    });
+    try {
+      const userInfo = await this.userRepo.findOne({
+        select: ['id', 'oAuthType', 'oAuthServiceId', 'proFileImageUrl', 'userName', 'mailAddress', 'createdAt', 'updatedAt', 'admin'],
+        where: { userName: userName },
+      });
+      // 유저가 존재하지 않는 경우
+      if (!userInfo) throw new NotFoundUser(`service.users.findUserToUserName.Not found user`);
+      return userInfo;
+    } catch (error) {
+      // 존재하지않는 유저
+      if (error instanceof NotFoundUser) throw error;
+      throw new FaildGetUser(`service.users.findUserToUserName.${!!error.message ? error.message : 'Unknown_Error'}`);
+    }
   }
 
   // // 스웨거를 위한 테스트 계정 생성
