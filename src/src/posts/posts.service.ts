@@ -509,9 +509,9 @@ export class PostsService {
       response.admin = queryResult.users.admin;
       response.categoryName = queryResult.category.categoryName;
       response.iconUrl = queryResult.category.iconUrl;
-      response.blogTitle = queryResult.users.userblogCustomization?.blogTitle;
-      response.selfIntroduction = queryResult.users.userblogCustomization?.selfIntroduction;
-      response.statusMessage = queryResult.users.userblogCustomization?.statusMessage;
+      response.blogTitle = queryResult.users.userblogCustomization?.blogTitle || null;
+      response.selfIntroduction = queryResult.users.userblogCustomization?.selfIntroduction || null;
+      response.statusMessage = queryResult.users.userblogCustomization?.statusMessage || null;
       response.TagData = queryResult.postsTags?.map((tagValue) => {
         return {
           id: tagValue.tags.id,
