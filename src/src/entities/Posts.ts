@@ -6,7 +6,7 @@ import { Category } from './Category';
 import { Users } from './Users';
 import { PostsTags } from './PostsTags';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsInt, IsString, MinLength, MaxLength, IsPositive, Min, Max } from 'class-validator';
+import { IsNotEmpty, IsInt, IsString, MinLength, MaxLength, IsPositive, Min, Max, IsOptional } from 'class-validator';
 
 @Index('FK_posts_usersID_users_id', ['usersId'], {})
 @Index('FK_posts_categoryID_category_id', ['categoryId'], {})
@@ -75,6 +75,7 @@ export class Posts {
     type: [String, null],
     required: true,
   })
+  @IsOptional()
   @IsString() // string
   @MaxLength(299) // max length
   thumbNailUrl: string | null;
