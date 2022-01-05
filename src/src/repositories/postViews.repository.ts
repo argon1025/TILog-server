@@ -12,7 +12,7 @@ export class PostViewsRepository extends AbstractRepository<PostView> {
   findOneByPostIdAndUserIp(postId: string, userIp: string): Promise<PostView> {
     return this.repository
       .createQueryBuilder('PostView')
-      .select(['postView.id', 'postView.viewedAt'])
+      .select(['PostView.id', 'PostView.viewedAt'])
       .where('PostView.postsId = :postID', { postID: postId })
       .andWhere('PostView.userIp = :userIP', { userIP: userIp })
       .maxExecutionTime(1000)
@@ -40,7 +40,7 @@ export class PostViewsRepository extends AbstractRepository<PostView> {
    */
   create(userIp: string, postId: string, viewedAt: string): Promise<InsertResult> {
     return this.repository
-      .createQueryBuilder('PostView')
+      .createQueryBuilder()
       .insert()
       .values([{ userIp: userIp, postsId: postId, viewedAt: viewedAt }])
       .updateEntity(false)

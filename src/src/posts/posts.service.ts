@@ -333,7 +333,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async addPostViews(viewData: AddPostViewCountDto): Promise<boolean | PostViewCountAddFail> {
+  public async addPostViews(viewData: AddPostViewCountDto): Promise<boolean> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -393,6 +393,12 @@ export class PostsService {
     } catch (error) {
       // 트랜잭션 롤백
       await queryRunner.rollbackTransaction();
+
+      // 이미 등록 된 경우 true리턴합니다
+      if (error.message === 'THIS_IP_ALREADY_SEEN_THE_POST') {
+        return true;
+      }
+
       // 개발자 코멘트 생성
       const developerComment = `Post.service.addPostViews.${!!error.message ? error.message : JSON.stringify(error)}`;
       throw new PostViewCountAddFail(developerComment);
@@ -534,6 +540,44 @@ export class PostsService {
       throw new PostDetailGetFail(developerComment);
     } finally {
       // 생성된 커넥션을 해제합니다.
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * 특정 게시글에 특정 유저가 좋아요를 눌렀는지 여부를 반환합니다
+   * @TODO DTO 생성 필요
+   * @author seongrokLee <argon1025@gmail.com>
+   * @version 1.0.0
+   */
+  async isLiked(requestData: { postId: string; userId: number }) {
+    // 쿼리러너 객체 생성
+    const queryRunner = this.connection.createQueryRunner();
+
+    // 데이터 베이스 연결
+    await queryRunner.connect();
+
+    // 트랜잭션 시작
+    await queryRunner.startTransaction();
+    try {
+      const postLikeRepository = queryRunner.manager.getCustomRepository(PostLikesRepository);
+
+      // 유저가 해당 포스트에 좋아요를 눌렀는지 확인합니다
+      const getPostLikeResult = await postLikeRepository.findOneByPostIdAndUserId(requestData.postId, requestData.userId);
+
+      // 트랜잭션 커밋
+      await queryRunner.commitTransaction();
+
+      // 유저가 해당 포스트에 '좋아요'를 설정한 기록이 있을경우 true를 리턴합니다
+      if (!!getPostLikeResult) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      return false;
+    } finally {
+      // 커넥션 해제
       await queryRunner.release();
     }
   }
