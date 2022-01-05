@@ -136,7 +136,7 @@ export class PostRepository extends AbstractRepository<Posts> {
       .createQueryBuilder('Post')
       .update()
       .set({ viewCounts: viewCount })
-      .where('Post.id = :postID', { postID: postId })
+      .where('id = :postID', { postID: postId })
       .updateEntity(false)
       .execute();
   }
