@@ -36,4 +36,5 @@ export class GetPostDetailResponseDto extends IntersectionType(
   ),
 ) {
   TagData: Array<PostTagsDto>;
+  isLiked: boolean;
 }

@@ -14,6 +14,7 @@ import {
   ParseIntPipe,
   ConsoleLogger,
 } from '@nestjs/common';
+import { RealIP } from 'nestjs-real-ip';
 import { ConfigService } from '@nestjs/config';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UserInfo } from 'src/auth/decorators/userInfo.decorator';
@@ -236,12 +237,14 @@ export class PostsController {
     required: true,
     description: '포스트 아이디',
   })
-  async getDetailFindByPostID(@UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number) {
+  async getDetailFindByPostID(@UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number, @RealIP() userIp: string) {
     // PostID 상수 선언
-    const POST_ID = String(postID);
+    const POST_ID: string = String(postID);
+    const USER_ID: number | undefined = userData?.id;
+    let IS_LIKED: boolean = false;
     try {
       // 유저에게 세션데이터가 있다면 요청 포스트의 작성자인지 확인합니다, 세션이 없으면 false를 반환합니다.
-      const IS_OWNER: boolean = !userData?.id ? false : await this.postsService.isOwner({ userId: userData.id, postId: POST_ID });
+      const IS_OWNER: boolean = !USER_ID ? false : await this.postsService.isOwner({ userId: userData.id, postId: POST_ID });
 
       // 삭제된 포스트인지 확인합니다
       const IS_DELETED: boolean = await this.postsService.isDeleted({ postId: POST_ID });
@@ -271,10 +274,21 @@ export class PostsController {
         }
       }
 
+      if (typeof userIp === 'string') {
+        // 조회수를 늘릴 수 있다면 늘립니다 이 작업은 강제되지 않습니다.
+        await this.postsService.addPostViews({ id: POST_ID, userIp: userIp });
+      }
+
+      // 해당아이피의 좋아요 유무를 조회합니다
+      if (!!USER_ID) {
+        IS_LIKED = await this.postsService.isLiked({ postId: POST_ID, userId: USER_ID });
+      }
+
       // 게시물 정보를 조회하고 저장합니다
       let GetPostDetailRequestDto = new GetPostDetailDto();
       GetPostDetailRequestDto.id = POST_ID;
       POST_DATA = await this.postsService.getPostDetail(GetPostDetailRequestDto);
+      POST_DATA.isLiked = IS_LIKED;
 
       // 응답 리턴
       return ResponseUtility.create(false, 'ok', { data: POST_DATA });
