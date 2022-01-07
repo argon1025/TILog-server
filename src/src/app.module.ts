@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { CacheModule, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -31,8 +31,8 @@ import { PinnedRepositoriesModule } from './pinned-repositories/pinned-repositor
 // ThrottlerModule
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerStorageRedisService } from 'nestjs-throttler-storage-redis';
-import * as redis from 'redis';
+import { CacheManagerModule } from './cache-manager/cache-manager.module';
+import * as redisStore from 'cache-manager-redis-store';
 
 // Load ENV
 const ENV = process.env;
@@ -88,6 +88,7 @@ const ENV = process.env;
     CategoriesModule,
     PinnedRepositoriesModule,
     UsersModule,
+    CacheManagerModule,
   ],
   controllers: [AppController],
   providers: [

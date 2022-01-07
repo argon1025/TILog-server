@@ -1,19 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  HttpException,
-  UseGuards,
-  Version,
-  Put,
-  Query,
-  ParseIntPipe,
-  ConsoleLogger,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, UseGuards, Version, Put, Query, ParseIntPipe } from '@nestjs/common';
+import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
 import { RealIP } from 'nestjs-real-ip';
 import { ConfigService } from '@nestjs/config';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -40,7 +26,11 @@ import { PostsService } from './posts.service';
 
 @Controller('')
 export class PostsController {
-  constructor(private readonly postsService: PostsService, private readonly configService: ConfigService) {}
+  constructor(
+    private readonly postsService: PostsService,
+    private readonly configService: ConfigService,
+    private readonly CacheManagerService: CacheManagerService,
+  ) {}
 
   /**
    * 포스트 생성요청을 처리합니다.
@@ -477,19 +467,31 @@ export class PostsController {
         throw new PostNotFound(developerComment);
       }
 
-      // Dto Mapping
-      let getPostsRequestDto = new MostLikedRequestDto();
-      // 최대 콘텐츠 조회 갯수
-      getPostsRequestDto.contentLimit = this.configService.get<number>('POSTS_GET_CONTENT_LIMIT', 10);
-      // 현재 커서 넘버
-      getPostsRequestDto.cursorNumber = cursor;
-      // 조회 기간
-      getPostsRequestDto.date = searchScopeData;
+      const cacheResult = await this.CacheManagerService.getTrendPost({ ScopeData: searchScopeData, cursor: cursor });
 
-      const getPostsResult = await this.postsService.getMostLiked(getPostsRequestDto);
+      if (!!cacheResult) {
+        // 캐시가 존재할 경우
+        // 응답 리턴
+        return ResponseUtility.create(false, 'ok', cacheResult);
+      } else {
+        // 캐시가 없을 경우
+        // Dto Mapping
+        let getPostsRequestDto = new MostLikedRequestDto();
+        // 최대 콘텐츠 조회 갯수
+        getPostsRequestDto.contentLimit = this.configService.get<number>('POSTS_GET_CONTENT_LIMIT', 10);
+        // 현재 커서 넘버
+        getPostsRequestDto.cursorNumber = cursor;
+        // 조회 기간
+        getPostsRequestDto.date = searchScopeData;
 
-      // 응답 리턴
-      return ResponseUtility.create(false, 'ok', getPostsResult);
+        const getPostsResult = await this.postsService.getMostLiked(getPostsRequestDto);
+
+        // 캐시 저장
+        await this.CacheManagerService.setTrendPost({ ScopeData: searchScopeData, cursor: cursor, postListData: getPostsResult, ttl: 5000 });
+
+        // 응답 리턴
+        return ResponseUtility.create(false, 'ok', getPostsResult);
+      }
     } catch (error) {
       // 사전 정의된 에러인 경우
       if ('codeNumber' in error && 'codeText' in error && 'message' in error) {

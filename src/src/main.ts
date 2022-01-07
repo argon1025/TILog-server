@@ -34,7 +34,7 @@ async function bootstrap() {
 
   //CORS Setting
   app.enableCors({
-    origin: ['https://tilog.io', 'https://www.tilog.io'],
+    origin: ['https://tilog.io', 'https://www.tilog.io', 'http://localhost:8080'],
     methods: CORS_METHOD,
     credentials: true,
   });
