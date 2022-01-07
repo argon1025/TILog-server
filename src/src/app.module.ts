@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { CacheModule, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -31,14 +31,23 @@ import { PinnedRepositoriesModule } from './pinned-repositories/pinned-repositor
 // ThrottlerModule
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerStorageRedisService } from 'nestjs-throttler-storage-redis';
-import * as redis from 'redis';
+import * as redisStore from 'cache-manager-redis-store';
 
 // Load ENV
 const ENV = process.env;
 
 @Module({
   imports: [
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        // Redis config
+        const REDIS_HOST = configService.get<string>('REDIS_HOST', 'localhost');
+        const REDIS_PORT = configService.get<number>('REDIS_PORT', 6379);
+        return { host: REDIS_HOST, port: REDIS_PORT };
+      },
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV.NODE_ENV ? '.env' : `.env.${ENV.NODE_ENV}`,
