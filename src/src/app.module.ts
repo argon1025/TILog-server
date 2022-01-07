@@ -31,6 +31,7 @@ import { PinnedRepositoriesModule } from './pinned-repositories/pinned-repositor
 // ThrottlerModule
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { CacheManagerModule } from './cache-manager/cache-manager.module';
 import * as redisStore from 'cache-manager-redis-store';
 
 // Load ENV
@@ -38,16 +39,6 @@ const ENV = process.env;
 
 @Module({
   imports: [
-    CacheModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        // Redis config
-        const REDIS_HOST = configService.get<string>('REDIS_HOST', 'localhost');
-        const REDIS_PORT = configService.get<number>('REDIS_PORT', 6379);
-        return { host: REDIS_HOST, port: REDIS_PORT };
-      },
-    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV.NODE_ENV ? '.env' : `.env.${ENV.NODE_ENV}`,
@@ -97,6 +88,7 @@ const ENV = process.env;
     CategoriesModule,
     PinnedRepositoriesModule,
     UsersModule,
+    CacheManagerModule,
   ],
   controllers: [AppController],
   providers: [
