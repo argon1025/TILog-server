@@ -472,7 +472,7 @@ export class PostsController {
       if (!!cacheResult) {
         // 캐시가 존재할 경우
         // 응답 리턴
-        return ResponseUtility.create(false, 'ok', cacheResult);
+        return ResponseUtility.create(false, 'ok', { data: cacheResult });
       } else {
         // 캐시가 없을 경우
         // Dto Mapping
