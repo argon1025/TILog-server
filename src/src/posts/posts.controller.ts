@@ -490,7 +490,7 @@ export class PostsController {
         await this.CacheManagerService.setTrendPost({ ScopeData: searchScopeData, cursor: cursor, postListData: getPostsResult, ttl: 5000 });
 
         // 응답 리턴
-        return ResponseUtility.create(false, 'ok', getPostsResult);
+        return ResponseUtility.create(false, 'ok', { data: getPostsResult });
       }
     } catch (error) {
       // 사전 정의된 에러인 경우
