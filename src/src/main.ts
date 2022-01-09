@@ -10,6 +10,7 @@ import * as helmet from 'helmet';
 import { HttpExceptionFilter } from './ExceptionFilters/HttpException.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationFailed } from './ExceptionFilters/Errors/Validation/Validation.error';
+import { TaskManagerService } from './task-manager/task-manager.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -34,13 +35,13 @@ async function bootstrap() {
 
   //CORS Setting
   app.enableCors({
-    origin: ['https://tilog.io', 'https://www.tilog.io'],
+    origin: ['https://tilog.io', 'https://www.tilog.io', 'http://localhost:8080'],
     methods: CORS_METHOD,
     credentials: true,
   });
 
   // Connect Local Redis
-  const client = redis.createClient({ url: `redis://${REDIS_HOST}:${REDIS_PORT}`, retryDelay: 1000 });
+  const client = redis.createClient({ url: `redis://${REDIS_HOST}:${REDIS_PORT}` });
   // Redis Store Use Session
   const redisStore = connectRedis(session);
   // Redis Log
@@ -78,7 +79,8 @@ async function bootstrap() {
   app.use(passport.session());
 
   // ExceptionFilter
-  app.useGlobalFilters(new HttpExceptionFilter());
+  const taskManagerService = app.get<TaskManagerService>(TaskManagerService);
+  app.useGlobalFilters(new HttpExceptionFilter(taskManagerService));
 
   // ValidationPipe
   app.useGlobalPipes(

@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { CacheModule, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -31,8 +31,10 @@ import { PinnedRepositoriesModule } from './pinned-repositories/pinned-repositor
 // ThrottlerModule
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerStorageRedisService } from 'nestjs-throttler-storage-redis';
-import * as redis from 'redis';
+import { CacheManagerModule } from './cache-manager/cache-manager.module';
+import * as redisStore from 'cache-manager-redis-store';
+import { BullModule } from '@nestjs/bull';
+import { TaskManagerModule } from './task-manager/task-manager.module';
 
 // Load ENV
 const ENV = process.env;
@@ -42,6 +44,15 @@ const ENV = process.env;
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV.NODE_ENV ? '.env' : `.env.${ENV.NODE_ENV}`,
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const REDIS_HOST = configService.get<string>('REDIS_HOST', 'localhost');
+        const REDIS_PORT = configService.get<number>('REDIS_PORT', 6379);
+        return { redis: { host: REDIS_HOST, port: REDIS_PORT } };
+      },
+      inject: [ConfigService],
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',
@@ -88,6 +99,8 @@ const ENV = process.env;
     CategoriesModule,
     PinnedRepositoriesModule,
     UsersModule,
+    CacheManagerModule,
+    TaskManagerModule,
   ],
   controllers: [AppController],
   providers: [

@@ -754,65 +754,14 @@ export class PostsService {
     await queryRunner.startTransaction();
 
     try {
-      let query = queryRunner.manager
-        .createQueryBuilder()
-        .select([
-          'posts.id',
-          'posts.usersId',
-          'posts.categoryId',
-          'posts.title',
-          'posts.thumbNailUrl',
-          'posts.viewCounts',
-          'posts.likes',
-          'posts.private',
-          'posts.createdAt',
-          'posts.updatedAt',
-          'category.id',
-          'category.categoryName',
-          'category.iconUrl',
-          'users.userName',
-          'users.proFileImageUrl',
-        ])
-        .from(Posts, 'posts')
-        .innerJoin(Category, 'category', 'posts.categoryId = category.id')
-        .innerJoin(Users, 'users', 'posts.usersId = users.id')
-        // 커서 다음에 있는 게시글이고
-        .where('posts.id > :cursorNumber', { cursorNumber: requestData.cursorNumber })
-        // 해당 날자 안에
-        .andWhere(`posts.createdAt BETWEEN DATE_ADD(NOW(), INTERVAL -1 ${requestData.date}) AND NOW()`)
-        // 삭제되지 않은 게시글만
-        .andWhere('posts.deletedAt is NULL')
-        // 비밀글이 아닌것만
-        .andWhere('posts.private = 0')
-        // 좋아요 높은 순으로 정렬
-        .orderBy('posts.likes', 'DESC')
-        // 최대 반환 게시글 수
-        .limit(requestData.contentLimit)
-        .maxExecutionTime(1000);
+      // load DAO
+      const postRepository = queryRunner.manager.getCustomRepository(PostRepository);
 
-      /**
-       *
-       * @returns [
-       *  TextRow {
-       *     posts_id: '7',
-       *     posts_usersID: 1,
-       *     posts_categoryID: 1,
-       *     posts_title: 'Title example',
-       *     posts_thumbNailURL: 'thumbNailUrl.com',
-       *     posts_viewCounts: 0,
-       *     posts_likes: 2,
-       *     posts_private: 0,
-       *     posts_createdAt: 2021-11-22T01:27:38.000Z,
-       *     posts_updatedAt: null,
-       *     category_id: 1,
-       *     category_categoryName: 'ㅅㄷㄴㅅ',
-       *     category_iconURL: null,
-       *     users_userName: 'ㅁㄴㅇ',
-       *     users_proFileImageURL: 'ㅁㄴㅇ'
-       *   }
-       * ]
-       */
-      const queryResult = await query.getRawMany();
+      const queryResult = await postRepository.getTrend({
+        cursor: requestData.cursorNumber,
+        dateScope: requestData.date,
+        rowLimit: requestData.contentLimit,
+      });
 
       // 찾은 포스트가 없다면 에러를 반환합니다.
       if (queryResult.length === 0) {
@@ -824,7 +773,7 @@ export class PostsService {
       // 포스트 리스트 데이터
       responseData.postListData = queryResult;
       // 포스트 마지막 데이터의 id를 커서 넘버로 저장
-      responseData.nextCursorNumber = queryResult.length === 0 ? 0 : Number(queryResult[queryResult.length - 1].posts_id);
+      responseData.nextCursorNumber = queryResult.length === 0 ? 0 : Number(queryResult[queryResult.length - 1].id);
 
       // 변경 사항을 커밋합니다.
       await queryRunner.commitTransaction();

@@ -3,6 +3,7 @@ import { PostsTags } from 'src/entities/PostsTags';
 import { Tags } from 'src/entities/Tags';
 import { UserblogCustomization } from 'src/entities/UserblogCustomization';
 import { Users } from 'src/entities/Users';
+import { searchScope } from 'src/posts/dto/Services/MostLikedPost.DTO';
 import { EntityRepository, AbstractRepository, InsertResult, UpdateResult } from 'typeorm';
 import { Posts } from '../entities/Posts';
 
@@ -393,5 +394,73 @@ export class PostRepository extends AbstractRepository<Posts> {
     }
 
     return queryBuilder.getOne();
+  }
+
+  /**
+   * 
+   * @param requestData 
+   * @returns Array[{
+    id: "16",
+    usersId: 1,
+    categoryId: 1,
+    title: "Title example",
+    thumbNailUrl: "thumbNailUrl.com",
+    viewCounts: 1,
+    likes: 1,
+    private: 0,
+    createdAt: {
+    },
+    updatedAt: {
+    },
+    category: {
+      id: 1,
+      categoryName: "미지정",
+      iconUrl: null,
+    },
+    users: {
+      userName: "argon1025",
+      proFileImageUrl: "https://avatars.githubusercontent.com/u/55491354?v=4",
+    },
+  },
+]
+   */
+  public getTrend(requestData: { cursor: number; dateScope: searchScope; rowLimit: number }) {
+    return (
+      this.repository
+        .createQueryBuilder('Post')
+        .select([
+          'Post.id',
+          'Post.usersId',
+          'Post.categoryId',
+          'Post.title',
+          'Post.thumbNailUrl',
+          'Post.viewCounts',
+          'Post.likes',
+          'Post.private',
+          'Post.createdAt',
+          'Post.updatedAt',
+          'Category.id',
+          'Category.categoryName',
+          'Category.iconUrl',
+          'User.userName',
+          'User.proFileImageUrl',
+        ])
+        .innerJoin('Post.category', 'Category')
+        .innerJoin('Post.users', 'User')
+        // 커서 다음에 있는 게시글이고
+        .where('Post.id > :cursorNumber', { cursorNumber: requestData.cursor })
+        // 해당 날자 안에
+        .andWhere(`Post.createdAt BETWEEN DATE_ADD(NOW(), INTERVAL -1 ${requestData.dateScope}) AND NOW()`)
+        // 삭제되지 않은 게시글만
+        .andWhere('Post.deletedAt is NULL')
+        // 비밀글이 아닌것만
+        .andWhere('Post.private = 0')
+        // 좋아요 높은 순으로 정렬
+        .orderBy('Post.likes', 'DESC')
+        // 최대 반환 게시글 수
+        .limit(requestData.rowLimit)
+        .maxExecutionTime(1000)
+        .getMany()
+    );
   }
 }
