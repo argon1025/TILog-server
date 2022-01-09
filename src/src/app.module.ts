@@ -33,6 +33,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { CacheManagerModule } from './cache-manager/cache-manager.module';
 import * as redisStore from 'cache-manager-redis-store';
+import { BullModule } from '@nestjs/bull';
 
 // Load ENV
 const ENV = process.env;
@@ -42,6 +43,15 @@ const ENV = process.env;
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV.NODE_ENV ? '.env' : `.env.${ENV.NODE_ENV}`,
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const REDIS_HOST = configService.get<string>('REDIS_HOST', 'localhost');
+        const REDIS_PORT = configService.get<number>('REDIS_PORT', 6379);
+        return { redis: { host: REDIS_HOST, port: REDIS_PORT } };
+      },
+      inject: [ConfigService],
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',
