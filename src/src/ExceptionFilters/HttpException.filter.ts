@@ -1,9 +1,11 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { TaskManagerService } from 'src/task-manager/task-manager.service';
 import Error from './Interface/Error.interface';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
+  constructor(private taskManagerService: TaskManagerService) {}
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
 
@@ -24,13 +26,26 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const message = !errorData?.message ? errorData : errorData.message;
 
     // Logging
+    /*
     Logger.error(`
       statusCode : ${status}
       location : ${requestLocation}
       errorObjectCode : ${errorObjectCode}
       description : ${devDescription}
       message : ${JSON.stringify(message)}
-      `);
+      `);\
+      */
+
+    // Task-Manager-Service
+    if (!(status === 404 || status === 403)) {
+      this.taskManagerService.sendError({
+        location: requestLocation,
+        developerComment: devDescription,
+        errorCode: status,
+        errorObjectCode: errorObjectCode,
+        message: message,
+      });
+    }
 
     // Error response
     response.status(status).json({
