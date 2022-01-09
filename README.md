@@ -103,7 +103,7 @@ SESSION_SAVEUNINITIALIZED=
 SESSION_COOKIE_MAXAGE=86400000
 
 # Front Server Setting
-REDIRECT_FRONT=http://localhost:8080/
+REDIRECT_FRONT=http://localhost:8080/login
 
 # S3 fileUpload settings
 AWS_S3_BUCKET=
