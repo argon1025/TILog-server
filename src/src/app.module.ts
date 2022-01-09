@@ -34,6 +34,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { CacheManagerModule } from './cache-manager/cache-manager.module';
 import * as redisStore from 'cache-manager-redis-store';
 import { BullModule } from '@nestjs/bull';
+import { TaskManagerModule } from './task-manager/task-manager.module';
 
 // Load ENV
 const ENV = process.env;
@@ -99,6 +100,7 @@ const ENV = process.env;
     PinnedRepositoriesModule,
     UsersModule,
     CacheManagerModule,
+    TaskManagerModule,
   ],
   controllers: [AppController],
   providers: [
