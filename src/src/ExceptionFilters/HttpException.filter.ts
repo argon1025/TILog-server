@@ -37,15 +37,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
       */
 
     // Task-Manager-Service
-    if (!(status === 404 || status === 403)) {
-      this.taskManagerService.sendError({
-        location: requestLocation,
-        developerComment: devDescription,
-        errorCode: status,
-        errorObjectCode: errorObjectCode,
-        message: message,
-      });
-    }
+    // 전체 에러에 대한 로깅
+    this.taskManagerService.sendError({
+      location: requestLocation,
+      developerComment: devDescription,
+      errorCode: status,
+      errorObjectCode: errorObjectCode,
+      message: message,
+    });
 
     // Error response
     response.status(status).json({
