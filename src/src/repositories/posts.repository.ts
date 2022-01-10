@@ -444,7 +444,7 @@ export class PostRepository extends AbstractRepository<Posts> {
     );*/
 
     const query = this.repository.query(
-      `SELECT postList.*, users.userName, users.proFileImageURL, category.categoryName, category.iconURL FROM (SELECT @ROWNUM:=@ROWNUM+1 AS cursor_num, posts.id as postId, posts.title as postTitle, posts.viewCounts as postViewCounts, posts.likes as postLikes, posts.createdAt as createdAt, posts.usersID as usersID, posts.categoryID as categoryID FROM (SELECT @rownum:=0) TMP, posts WHERE posts.createdAt BETWEEN DATE_ADD(NOW(), INTERVAL -1 ${requestData.dateScope}) AND NOW() AND posts.deletedAt is NULL AND posts.private = 0 ORDER BY posts.likes DESC, posts.id ASC) as postList INNER JOIN users ON postList.usersID = users.id INNER JOIN category ON postList.categoryID = category.id WHERE postList.cursor_num > ${requestData.cursor}  LIMIT ${requestData.rowLimit}`,
+      `SELECT postList.*, users.userName, users.proFileImageURL, category.categoryName, category.iconURL FROM (SELECT @ROWNUM:=@ROWNUM+1 AS cursor_num, posts.id as postId, posts.title as postTitle,posts.thumbNailURL as thumbNailURL, posts.viewCounts as postViewCounts, posts.likes as postLikes, posts.createdAt as createdAt, posts.usersID as usersID, posts.categoryID as categoryID FROM (SELECT @rownum:=0) TMP, posts WHERE posts.createdAt BETWEEN DATE_ADD(NOW(), INTERVAL -1 ${requestData.dateScope}) AND NOW() AND posts.deletedAt is NULL AND posts.private = 0 ORDER BY posts.likes DESC, posts.id ASC) as postList INNER JOIN users ON postList.usersID = users.id INNER JOIN category ON postList.categoryID = category.id WHERE postList.cursor_num > ${requestData.cursor}  LIMIT ${requestData.rowLimit}`,
     );
 
     return query;

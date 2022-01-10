@@ -784,6 +784,7 @@ export class PostsService {
         rowData.iconUrl = queryRowData.iconURL;
         rowData.userName = queryRowData.userName;
         rowData.proFileImageUrl = queryRowData.proFileImageURL;
+        rowData.thumbNailUrl = queryRowData.thumbNailURL;
 
         return rowData;
       });
