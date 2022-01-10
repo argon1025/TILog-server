@@ -1,71 +1,76 @@
 import { HttpService } from '@nestjs/axios';
 import { OnQueueActive, Process, Processor } from '@nestjs/bull';
+import { ConfigService } from '@nestjs/config';
 import { Job } from 'bull';
 import { firstValueFrom } from 'rxjs';
 
 @Processor('log')
 export class LogConsumer {
-  constructor(private httpService: HttpService) {}
+  constructor(private httpService: HttpService, private configService: ConfigService) {}
 
   @Process('send')
   async sendError(job) {
+    // 작업 데이터 로드
     const ERROR_DATA = job?.data?.data;
-    try {
-      await firstValueFrom(
-        this.httpService.post('https://hooks.slack.com/services/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', {
-          blocks: [
+    const MESSAGE: object = {
+      blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: '에러 이벤트 발생',
+            emoji: true,
+          },
+        },
+        {
+          type: 'section',
+          fields: [
             {
-              type: 'header',
-              text: {
-                type: 'plain_text',
-                text: '에러 이벤트 발생',
-                emoji: true,
-              },
+              type: 'mrkdwn',
+              text: `*HTTP Code:*\n${ERROR_DATA.errorCode}`,
             },
             {
-              type: 'section',
-              fields: [
-                {
-                  type: 'mrkdwn',
-                  text: `*HTTP Code:*\n${ERROR_DATA.errorCode}`,
-                },
-                {
-                  type: 'mrkdwn',
-                  text: `*API Location:*\n${ERROR_DATA.location}`,
-                },
-              ],
-            },
-            {
-              type: 'section',
-              fields: [
-                {
-                  type: 'mrkdwn',
-                  text: `*Error Type:*\n${ERROR_DATA.errorObjectCode}`,
-                },
-              ],
-            },
-            {
-              type: 'section',
-              fields: [
-                {
-                  type: 'mrkdwn',
-                  text: `*오류에 대한 개발자 코멘트:*\n\`\`\`${ERROR_DATA.developerComment}\`\`\``,
-                },
-              ],
-            },
-            {
-              type: 'section',
-              fields: [
-                {
-                  type: 'mrkdwn',
-                  text: `*응답 메시지:*\n\`\`\`${JSON.stringify(ERROR_DATA.message)}\`\`\``,
-                },
-              ],
+              type: 'mrkdwn',
+              text: `*API Location:*\n${ERROR_DATA.location}`,
             },
           ],
-        }),
-      );
-      return {};
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Error Type:*\n${ERROR_DATA.errorObjectCode}`,
+            },
+          ],
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*오류에 대한 개발자 코멘트:*\n\`\`\`${ERROR_DATA.developerComment}\`\`\``,
+            },
+          ],
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*응답 메시지:*\n\`\`\`${JSON.stringify(ERROR_DATA.message)}\`\`\``,
+            },
+          ],
+        },
+      ],
+    };
+    const WEB_HOOK_URL: string | undefined = this.configService.get<string>('ERROR_SLACK_WEBHOOK_URL', undefined);
+
+    try {
+      if (!!WEB_HOOK_URL) {
+        await firstValueFrom(this.httpService.post(WEB_HOOK_URL, MESSAGE));
+      }
+      return 'ok';
     } catch (error) {
       throw new Error('log.send job fail');
     }
