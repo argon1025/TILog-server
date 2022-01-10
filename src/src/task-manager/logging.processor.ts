@@ -12,7 +12,7 @@ export class LogConsumer {
     const ERROR_DATA = job?.data?.data;
     try {
       await firstValueFrom(
-        this.httpService.post('https://hooks.slack.com/services/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', {
+        this.httpService.post('https://hooks.slack.com/services/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', {
           blocks: [
             {
               type: 'header',
