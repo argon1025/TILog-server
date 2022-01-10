@@ -1,6 +1,7 @@
 import { HttpModule } from '@nestjs/axios';
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { LogConsumer } from './logging.processor';
 import { TaskManagerService } from './task-manager.service';
 
@@ -17,6 +18,7 @@ import { TaskManagerService } from './task-manager.service';
       name: 'image',
     }),
     HttpModule,
+    ConfigModule,
   ],
   providers: [TaskManagerService, LogConsumer],
   exports: [TaskManagerService],
