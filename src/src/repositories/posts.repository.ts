@@ -397,34 +397,14 @@ export class PostRepository extends AbstractRepository<Posts> {
   }
 
   /**
-   * 
-   * @param requestData 
-   * @returns Array[{
-    id: "16",
-    usersId: 1,
-    categoryId: 1,
-    title: "Title example",
-    thumbNailUrl: "thumbNailUrl.com",
-    viewCounts: 1,
-    likes: 1,
-    private: 0,
-    createdAt: {
-    },
-    updatedAt: {
-    },
-    category: {
-      id: 1,
-      categoryName: "미지정",
-      iconUrl: null,
-    },
-    users: {
-      userName: "argon1025",
-      proFileImageUrl: "https://avatars.githubusercontent.com/u/55491354?v=4",
-    },
-  },
-]
+   * 최근 인기 게시글을 가져옵니다
+   * @TODO 쿼리빌더로 변환 필요합니다
+   * @TODO 서브쿼리에서 커서인덱스를 생성함, 캐시 업데이트 주기가 길기 떄문에 오프셋이랑 별 차이가 없음
+   * @param requestData
+   * @returns MostLikedResponseDto
    */
   public getTrend(requestData: { cursor: number; dateScope: searchScope; rowLimit: number }) {
+    /*
     return (
       this.repository
         .createQueryBuilder('Post')
@@ -461,6 +441,12 @@ export class PostRepository extends AbstractRepository<Posts> {
         .limit(requestData.rowLimit)
         .maxExecutionTime(1000)
         .getMany()
+    );*/
+
+    const query = this.repository.query(
+      `SELECT postList.*, users.userName, users.proFileImageURL, category.categoryName, category.iconURL FROM (SELECT @ROWNUM:=@ROWNUM+1 AS cursor_num, posts.id as postId, posts.title as postTitle, posts.viewCounts as postViewCounts, posts.likes as postLikes, posts.createdAt as createdAt, posts.usersID as usersID, posts.categoryID as categoryID FROM (SELECT @rownum:=0) TMP, posts WHERE posts.createdAt BETWEEN DATE_ADD(NOW(), INTERVAL -1 ${requestData.dateScope}) AND NOW() AND posts.deletedAt is NULL AND posts.private = 0 ORDER BY posts.likes DESC, posts.id ASC) as postList INNER JOIN users ON postList.usersID = users.id INNER JOIN category ON postList.categoryID = category.id WHERE postList.cursor_num > ${requestData.cursor}  LIMIT ${requestData.rowLimit}`,
     );
+
+    return query;
   }
 }
