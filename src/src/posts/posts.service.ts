@@ -31,7 +31,7 @@ import { SetPostToDislikeDto, SetPostToDislikeResponseDto } from './dto/Services
 import { Tags } from 'src/entities/Tags';
 import { PostsTags } from 'src/entities/PostsTags';
 import { Category } from 'src/entities/Category';
-import { MostLikedRequestDto, MostLikedResponseDto } from './dto/Services/MostLikedPost.DTO';
+import { MostLikedRequestDto, MostLikedResponseDto, postListDataDTO } from './dto/Services/MostLikedPost.DTO';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareArray } from 'src/utilities/compare.array.utility';
 import { CreatePostTags } from './dto/Services/CreatePostTags.DTO';
@@ -771,9 +771,24 @@ export class PostsService {
       //DTO Mapping
       let responseData = new MostLikedResponseDto();
       // 포스트 리스트 데이터
-      responseData.postListData = queryResult;
+      responseData.postListData = queryResult.map((queryRowData) => {
+        let rowData = new postListDataDTO();
+        rowData.id = queryRowData.postId; // PostID
+        rowData.usersId = queryRowData.usersID;
+        rowData.categoryId = queryRowData.categoryID;
+        rowData.title = queryRowData.postTitle;
+        rowData.viewCounts = queryRowData.postViewCounts;
+        rowData.likes = queryRowData.postLikes;
+        rowData.createdAt = queryRowData.createdAt;
+        rowData.categoryName = queryRowData.categoryName;
+        rowData.iconUrl = queryRowData.iconURL;
+        rowData.userName = queryRowData.userName;
+        rowData.proFileImageUrl = queryRowData.proFileImageURL;
+
+        return rowData;
+      });
       // 포스트 마지막 데이터의 id를 커서 넘버로 저장
-      responseData.nextCursorNumber = queryResult.length === 0 ? 0 : Number(queryResult[queryResult.length - 1].id);
+      responseData.nextCursorNumber = queryResult.length === 0 ? 0 : Number(queryResult[queryResult.length - 1].cursor_num);
 
       // 변경 사항을 커밋합니다.
       await queryRunner.commitTransaction();
