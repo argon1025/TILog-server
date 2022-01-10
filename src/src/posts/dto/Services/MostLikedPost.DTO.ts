@@ -24,7 +24,7 @@ export class MostLikedRequestDto {
 export class postListDataDTO extends IntersectionType(
   PickType(Users, ['userName', 'proFileImageUrl'] as const),
   IntersectionType(
-    PickType(Posts, ['id', 'usersId', 'categoryId', 'title', 'viewCounts', 'likes', 'createdAt'] as const),
+    PickType(Posts, ['id', 'usersId', 'categoryId', 'title', 'viewCounts', 'likes', 'createdAt', 'thumbNailUrl'] as const),
     PickType(Category, ['categoryName', 'iconUrl'] as const),
   ),
 ) {}
