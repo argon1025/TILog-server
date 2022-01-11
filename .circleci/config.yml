@@ -40,6 +40,7 @@ jobs:
             npm run build
   # CircleCI 컨텍스트를 활용해 .ENV 파일을 프로젝트 폴더에 생성해주는 작업입니다
   createEnv:
+    # node Image
     docker:
       - image: cimg/node:lts-browsers
     steps:
