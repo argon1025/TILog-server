@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Connection, Repository } from 'typeorm';
 import { Posts } from '../entities/Posts';
-import { Users } from 'src/entities/Users';
 import Time from 'src/utilities/time.utility';
 
 // ERROR
@@ -30,7 +29,6 @@ import { SetPostToLikeDto, SetPostToLikeResponseDto } from './dto/Services/SetPo
 import { SetPostToDislikeDto, SetPostToDislikeResponseDto } from './dto/Services/SetPostToDislike.DTO';
 import { Tags } from 'src/entities/Tags';
 import { PostsTags } from 'src/entities/PostsTags';
-import { Category } from 'src/entities/Category';
 import { MostLikedRequestDto, MostLikedResponseDto, postListDataDTO } from './dto/Services/MostLikedPost.DTO';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareArray } from 'src/utilities/compare.array.utility';
@@ -104,19 +102,14 @@ export class PostsService {
    * @version 1.0.0
    */
   async isOwner(requestData: { userId: number; postId: string }): Promise<boolean> {
-    try {
-      const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.postId });
+    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.postId });
 
-      if (getPostWriterIdResult.usersId === requestData.userId) {
-        // 유저 아이디가 맞을경우
-        return true;
-      } else {
-        // 유저 아이디가 다를경우
-        return false;
-      }
-    } catch (error) {
-      // getPostWriterId 에서 발생한 에러를 그대로 전달합니다
-      throw error;
+    if (getPostWriterIdResult.usersId === requestData.userId) {
+      // 유저 아이디가 맞을경우
+      return true;
+    } else {
+      // 유저 아이디가 다를경우
+      return false;
     }
   }
 
@@ -127,19 +120,14 @@ export class PostsService {
    * @version 1.0.0
    */
   async isPrivate(requestData: { postId: string }): Promise<boolean> {
-    try {
-      const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.postId });
+    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.postId });
 
-      if (getPostWriterIdResult.private === 0) {
-        // 비밀글이 아닐경우
-        return false;
-      } else {
-        // 비밀글일 경우
-        return true;
-      }
-    } catch (error) {
-      // getPostWriterId 에서 발생한 에러를 그대로 전달합니다
-      throw error;
+    if (getPostWriterIdResult.private === 0) {
+      // 비밀글이 아닐경우
+      return false;
+    } else {
+      // 비밀글일 경우
+      return true;
     }
   }
   /**
@@ -151,19 +139,14 @@ export class PostsService {
    * @version 1.0.0
    */
   async isDeleted(requestData: { postId: string }): Promise<boolean> {
-    try {
-      const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.postId });
+    const getPostWriterIdResult = await this.getPostWriterId({ id: requestData.postId });
 
-      if (!getPostWriterIdResult.deletedAt) {
-        // 삭제된 기록이 없을 경우
-        return false;
-      } else {
-        // 삭제된 기록이 있을경우
-        return true;
-      }
-    } catch (error) {
-      // getPostWriterId 에서 발생한 에러를 그대로 전달합니다
-      throw error;
+    if (!getPostWriterIdResult.deletedAt) {
+      // 삭제된 기록이 없을 경우
+      return false;
+    } else {
+      // 삭제된 기록이 있을경우
+      return true;
     }
   }
 
