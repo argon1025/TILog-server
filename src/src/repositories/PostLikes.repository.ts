@@ -27,7 +27,7 @@ export class PostLikesRepository extends AbstractRepository<PostLike> {
    * @returns
    */
   public create(postId: string, userId: number, likedAt: string): Promise<InsertResult> {
-    return this.repository.createQueryBuilder('PostLike').insert().values({ usersId: userId, postsId: postId, likedAt: likedAt }).execute();
+    return this.repository.createQueryBuilder().insert().values({ usersId: userId, postsId: postId, likedAt: likedAt }).execute();
   }
 
   /**
@@ -38,10 +38,10 @@ export class PostLikesRepository extends AbstractRepository<PostLike> {
    */
   public delete(postId: string, userId: number): Promise<DeleteResult> {
     return this.repository
-      .createQueryBuilder('PostLike')
+      .createQueryBuilder()
       .delete()
-      .where('PostLike.usersId = :userId', { userId: userId })
-      .andWhere('PostLike.postsId = :postId', { postId: postId })
+      .where('usersId = :userId', { userId: userId })
+      .andWhere('postsId = :postId', { postId: postId })
       .execute();
   }
 }
