@@ -163,7 +163,7 @@ export class CommentsService {
   async getComment(commentId: string): Promise<Comments> {
     try {
       // 코멘트를 검색합니다.
-      const comment = await this.commentsRepo.createQueryBuilder('comments').withDeleted().where(`comments.id = ${commentId}`).getOne();
+      const comment = await this.commentsRepo.createQueryBuilder('comments').where(`comments.id =  ${commentId}`).withDeleted().getOne();
       // 코멘트를 찾을 수 없을 시
       if (!comment) throw new NotFoundComment(`service.comment.getcomment.No comments were found.`);
       // 코멘트가 있을 시
