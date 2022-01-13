@@ -121,7 +121,7 @@ export class Posts {
   })
   @IsNotEmpty() // Not null
   @IsString() // string
-  @MaxLength(17000) // max length
+  @MaxLength(1500000) // max length -> Medium Text Max 16,777,215 byte
   markDownContent: string | null;
 
   @Column('tinyint', {

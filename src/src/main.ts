@@ -85,9 +85,10 @@ async function bootstrap() {
   // ValidationPipe
   app.useGlobalPipes(
     new ValidationPipe({
-      transform: true,
+      transform: true, // DTO에 맞춰 페이로드 타입 지정
       exceptionFactory: (errors) => {
-        return new BadRequestException(new ValidationFailed('test'));
+        const wrongPlace = errors[0]?.property;
+        return new BadRequestException(new ValidationFailed(`ValidationFailed to ${wrongPlace}`));
       },
     }),
   );
