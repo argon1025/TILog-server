@@ -64,7 +64,7 @@ export class PostsService {
 
     await queryRunner.connect();
 
-    await queryRunner.startTransaction();
+    await queryRunner.startTransaction('READ COMMITTED');
 
     try {
       const queryResult = await queryRunner.manager.getCustomRepository(PostRepository).accessInfoFindOneOrFailByPostId(postWriterData.id);
@@ -405,7 +405,7 @@ export class PostsService {
     await queryRunner.connect();
 
     // 트랜잭션 시작
-    await queryRunner.startTransaction();
+    await queryRunner.startTransaction('READ COMMITTED');
 
     try {
       // load DAO
@@ -462,7 +462,7 @@ export class PostsService {
     await queryRunner.connect();
 
     // 트랜잭션 시작
-    await queryRunner.startTransaction();
+    await queryRunner.startTransaction('READ COMMITTED');
 
     try {
       // Load DAO
@@ -541,7 +541,7 @@ export class PostsService {
     await queryRunner.connect();
 
     // 트랜잭션 시작
-    await queryRunner.startTransaction();
+    await queryRunner.startTransaction('READ COMMITTED');
     try {
       const postLikeRepository = queryRunner.manager.getCustomRepository(PostLikesRepository);
 
@@ -734,7 +734,7 @@ export class PostsService {
     await queryRunner.connect();
 
     // 트랜잭션 시작
-    await queryRunner.startTransaction();
+    await queryRunner.startTransaction('READ COMMITTED');
 
     try {
       // load DAO
