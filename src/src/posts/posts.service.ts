@@ -398,6 +398,10 @@ export class PostsService {
    * @version 1.0.0
    */
   public async getPostsFoundByMemberId(getPostData: GetPostsDto): Promise<GetPostsResponseDto> {
+    // 게시글 소유자와 요청자의 아이디가 동일할 경우
+    // 숨겨진 게시글도 함께 보여집니다
+    const ONLY_PUBLIC_POST: boolean = getPostData.personalRequest ? false : true;
+
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
@@ -416,7 +420,7 @@ export class PostsService {
         getPostData.usersId,
         getPostData.cursorNumber,
         getPostData.contentLimit,
-        getPostData.personalRequest,
+        ONLY_PUBLIC_POST,
         'DESC',
       );
 
