@@ -20,14 +20,20 @@
 
 # Project Status
 Last Release Build : [![CircleCI](https://circleci.com/gh/argon1025/TILog-server/tree/release.svg?style=svg)](https://circleci.com/gh/argon1025/TILog-server/tree/release)
+![image](https://user-images.githubusercontent.com/55491354/149620300-636ddac5-e957-4bc3-8c92-543237946cd5.png)
+
 
 # Team
 ![image](https://user-images.githubusercontent.com/55491354/146319436-555170dd-5e59-4484-a049-6e80dc8f2713.png)
-- 프로젝트 셋팅 및 [Dockerize](https://github.com/argon1025/TILog-server/blob/main/docker-compose.yml)
+- 프로젝트 관리
+- [Dockerize](https://github.com/argon1025/TILog-server/blob/main/docker-compose.yml)
 - [데이터 베이스 설계](https://github.com/argon1025/TILog-server/blob/main/docker/mysql/mysql-init-files/init.sql)
 - [에러처리](https://github.com/argon1025/TILog-server/tree/main/src/src/ExceptionFilters)
 - [포스트 서비스](https://github.com/argon1025/TILog-server/tree/main/src/src/posts)
-- [Image to S3 업로드](https://github.com/argon1025/TILog-server/blob/main/src/src/file-uploads/file-uploads.service.ts)
+- [S3 파일 업로드](https://github.com/argon1025/TILog-server/blob/main/src/src/file-uploads/file-uploads.service.ts)
+- [작업 큐 서비스](https://github.com/argon1025/TILog-server/tree/main/src/src/task-manager)
+- [Redis 캐시 서비스](https://github.com/argon1025/TILog-server/tree/main/src/src/cache-manager)
+- [CircleCI 지속적 배포](https://github.com/argon1025/TILog-server/blob/main/.circleci/config.yml)
 
 ![image](https://user-images.githubusercontent.com/55491354/146319449-2636ea9e-4166-454d-8d71-60f8d90b9895.png)
 - [Comments 서비스](https://github.com/argon1025/TILog-server/tree/main/src/src/comments)
@@ -37,7 +43,8 @@ Last Release Build : [![CircleCI](https://circleci.com/gh/argon1025/TILog-server
 
 
 ![image](https://user-images.githubusercontent.com/55491354/146319456-6dd8503d-9167-484f-ae1c-56ce4feee377.png)
-- 작성필요
+- 게시글 태그
+- 태그 검색
 
 
 
@@ -117,10 +124,21 @@ POSTS_GET_CONTENT_LIMIT=30
 # Throttle Settings
 THROTTLE_TTL=60
 THROTTLE_LIMIT=10
+
+# Alert WebHook
+ERROR_SLACK_WEBHOOK_URL=https://hooks.slack.com/
 ```
 
-## 4.Using Docker-compose to Run This Server
+## 4.Using Docker-compose to Run the Storage.
 ```
 docker-compose up --build
 ```
 > Please Change the environment variable(Database password) in docker-compose.yml
+
+
+## 5.Start serverApp
+```
+cd src
+npm run start:dev
+```
+> Please Change the environment variable(.env.dev)
