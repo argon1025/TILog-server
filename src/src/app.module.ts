@@ -3,7 +3,6 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { LoggerMiddleware } from './middlewares/Logger.middleware';
 
 // Load Entities
@@ -117,7 +116,6 @@ const ENV = process.env;
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-    AppService,
   ],
 })
 // Add Middleware
