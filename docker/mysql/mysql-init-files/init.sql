@@ -79,6 +79,16 @@ ALTER TABLE posts
     ADD CONSTRAINT FK_posts_categoryID_category_id FOREIGN KEY (categoryID)
         REFERENCES category (id) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- 인덱스 설정
+-- 유저가 작성한 게시글을 조회 및 정렬
+-- 해당 인덱스로 인해 기존 FK Index가 지정되지 않음 포스트 작업시 참고해야합니다
+ALTER TABLE `TILog`.`posts` 
+ADD INDEX `userID_postID_INDEX` USING BTREE (`usersID`, `id`);
+
+-- 인기글 조회 및 정렬
+ALTER TABLE `TILog`.`posts` 
+ADD INDEX `createdAt_likes_INDEX` USING BTREE (`createdAt`, `likes`);
+
 
 -- tags Table Create SQL
 CREATE TABLE tags

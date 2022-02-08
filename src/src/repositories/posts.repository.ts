@@ -1,8 +1,3 @@
-import { Category } from 'src/entities/Category';
-import { PostsTags } from 'src/entities/PostsTags';
-import { Tags } from 'src/entities/Tags';
-import { UserblogCustomization } from 'src/entities/UserblogCustomization';
-import { Users } from 'src/entities/Users';
 import { searchScope } from 'src/posts/dto/Services/MostLikedPost.DTO';
 import { EntityRepository, AbstractRepository, InsertResult, UpdateResult } from 'typeorm';
 import { Posts } from '../entities/Posts';

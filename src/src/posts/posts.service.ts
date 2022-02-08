@@ -1,9 +1,25 @@
+// Nest Core
 import { Injectable } from '@nestjs/common';
 import { Connection, Repository } from 'typeorm';
-import { Posts } from '../entities/Posts';
+import { InjectRepository } from '@nestjs/typeorm';
+
+// Custom
+import { compareArray } from 'src/utilities/compare.array.utility';
 import Time from 'src/utilities/time.utility';
 
-// ERROR
+// Type
+import { GetPostWriterDto, GetPostWriterResponseDto } from './dto/Services/GetPostWriter.DTO';
+import { CreatePostDto } from './dto/Services/CreatePost.DTO';
+import { UpdatePostDto } from './dto/Services/UpdatePost.DTO';
+import { SoftDeletePostDto } from './dto/Services/SoftDeletePost.DTO';
+import { AddPostViewCountDto } from './dto/Services/AddPostViewCount.DTO';
+import { GetPostsDto, GetPostsResponseDto } from './dto/Services/GetPosts.DTO';
+import { GetPostDetailDto, GetPostDetailResponseDto } from './dto/Services/GetPostDetail.DTO';
+import { SetPostToLikeDto, SetPostToLikeResponseDto } from './dto/Services/SetPostToLike.DTO';
+import { SetPostToDislikeDto, SetPostToDislikeResponseDto } from './dto/Services/SetPostToDislike.DTO';
+import { MostLikedRequestDto, MostLikedResponseDto, postListDataDTO } from './dto/Services/MostLikedPost.DTO';
+import { CreatePostTags } from './dto/Services/CreatePostTags.DTO';
+// Error Type
 import {
   CreatePostTagFail,
   GetMostLikedPostFail,
@@ -17,27 +33,13 @@ import {
   SetPostToLikeFail,
 } from '../ExceptionFilters/Errors/Posts/Post.error';
 
-// DTO
-import { GetPostWriterDto, GetPostWriterResponseDto } from './dto/Services/GetPostWriter.DTO';
-import { CreatePostDto } from './dto/Services/CreatePost.DTO';
-import { UpdatePostDto } from './dto/Services/UpdatePost.DTO';
-import { SoftDeletePostDto } from './dto/Services/SoftDeletePost.DTO';
-import { AddPostViewCountDto } from './dto/Services/AddPostViewCount.DTO';
-import { GetPostsDto, GetPostsResponseDto } from './dto/Services/GetPosts.DTO';
-import { GetPostDetailDto, GetPostDetailResponseDto } from './dto/Services/GetPostDetail.DTO';
-import { SetPostToLikeDto, SetPostToLikeResponseDto } from './dto/Services/SetPostToLike.DTO';
-import { SetPostToDislikeDto, SetPostToDislikeResponseDto } from './dto/Services/SetPostToDislike.DTO';
-import { Tags } from 'src/entities/Tags';
-import { PostsTags } from 'src/entities/PostsTags';
-import { MostLikedRequestDto, MostLikedResponseDto, postListDataDTO } from './dto/Services/MostLikedPost.DTO';
-import { InjectRepository } from '@nestjs/typeorm';
-import { compareArray } from 'src/utilities/compare.array.utility';
-import { CreatePostTags } from './dto/Services/CreatePostTags.DTO';
-
 // Custom Repository
 import { PostRepository } from 'src/repositories/posts.repository';
 import { PostViewsRepository } from 'src/repositories/postViews.repository';
 import { PostLikesRepository } from 'src/repositories/PostLikes.repository';
+import { Tags } from 'src/entities/Tags';
+import { PostsTags } from 'src/entities/PostsTags';
+import { Posts } from '../entities/Posts';
 
 @Injectable()
 export class PostsService {
@@ -155,7 +157,7 @@ export class PostsService {
    * @author seongrokLee <argon1025@gmail.com>
    * @version 1.0.0
    */
-  public async createPost(postData: CreatePostDto): Promise<boolean> {
+  public async createPost(postData: CreatePostDto): Promise<number> {
     // 쿼리러너 객체 생성
     const queryRunner = this.connection.createQueryRunner();
 
