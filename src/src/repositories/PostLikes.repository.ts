@@ -1,4 +1,4 @@
-import { EntityRepository, AbstractRepository, UpdateResult, InsertResult, DeleteResult } from 'typeorm';
+import { EntityRepository, AbstractRepository, InsertResult, DeleteResult } from 'typeorm';
 import { PostLike } from '../entities/PostLike';
 
 @EntityRepository(PostLike)
