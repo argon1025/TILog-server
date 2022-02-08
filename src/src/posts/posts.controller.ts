@@ -1,28 +1,34 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, UseGuards, Version, Put, Query, ParseIntPipe } from '@nestjs/common';
-import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
-import { RealIP } from 'nestjs-real-ip';
-import { ConfigService } from '@nestjs/config';
+// Core
+import { Controller, Get, Post, Body, Param, Delete, HttpException, UseGuards, Version, Put, Query, ParseIntPipe } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
+
+import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
+
+// Custom
+import { PostsService } from './posts.service';
+import { RealIP } from 'nestjs-real-ip';
 import { UserInfo } from 'src/auth/decorators/userInfo.decorator';
-import { SessionInfo } from 'src/auth/dto/session-info.dto';
 import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
-import { PermissionDenied } from 'src/ExceptionFilters/Errors/Auth/Auth.error';
-import { ErrorHandlerNotFound } from 'src/ExceptionFilters/Errors/ErrorHandlerNotFound.error';
-import { PostNotFound } from 'src/ExceptionFilters/Errors/Posts/Post.error';
 import ResponseUtility from 'src/utilities/Response.utility';
+
+// Type
+import { SessionInfo } from 'src/auth/dto/session-info.dto';
 import { CreateDto } from './dto/Controller/Create.Posts.controller.DTO';
 import { UpdateDto } from './dto/Controller/Update.Posts.controller.DTO copy';
 import { CreatePostDto } from './dto/Services/CreatePost.DTO';
 import { CreatePostTags } from './dto/Services/CreatePostTags.DTO';
 import { GetPostDetailDto, GetPostDetailResponseDto } from './dto/Services/GetPostDetail.DTO';
 import { GetPostsDto } from './dto/Services/GetPosts.DTO';
-import { GetPostWriterDto } from './dto/Services/GetPostWriter.DTO';
 import { MostLikedRequestDto, searchScope } from './dto/Services/MostLikedPost.DTO';
 import { SetPostToDislikeDto } from './dto/Services/SetPostToDislike.DTO';
 import { SetPostToLikeDto } from './dto/Services/SetPostToLike.DTO';
 import { SoftDeletePostDto } from './dto/Services/SoftDeletePost.DTO';
 import { UpdatePostDto } from './dto/Services/UpdatePost.DTO';
-import { PostsService } from './posts.service';
+// Error Type
+import { PermissionDenied } from 'src/ExceptionFilters/Errors/Auth/Auth.error';
+import { ErrorHandlerNotFound } from 'src/ExceptionFilters/Errors/ErrorHandlerNotFound.error';
+import { PostNotFound } from 'src/ExceptionFilters/Errors/Posts/Post.error';
 
 @Controller('')
 export class PostsController {
@@ -103,8 +109,6 @@ export class PostsController {
     const POST_ID: string = String(postID);
     try {
       const IS_OWNER: boolean = await this.postsService.isOwner({ userId: userData.id, postId: POST_ID });
-      const IS_DELETED: boolean = await this.postsService.isDeleted({ postId: POST_ID });
-
       if (!IS_OWNER) {
         // 개발자 코멘트 작성
         const developerComment = `PostsController.update.NOT_OWNER`;
@@ -112,6 +116,7 @@ export class PostsController {
         throw new PermissionDenied(developerComment);
       }
 
+      const IS_DELETED: boolean = await this.postsService.isDeleted({ postId: POST_ID });
       if (IS_DELETED) {
         // 개발자 코멘트 작성
         const developerComment = `PostsController.update.DELETED_POST`;
@@ -170,7 +175,6 @@ export class PostsController {
     const POST_ID: string = String(postID);
     try {
       const IS_OWNER: boolean = await this.postsService.isOwner({ userId: userData.id, postId: POST_ID });
-      const IS_DELETED: boolean = await this.postsService.isDeleted({ postId: POST_ID });
 
       if (!IS_OWNER) {
         // 개발자 코멘트 작성
@@ -179,6 +183,7 @@ export class PostsController {
         throw new PermissionDenied(developerComment);
       }
 
+      const IS_DELETED: boolean = await this.postsService.isDeleted({ postId: POST_ID });
       if (IS_DELETED) {
         // 개발자 코멘트 작성
         const developerComment = `PostsController.delete.DELETED_POST`;
@@ -230,7 +235,9 @@ export class PostsController {
   async getDetailFindByPostID(@UserInfo() userData: SessionInfo, @Param('postID', ParseIntPipe) postID: Number, @RealIP() userIp: string) {
     // PostID 상수 선언
     const POST_ID: string = String(postID);
+    // 세션 유저 아이디, 미로그인일경우 undefined
     const USER_ID: number | undefined = userData?.id;
+    // 해당 세션 유저가 해당 포스트에 좋아요를 누른상태를 저장하는 변수
     let IS_LIKED: boolean = false;
     try {
       // 유저에게 세션데이터가 있다면 요청 포스트의 작성자인지 확인합니다, 세션이 없으면 false를 반환합니다.
@@ -241,9 +248,6 @@ export class PostsController {
 
       // 비밀글인지 확인합니다
       const IS_PRIVATE: boolean = await this.postsService.isPrivate({ postId: POST_ID });
-
-      // 게시글 디테일 정보
-      let POST_DATA: GetPostDetailResponseDto;
 
       // 삭제된 게시글인지 검증합니다
       if (IS_DELETED) {
@@ -273,6 +277,9 @@ export class PostsController {
       if (!!USER_ID) {
         IS_LIKED = await this.postsService.isLiked({ postId: POST_ID, userId: USER_ID });
       }
+
+      // 게시글 디테일 정보
+      let POST_DATA: GetPostDetailResponseDto;
 
       // 게시물 정보를 조회하고 저장합니다
       let GetPostDetailRequestDto = new GetPostDetailDto();
@@ -323,8 +330,9 @@ export class PostsController {
     @Param('userID', ParseIntPipe) userID: number,
     @Query('cursor', ParseIntPipe) cursor: number = 0,
   ) {
-    // 상수 선언
+    // 최대 콘텐츠 로드 갯수설정 로드
     const CONTENT_LIMIT: number = this.configService.get<number>('POSTS_GET_CONTENT_LIMIT', 10);
+    // 세션 아이디와 요청한 유저아이디가 동일할 경우 퍼스널 요청으로 간주합니다. 숨김 게시글을 표시할 수 있습니다
     const PERSONAL_REQUEST: boolean = userData?.id === userID ? true : false;
     try {
       // Dto Mapping
@@ -467,31 +475,33 @@ export class PostsController {
         throw new PostNotFound(developerComment);
       }
 
+      // 캐시 데이터 조회
       const cacheResult = await this.CacheManagerService.getTrendPost({ ScopeData: searchScopeData, cursor: cursor });
 
+      // 캐시가 존재할 경우
       if (!!cacheResult) {
-        // 캐시가 존재할 경우
-        // 응답 리턴
+        // 캐시 데이터를 리턴
         return ResponseUtility.create(false, 'ok', { data: cacheResult });
-      } else {
-        // 캐시가 없을 경우
-        // Dto Mapping
-        let getPostsRequestDto = new MostLikedRequestDto();
-        // 최대 콘텐츠 조회 갯수
-        getPostsRequestDto.contentLimit = this.configService.get<number>('POSTS_GET_CONTENT_LIMIT', 10);
-        // 현재 커서 넘버
-        getPostsRequestDto.cursorNumber = cursor;
-        // 조회 기간
-        getPostsRequestDto.date = searchScopeData;
-
-        const getPostsResult = await this.postsService.getMostLiked(getPostsRequestDto);
-
-        // 캐시 저장
-        await this.CacheManagerService.setTrendPost({ ScopeData: searchScopeData, cursor: cursor, postListData: getPostsResult, ttl: 5000 });
-
-        // 응답 리턴
-        return ResponseUtility.create(false, 'ok', { data: getPostsResult });
       }
+
+      // 캐시가 없을 경우
+      // Dto Mapping
+      let getPostsRequestDto = new MostLikedRequestDto();
+      // 최대 콘텐츠 조회 갯수
+      getPostsRequestDto.contentLimit = this.configService.get<number>('POSTS_GET_CONTENT_LIMIT', 10);
+      // 현재 커서 넘버
+      getPostsRequestDto.cursorNumber = cursor;
+      // 조회 기간
+      getPostsRequestDto.date = searchScopeData;
+
+      // 데이터베이스에서 정보 조회
+      const getPostsResult = await this.postsService.getMostLiked(getPostsRequestDto);
+
+      // 다음 요청에 사용할 캐시 저장
+      await this.CacheManagerService.setTrendPost({ ScopeData: searchScopeData, cursor: cursor, postListData: getPostsResult, ttl: 5000 });
+
+      // 응답 리턴
+      return ResponseUtility.create(false, 'ok', { data: getPostsResult });
     } catch (error) {
       // 사전 정의된 에러인 경우
       if ('codeNumber' in error && 'codeText' in error && 'message' in error) {
@@ -507,6 +517,12 @@ export class PostsController {
     }
   }
 
+  /**
+   * 동현이형이 작업함, 관심사 분리 필요
+   * @param param0
+   * @param createPostTags
+   * @returns
+   */
   @Post('posts/:postsId/tags')
   public async createPostTags(@Param() { postsId }: { postsId: number }, @Body() createPostTags: CreatePostTags[]) {
     try {

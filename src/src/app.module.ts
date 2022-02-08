@@ -1,8 +1,8 @@
-import { CacheModule, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+// Nest Core
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { LoggerMiddleware } from './middlewares/Logger.middleware';
 
 // Load Entities
@@ -16,14 +16,16 @@ import { Posts } from './entities/Posts';
 import { PostsTags } from './entities/PostsTags';
 import { Tags } from './entities/Tags';
 import { UserblogCustomization } from './entities/UserblogCustomization';
-import { CommentsModule } from './comments/comments.module';
 import { Users } from './entities/Users';
 import { PostView } from './entities/PostView';
+
+// Service
+import { CommentsModule } from './comments/comments.module';
 import { PostsModule } from './posts/posts.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { FileUploadsModule } from './file-uploads/file-uploads.module';
 import { UserBlogCustomizationModule } from './user-blog-customization/user-blog-customization.module';
+import { FileUploadsModule } from './file-uploads/file-uploads.module';
 import { TagsModule } from './tags/tags.module';
 import { CategoriesModule } from './categories/categories.module';
 import { PinnedRepositoriesModule } from './pinned-repositories/pinned-repositories.module';
@@ -31,10 +33,13 @@ import { PinnedRepositoriesModule } from './pinned-repositories/pinned-repositor
 // ThrottlerModule
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { CacheManagerModule } from './cache-manager/cache-manager.module';
-import * as redisStore from 'cache-manager-redis-store';
+
+// Task
 import { BullModule } from '@nestjs/bull';
 import { TaskManagerModule } from './task-manager/task-manager.module';
+
+// Cache
+import { CacheManagerModule } from './cache-manager/cache-manager.module';
 
 // Load ENV
 const ENV = process.env;
@@ -43,6 +48,7 @@ const ENV = process.env;
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      // NODE_ENV 가 설정되었을 경우 .env.{NODE_ENV} 설정파일을 로드합니다.
       envFilePath: !ENV.NODE_ENV ? '.env' : `.env.${ENV.NODE_ENV}`,
     }),
     BullModule.forRootAsync({
@@ -84,6 +90,8 @@ const ENV = process.env;
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
+        // 모든 인증 처리는 Oauth로 처리되기 때문에 일시적인 버스트 요청만 차단하도록 설정되었습니다
+        // ttl 주기가 매우 짧기때문에 레디스 스토리지를 사용하지않도록 변경했습니다.
         const ttl = configService.get<number>('THROTTLE_TTL', 60);
         const limit = configService.get<number>('THROTTLE_LIMIT', 10);
         return { ttl: ttl, limit: limit };
@@ -108,7 +116,6 @@ const ENV = process.env;
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-    AppService,
   ],
 })
 // Add Middleware

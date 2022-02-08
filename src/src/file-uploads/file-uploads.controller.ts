@@ -1,16 +1,22 @@
+// Nest Core
 import { Controller, Post, UseInterceptors, UploadedFile, HttpException, UseGuards, Version } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UserInfo } from 'src/auth/decorators/userInfo.decorator';
-import { SessionInfo } from 'src/auth/dto/session-info.dto';
-import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
-import { ErrorHandlerNotFound } from 'src/ExceptionFilters/Errors/ErrorHandlerNotFound.error';
-import ResponseUtility from 'src/utilities/Response.utility';
-import { ImageFileUploadDto } from './dto/service/ImageFileUpload.DTO';
-import { FileUploadsService } from './file-uploads.service';
-import Time from '../utilities/time.utility';
-import { FileSizeExceeded } from 'src/ExceptionFilters/Errors/FileUploads/FileUpload.error';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileUploadsService } from './file-uploads.service';
+
+// Custom
+import { UserInfo } from 'src/auth/decorators/userInfo.decorator';
+import ResponseUtility from 'src/utilities/Response.utility';
+import Time from '../utilities/time.utility';
+import { AuthenticatedGuard } from 'src/auth/guard/auth.guard';
+
+// Type
+import { SessionInfo } from 'src/auth/dto/session-info.dto';
+import { ImageFileUploadDto } from './dto/service/ImageFileUpload.DTO';
+// Error Type
+import { ErrorHandlerNotFound } from 'src/ExceptionFilters/Errors/ErrorHandlerNotFound.error';
+import { FileSizeExceeded } from 'src/ExceptionFilters/Errors/FileUploads/FileUpload.error';
 
 @Controller('')
 export class FileUploadsController {

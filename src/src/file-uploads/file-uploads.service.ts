@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as AWS from 'aws-sdk';
 import { ImageUpload } from 'src/entities/ImageUpload';
-import { ImageUploadFail, S3FileUploadFail } from 'src/ExceptionFilters/Errors/FileUploads/FileUpload.error';
+import { ImageUploadFail } from 'src/ExceptionFilters/Errors/FileUploads/FileUpload.error';
 import { Connection } from 'typeorm';
 import { ImageFileUploadDto, ImageFileUploadResponseDto } from './dto/service/ImageFileUpload.DTO';
 import { S3FileDeleteDto } from './dto/service/S3FileDelete.DTO';
@@ -28,7 +28,7 @@ export class FileUploadsService {
    * @version 1.0.0
    * @throws {S3FileUploadFail}
    */
-  public async s3FileUpload(requestData: S3FileUploadDto): Promise<S3FileUploadResponseDto> {
+  private async s3FileUpload(requestData: S3FileUploadDto): Promise<S3FileUploadResponseDto> {
     try {
       // 파일 업로드를 요청합니다.
       const s3FileUploadRequestResult = await this.S3.upload({

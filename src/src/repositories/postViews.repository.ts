@@ -1,4 +1,4 @@
-import { EntityRepository, AbstractRepository, UpdateResult, InsertResult } from 'typeorm';
+import { EntityRepository, AbstractRepository, InsertResult } from 'typeorm';
 import { PostView } from '../entities/PostView';
 
 @EntityRepository(PostView)
