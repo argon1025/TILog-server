@@ -1,6 +1,6 @@
+import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { BullModule } from '@nestjs/bull';
-import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LogConsumer } from './logging.processor';
 import { TaskManagerService } from './task-manager.service';
@@ -10,8 +10,9 @@ import { TaskManagerService } from './task-manager.service';
     BullModule.registerQueue({
       name: 'log',
       limiter: {
-        max: 1,
-        duration: 1000,
+        // 작업제한 설정
+        max: 1, // 1개씩만 처리
+        duration: 1000, // 1초당
       },
     }),
     BullModule.registerQueue({
