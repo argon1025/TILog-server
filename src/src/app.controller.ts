@@ -1,4 +1,5 @@
 import { Controller, Get, Session } from '@nestjs/common';
+import { ApiOperation } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller()
@@ -7,6 +8,7 @@ export class AppController {
 
   @Get()
   @SkipThrottle(true) // 상태체크 엔드포인트는 요청 제한 규칙을 적용받지 않습니다
+  @ApiOperation({ summary: '해당 서비스 상태를 체크합니다' })
   getHello(@Session() session) {
     // 해당 리소스 조회시 발급되는 기본세션을 삭제합니다.
     session.destroy();
