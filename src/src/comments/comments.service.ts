@@ -122,10 +122,10 @@ export class CommentsService {
    */
   async getReplies(commentId: string): Promise<GetRepliesDto[]> {
     try {
-      console.log('comemtnasd', commentId);
+      // 코멘트 존재 검증
+      await this.getComment(commentId);
       // 코멘트 레벨 검증
       await this.validateCommentLevel(commentId);
-      console.log('comemtnasd', commentId);
       // postid에 해당하는 부모 코멘트를 요청
       const replies = await this.commentsRepo
         .createQueryBuilder('comments')
@@ -149,6 +149,8 @@ export class CommentsService {
     } catch (error) {
       // is not comment
       if (error instanceof MaxLevelReached) throw error;
+      // 코멘트가 없을 시
+      if (error instanceof NotFoundComment) throw error;
       throw new FaildGetReplies(`service.comment.getcomments.${!!error.message ? error.message : 'Unknown_Error'}`);
     }
   }

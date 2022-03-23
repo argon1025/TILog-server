@@ -10,7 +10,7 @@
     개발자를 위한 블로그 플랫폼 TILog 입니다.
     <br />
     <br />
-    <a href="https://github.com/argon1025/TILog-server">View Demo</a>
+    <a href="https://tilog.io">View Service</a>
     ·
     <a href="https://github.com/argon1025/TILog-server/issues">Report Bug</a>
     ·

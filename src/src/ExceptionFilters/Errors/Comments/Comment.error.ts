@@ -91,7 +91,7 @@ export class FaildGetComment implements Error {
   constructor(public readonly description?) {}
 
   // 미리 정의된 에러코드
-  public readonly codeNumber = 400;
+  public readonly codeNumber = 500;
 
   public readonly codeText = 'FaildGetComment';
 
@@ -108,7 +108,7 @@ export class NotFoundComment implements Error {
   constructor(public readonly description?) {}
 
   // 미리 정의된 에러코드
-  public readonly codeNumber = 400;
+  public readonly codeNumber = 404;
 
   public readonly codeText = 'NotFoundComment';
 
