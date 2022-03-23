@@ -41,6 +41,11 @@ import { TaskManagerModule } from './task-manager/task-manager.module';
 // Cache
 import { CacheManagerModule } from './cache-manager/cache-manager.module';
 
+// Sentry
+import * as Sentry from '@sentry/node';
+// import * as Tracing from '@sentry/tracing';
+// import { TraceMiddleware } from './middlewares/trace.middleware';
+import { SentryModule } from './sentry/sentry.module';
 // Load ENV
 const ENV = process.env;
 
@@ -50,6 +55,17 @@ const ENV = process.env;
       isGlobal: true,
       // NODE_ENV 가 설정되었을 경우 .env.{NODE_ENV} 설정파일을 로드합니다.
       envFilePath: !ENV.NODE_ENV ? '.env' : `.env.${ENV.NODE_ENV}`,
+    }),
+    SentryModule.forRoot({
+      enabled: true,
+      debug: false,
+      dsn: ENV.SENTRY_DNS,
+      environment: 'production',
+      integrations: [
+        new Sentry.Integrations.Http({ tracing: true }),
+        // new Tracing.Integrations.Express()
+      ],
+      tracesSampleRate: 1.0,
     }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
@@ -122,5 +138,6 @@ const ENV = process.env;
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes('*');
+    // consumer.apply(TraceMiddleware).forRoutes('*');
   }
 }
