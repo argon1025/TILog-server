@@ -127,6 +127,10 @@ THROTTLE_LIMIT=10
 
 # Alert WebHook
 ERROR_SLACK_WEBHOOK_URL=https://hooks.slack.com/
+
+# Sentry
+SENTRY_DNS=https://uhvb123312398798asd89y8yh@o1171978.ingest.sentry.io
+
 ```
 
 ## 4.Using Docker-compose to Run the Storage.
