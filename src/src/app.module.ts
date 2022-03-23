@@ -137,7 +137,7 @@ const ENV = process.env;
 // Add Middleware
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
-    // consumer.apply(TraceMiddleware).forRoutes('*');
+    consumer.apply(Sentry.Handlers.requestHandler(), LoggerMiddleware).forRoutes('*');
+    // consumer.apply(, TraceMiddleware).forRoutes('*');
   }
 }
