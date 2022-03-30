@@ -519,7 +519,7 @@ export class PostsController {
 
   /**
    * 포스트의 태그들을 등록하기
-   * 관심사 분리 필요
+   * TODO 관심사 분리 필요
    * @param param0
    * @param createPostTags
    * @returns
