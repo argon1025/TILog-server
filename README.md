@@ -1,3 +1,4 @@
+> 현재 [**이곳**](https://github.com/TIL-Log-lab/Tilog-server-node-v2)에서 TILog-v2 마이그레이션이 진행중입니다.
 
 <div align="center">
     <img src="https://user-images.githubusercontent.com/55491354/146318970-b962dcc7-ed78-41e2-9d4e-d453fa4af043.png" alt="Logo">
